@@ -5,9 +5,13 @@
 // Tokenization: lowercase, non-alphanumeric -> space, split on whitespace,
 // drop tokens shorter than 2 chars. No stemming, no stopword list — the
 // vocab is built ONLY from the training split (see ml/dataset.mjs), so
-// there is no leakage from val/test into the features.
+// there is no leakage from val/test into the features. Per-source vocab
+// union in ml/train.mjs (top SMS tokens + top email tokens) so neither
+// domain crowds the other out. Word bigrams were tried in run #3 and
+// REVERTED — they helped phishing (+1.8%) but sank SMS precision
+// (85.9% -> 71.6%); unigrams only.
 
-export const VOCAB_SIZE = 1500;
+export const VOCAB_SIZE = 3000;
 
 /** Split raw text into tokens. Pure function, no state. */
 export function tokenize(text) {

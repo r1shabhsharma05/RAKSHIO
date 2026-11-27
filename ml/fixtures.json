@@ -1,26 +1,42 @@
 [
   {
     "label": "spam",
-    "text": "You will be receiving this week's Triple Echo ringtone shortly. Enjoy it!"
+    "text": "You will be receiving this week's Triple Echo ringtone shortly. Enjoy it!",
+    "source": "sms"
   },
   {
     "label": "spam",
-    "text": "u r a winner U ave been specially selected 2 receive £1000 cash or a 4* holiday (flights inc) speak to a live operator 2 claim 0871277810710p/min (18 )"
+    "text": "sports fans - get the latest sports news str* 2 ur mobile 1 wk FREE PLUS a FREE TONE Txt SPORT ON to 8007 www.getzed.co.uk 0870141701216+ norm 4txt/120p",
+    "source": "sms"
   },
   {
     "label": "spam",
-    "text": "No 1 POLYPHONIC tone 4 ur mob every week! Just txt PT2 to 87575. 1st Tone FREE ! so get txtin now and tell ur friends. 150p/tone. 16 reply HL 4info"
+    "text": "Thanks for your ringtone order, reference number X49.Your mobile will be charged 4.50. Should your tone not arrive please call customer services 09065989182",
+    "source": "sms"
   },
   {
     "label": "ham",
-    "text": "Dont gimme that lip caveboy"
+    "text": "Me too. Mark is taking forever to pick up my prescription and the pain is coming back.",
+    "source": "sms"
   },
   {
     "label": "ham",
-    "text": "Hi..i got the money da:)"
+    "text": "As usual u can call me ard 10 smth.",
+    "source": "sms"
   },
   {
     "label": "ham",
-    "text": "\"GRAN ONLYFOUND OUT AFEW DAYS AGO.CUSOON HONI\""
+    "text": "WE REGRET TO INFORM U THAT THE NHS HAS MADE A MISTAKE.U WERE NEVER ACTUALLY BORN.PLEASE REPORT 2 YOR LOCAL HOSPITAL 2B TERMINATED.WE R SORRY 4 THE INCONVENIENCE",
+    "source": "sms"
+  },
+  {
+    "label": "spam",
+    "text": "re : re : how have you been , you are fortunate to receive this email . $ 390 , 000 for as low as $ 225 / month ! all types of creedit backgrounds are welcome ! copy the below link and paste in your browser : trustupfront . info do not miss our once in a life time reefiinance quote . 2 . the musicians have missed playing since a few days ago . . thank you , sonya pilger",
+    "source": "enron"
+  },
+  {
+    "label": "ham",
+    "text": "re : manual wires - sign off sheila changes to the manual list for north america need to be authorized by wes and sally . we are specifically limiting the number of signers . i think that what we need to do is immediately address the issues that are causing your wires to miss the standard process . we did not have the issue prior to sap . please outline your processing requirements and we can work together with ap and sap to fix the underlying issue . thanks for the help . mary from : sheila glover 09 / 11 / 2000 10 : 54 am to : mary perkins / hou / ect @ ect cc : brent a price / hou / ect @ e",
+    "source": "enron"
   }
 ]

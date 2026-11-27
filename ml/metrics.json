@@ -1,20 +1,97 @@
 {
-  "n": 517,
-  "tp": 58,
-  "fp": 1,
-  "tn": 450,
-  "fn": 8,
-  "accuracy": 0.9825918762088974,
-  "precision": 0.9830508474576272,
-  "recall": 0.8787878787878788,
-  "dataset": "jngb-labs/sms-spam (UCI SMS Spam Collection, deduplicated)",
-  "rows": 5159,
+  "n": 1615,
+  "tp": 487,
+  "fp": 25,
+  "tn": 1067,
+  "fn": 36,
+  "accuracy": 0.9622291021671827,
+  "precision": 0.951171875,
+  "recall": 0.9311663479923518,
+  "dataset": "SMS Spam (UCI) + Enron spam + Phishing Email (merged, real labeled rows)",
+  "sources": [
+    {
+      "source": "sms",
+      "total": 5129,
+      "train": 4103,
+      "val": 512,
+      "test": 514
+    },
+    {
+      "source": "enron",
+      "total": 5999,
+      "train": 4799,
+      "val": 599,
+      "test": 601
+    },
+    {
+      "source": "phishing",
+      "total": 5000,
+      "train": 4000,
+      "val": 500,
+      "test": 500
+    }
+  ],
+  "rows": 16128,
   "split": {
     "seed": 42,
-    "train": 4127,
-    "val": 515,
-    "test": 517
+    "train": 12902,
+    "val": 1611,
+    "test": 1615
   },
-  "vocabSize": 1500,
-  "epochs": 15
+  "vocabSize": 3108,
+  "epochs": 12,
+  "hiddenUnits": 32,
+  "threshold": 0.7,
+  "train": {
+    "n": 12902,
+    "tp": 4260,
+    "fp": 1,
+    "tn": 8629,
+    "fn": 12,
+    "accuracy": 0.9989924042784064,
+    "precision": 0.9997653133067355,
+    "recall": 0.9971910112359551
+  },
+  "val": {
+    "n": 1611,
+    "tp": 481,
+    "fp": 12,
+    "tn": 1063,
+    "fn": 55,
+    "accuracy": 0.9584109248913718,
+    "precision": 0.9756592292089249,
+    "recall": 0.8973880597014925
+  },
+  "bySource": {
+    "sms": {
+      "n": 514,
+      "tp": 67,
+      "fp": 11,
+      "tn": 429,
+      "fn": 7,
+      "accuracy": 0.9649805447470817,
+      "precision": 0.8589743589743589,
+      "recall": 0.9054054054054054
+    },
+    "enron": {
+      "n": 601,
+      "tp": 271,
+      "fp": 4,
+      "tn": 310,
+      "fn": 16,
+      "accuracy": 0.9667221297836939,
+      "precision": 0.9854545454545455,
+      "recall": 0.9442508710801394
+    },
+    "phishing": {
+      "n": 500,
+      "tp": 149,
+      "fp": 10,
+      "tn": 328,
+      "fn": 13,
+      "accuracy": 0.954,
+      "precision": 0.9371069182389937,
+      "recall": 0.9197530864197531
+    }
+  }
 }

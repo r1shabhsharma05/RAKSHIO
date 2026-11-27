@@ -712,16 +712,16 @@ test('step 12: shield OTP note shows on the safe example without inflating the s
   await expect(page.getByText('OTP dikh raha hai — kisi se share mat karein.')).toBeVisible();
 });
 
-test('step 14: shield shows the trained TF.js model score + honest disclosure', async ({ page }) => {
+test('step 15: shield shows the retrained merged model score + honest disclosure', async ({ page }) => {
   await page.goto('/#/shield');
   // Danger example: rules say KHATRA; the model is an extra signal only.
   await page.getByRole('button', { name: 'Danger example' }).click();
   await expect(page.getByText('KHATRA — mat karein')).toBeVisible();
   await expect(page.getByText(/Model scam score: \d+% — model ko ye (scam|safe) lagta hai/)).toBeVisible({ timeout: 30000 });
-  // Honest disclosure: real dataset + size + real held-out test accuracy.
-  await expect(page.getByText(/jngb-labs\/sms-spam/)).toBeVisible();
-  await expect(page.getByText(/5,159 real SMS/)).toBeVisible();
-  await expect(page.getByText(/held-out test accuracy 98\.3%/)).toBeVisible();
+  // Honest disclosure: real datasets + size + real held-out test accuracy.
+  await expect(page.getByText(/SMS Spam \(UCI\) \+ Enron spam \+ Phishing Email/)).toBeVisible();
+  await expect(page.getByText(/16,128 real messages \(SMS \+ email\)/)).toBeVisible();
+  await expect(page.getByText(/held-out test accuracy 96\.2%/)).toBeVisible();
   await expect(page.getByText(/sirf ek extra signal hai/)).toBeVisible();
   await expect(page.getByText(/model score rules ke flags ko override nahi karta/)).toBeVisible();
   await expect(page.getByText(/phone par hi chalta hai/)).toBeVisible();

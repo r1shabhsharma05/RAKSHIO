@@ -1,19 +1,29 @@
-// Train the Shield ML model on the REAL labeled SMS Spam dataset.
-//   node ml/train.mjs
+// Train the Shield ML model on the REAL labeled merged dataset (Step 15).
+//   npm run train        (node ml/train.mjs, CPU, ~8 min)
 // Writes:
 //   public/ml/shield-model/model.json — single-file TF.js artifact
 //     (standard ModelArtifacts serialization: modelTopology + weightSpecs +
 //     base64 weightData, loadable via tf.io.fromMemory; verified by a
 //     round-trip reload + re-evaluation in this same script)
-//   ml/metrics.json — held-out test metrics (the numbers the UI quotes)
+//   ml/metrics.json — train/val/test metrics + per-source test metrics
+//     (the numbers the UI quotes come from the TEST split only)
 //   ml/fixtures.json — real held-out test rows used by the vitest check
 //
-// Model: binary bag-of-words (vocab built ONLY from the training split,
-// top 1500 tokens) -> Dense(32, relu) -> Dense(1, sigmoid). CPU, Node.
-// Split: seeded (42) 80/10/10 of the 5,159 real rows. No synthetic data,
+// Data (ml/dataset.mjs): UCI SMS Spam (5,159) + Enron sample (6,000) +
+// phishing-email sample (5,000) = ~16k real rows, global normalized
+// dedupe BEFORE the seeded (42) stratified 80/10/10 split — no message
+// can leak from train into test via another source. No synthetic data,
 // no training on the 32 Situation Guides — those are guides, not classes.
+//
+// Model: binary bag-of-words (per-source vocab union: top 1,500 SMS
+// tokens + top 2,500 email tokens, unigrams only, built ONLY from the
+// training split) -> Dense(32, relu) -> Dropout(0.2) -> Dense(1,
+// sigmoid). Class weights from the train split (spam is the minority).
+// Threshold tuned on the
+// VALIDATION split only (grid 0.30-0.70, max accuracy); the test split
+// is evaluated exactly once, after tuning, and never re-rolled.
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as tf from '@tensorflow/tfjs';
@@ -21,11 +31,20 @@ import { loadSplit } from './dataset.mjs';
 import { buildVocab, vectorize } from './tokenizer.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const EPOCHS = 15;
+const EPOCHS = 12;
+const HIDDEN = 32;
 
-const { train, val, test } = loadSplit(join(ROOT, 'ml/data/sms-spam.csv'));
-const vocab = buildVocab(train.map((r) => r.text));
-console.log(`split train=${train.length} val=${val.length} test=${test.length} vocab=${vocab.length}`);
+const { train, val, test, sources } = loadSplit(join(ROOT, 'ml/data'));
+// Per-source vocab union: top 1,500 SMS tokens + top 2,500 email tokens.
+// A single merged DF ranking drops SMS-specific tokens (ringtone, kyc,
+// otp, upi, aadhaar all fell out of the first 3,000) because email docs
+// dominate the corpus — that collapse is what sank SMS precision in the
+// first merged run. The union guarantees SMS tokens survive.
+const smsVocab = buildVocab(train.filter((r) => r.source === 'sms').map((r) => r.text), 1500);
+const mailVocab = buildVocab(train.filter((r) => r.source !== 'sms').map((r) => r.text), 2500);
+const vocab = [...new Set([...smsVocab, ...mailVocab])];
+console.log(`split train=${train.length} val=${val.length} test=${test.length} vocab=${vocab.length} (sms ${smsVocab.length} + mail ${mailVocab.length})`);
+console.log('sources:', JSON.stringify(sources));
 
 const toXY = (rows) => {
   const xs = new Float32Array(rows.length * vocab.length);
@@ -44,16 +63,24 @@ const tr = toXY(train);
 const va = toXY(val);
 const te = toXY(test);
 
+const nSpam = train.filter((r) => r.y === 1).length;
+const classWeight = { 0: train.length / (2 * (train.length - nSpam)), 1: train.length / (2 * nSpam) };
+console.log('classWeight:', JSON.stringify(classWeight));
+
 const model = tf.sequential();
-model.add(tf.layers.dense({ units: 32, activation: 'relu', inputShape: [vocab.length] }));
+model.add(tf.layers.dense({ units: HIDDEN, activation: 'relu', inputShape: [vocab.length] }));
+model.add(tf.layers.dropout({ rate: 0.2 }));
 model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
 model.compile({ optimizer: tf.train.adam(0.003), loss: 'binaryCrossentropy', metrics: ['accuracy'] });
-await model.fit(tr.x, tr.y, { epochs: EPOCHS, batchSize: 32, validationData: [va.x, va.y], verbose: 0 });
+const history = await model.fit(tr.x, tr.y, {
+  epochs: EPOCHS, batchSize: 32, validationData: [va.x, va.y], verbose: 0, classWeight,
+});
+console.log('val acc by epoch:', history.history.val_acc.map((v) => +v.toFixed(4)).join(' '));
 
-function metrics(rows, probs) {
+function metrics(rows, probs, threshold) {
   let tp = 0, fp = 0, tn = 0, fn = 0;
   rows.forEach((r, i) => {
-    const p = probs[i] >= 0.5 ? 1 : 0;
+    const p = probs[i] >= threshold ? 1 : 0;
     if (p === 1 && r.y === 1) tp++;
     else if (p === 1) fp++;
     else if (r.y === 1) fn++;
@@ -68,9 +95,32 @@ function metrics(rows, probs) {
   };
 }
 
-const probs = [...(await model.predict(te.x).data())];
-const m = metrics(test, probs);
-console.log('HELD-OUT TEST', JSON.stringify(m, null, 2));
+// Threshold tuned on VALIDATION only (never on test).
+const valProbs = [...(await model.predict(va.x).data())];
+let threshold = 0.5;
+let bestValAcc = -1;
+for (let t = 0.3; t <= 0.7001; t += 0.05) {
+  const a = metrics(val, valProbs, +t.toFixed(2)).accuracy;
+  if (a > bestValAcc) { bestValAcc = a; threshold = +t.toFixed(2); }
+}
+console.log(`tuned threshold=${threshold} (val acc ${(bestValAcc * 100).toFixed(2)}%)`);
+
+const trainProbs = [...(await model.predict(tr.x).data())];
+const testProbs = [...(await model.predict(te.x).data())];
+const mTrain = metrics(train, trainProbs, threshold);
+const mVal = metrics(val, valProbs, threshold);
+const mTest = metrics(test, testProbs, threshold);
+console.log('TRAIN', JSON.stringify(mTrain));
+console.log('VAL', JSON.stringify(mVal));
+console.log('HELD-OUT TEST', JSON.stringify(mTest));
+
+// Per-source test metrics (same threshold) — the honest breakdown.
+const bySource = {};
+for (const s of ['sms', 'enron', 'phishing']) {
+  const idx = test.map((r, i) => (r.source === s ? i : -1)).filter((i) => i >= 0);
+  bySource[s] = metrics(idx.map((i) => test[i]), idx.map((i) => testProbs[i]), threshold);
+}
+console.log('BY SOURCE (test)', JSON.stringify(bySource));
 
 // Save as a single-file standard TF.js artifact (ModelArtifacts JSON).
 let artifacts;
@@ -78,12 +128,15 @@ await model.save(tf.io.withSaveHandler(async (a) => { artifacts = a; return { mo
 const weightB64 = Buffer.from(artifacts.weightData).toString('base64');
 const out = {
   format: 'tfjs-layers-model-inline-v1',
-  dataset: 'jngb-labs/sms-spam (UCI SMS Spam Collection, deduplicated)',
+  dataset: 'SMS Spam (UCI) + Enron spam + Phishing Email (merged, real labeled rows)',
   datasetUrl: 'https://huggingface.co/datasets/jngb-labs/sms-spam',
-  rows: 5159, ham: 4517, spam: 642,
+  sources: sources.map((s) => ({ source: s.source, total: s.total, train: s.train, val: s.val, test: s.test })),
+  rows: train.length + val.length + test.length,
   split: { seed: 42, train: train.length, val: val.length, test: test.length },
   vocabSize: vocab.length, vocab,
-  metrics: m,
+  threshold,
+  metrics: mTest,
+  bySource,
   modelTopology: artifacts.modelTopology,
   weightSpecs: artifacts.weightSpecs,
   weightData: weightB64,
@@ -91,18 +144,32 @@ const out = {
 const outPath = join(ROOT, 'public/ml/shield-model/model.json');
 writeFileSync(outPath, JSON.stringify(out));
 const metricsPath = join(ROOT, 'ml/metrics.json');
-writeFileSync(metricsPath, JSON.stringify({ ...m, dataset: out.dataset, rows: out.rows, split: out.split, vocabSize: vocab.length, epochs: EPOCHS }, null, 2));
+writeFileSync(metricsPath, JSON.stringify({
+  ...mTest,
+  dataset: out.dataset,
+  sources: out.sources,
+  rows: out.rows,
+  split: out.split,
+  vocabSize: vocab.length,
+  epochs: EPOCHS,
+  hiddenUnits: HIDDEN,
+  threshold,
+  train: mTrain,
+  val: mVal,
+  bySource,
+}, null, 2));
 
 // Real held-out fixtures for the vitest check (source: test split).
-const spamFix = test.filter((r) => r.y === 1).slice(0, 3);
-const hamFix = test.filter((r) => r.y === 0).slice(0, 3);
+const smsSpam = test.filter((r) => r.source === 'sms' && r.y === 1).slice(0, 3);
+const smsHam = test.filter((r) => r.source === 'sms' && r.y === 0).slice(0, 3);
+const mailSpam = test.filter((r) => r.source !== 'sms' && r.y === 1).slice(0, 1);
+const mailHam = test.filter((r) => r.source !== 'sms' && r.y === 0).slice(0, 1);
 writeFileSync(join(ROOT, 'ml/fixtures.json'), JSON.stringify(
-  [...spamFix, ...hamFix].map((r) => ({ label: r.label, text: r.text })),
+  [...smsSpam, ...smsHam, ...mailSpam, ...mailHam].map((r) => ({ label: r.label, text: r.text, source: r.source })),
   null, 2,
 ));
 
 // Round-trip verify: reload the written file exactly as the browser does.
-const { readFileSync } = await import('node:fs');
 const saved = JSON.parse(readFileSync(outPath, 'utf8'));
 const b64buf = Buffer.from(saved.weightData, 'base64');
 const weightData = b64buf.buffer.slice(b64buf.byteOffset, b64buf.byteOffset + b64buf.byteLength);
@@ -110,8 +177,8 @@ const reloaded = await tf.loadLayersModel(tf.io.fromMemory({
   modelTopology: saved.modelTopology, weightSpecs: saved.weightSpecs, weightData,
 }));
 const probs2 = [...(await reloaded.predict(te.x).data())];
-const m2 = metrics(test, probs2);
+const m2 = metrics(test, probs2, threshold);
 console.log('ROUND-TRIP TEST', JSON.stringify(m2));
-if (Math.abs(m2.accuracy - m.accuracy) > 1e-6) throw new Error('round-trip accuracy mismatch');
+if (Math.abs(m2.accuracy - mTest.accuracy) > 1e-6) throw new Error('round-trip accuracy mismatch');
 const sizeKb = (Buffer.byteLength(JSON.stringify(out)) / 1024).toFixed(1);
 console.log(`saved ${outPath} (${sizeKb} KB), metrics -> ${metricsPath}`);

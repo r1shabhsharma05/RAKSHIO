@@ -1,11 +1,12 @@
 // Shield ML model — on-device TF.js inference, loaded LAZILY (only when
 // the user runs a Shield check, never on first load, never blocking 1930).
 //
-// The model was trained in ml/train.mjs on the REAL labeled SMS Spam
-// dataset (jngb-labs/sms-spam, 5,159 rows). It is an EXTRA signal only:
-// the 16 rules are still the explanation, and the model score never
-// overrides the rules' flags. The model was NOT trained on the 32
-// Situation Guides — those are guides, not training classes.
+// The model was trained in ml/train.mjs on the REAL labeled merged
+// dataset (UCI SMS Spam + Enron spam + phishing emails, 16,128 rows;
+// full provenance in ml/README.md). It is an EXTRA signal only: the 16
+// rules are still the explanation, and the model score never overrides
+// the rules' flags. The model was NOT trained on the 32 Situation
+// Guides — those are guides, not training classes.
 // Inference is fully on-device; no text leaves the device.
 
 import { vectorize } from '../../../ml/tokenizer.mjs';
@@ -34,6 +35,7 @@ export interface ShieldModelJson {
   dataset: string;
   datasetUrl: string;
   rows: number;
+  threshold: number; // tuned on VALIDATION only, never on test
   metrics: { n: number; accuracy: number; precision: number; recall: number };
 }
 

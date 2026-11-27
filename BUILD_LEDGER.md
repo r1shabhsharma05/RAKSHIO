@@ -1044,3 +1044,96 @@ NOT deployed — live still serves v6; deploy needs his word.
   and browser share `ml/tokenizer.mjs`, never edit one side only.
 - The Hinglish gap is a data gap, not a tuning gap: do not claim it
   fixed until a real labeled Hinglish dataset is trained on.
+
+## Step 15: complete (2026-11-27) — more data, retrained model, 99% target NOT reached (honest)
+
+User call 27 Nov 23:34 IST: "or data bdhao or train kro 99% accuracy
+leke aao or data set pe tarin kro ar situtaion ke liye tarin kro advance
+kro" — grow the data, retrain, bring 99% accuracy, train on datasets
+and for the situations, advance the model.
+
+Data (all REAL labeled, license-checked, SHAs in `ml/README.md`):
+`jngb-labs/sms-spam` UCI SMS (5,159) + `SetFit/enron_spam` Enron emails
+(seeded sample 6,000 of 33,716) + `zefang-liu/phishing-email-dataset`
+(seeded sample 5,000 of 18,650, LGPL-3.0) = **16,128 merged rows**
+(5,331 spam / 10,797 ham) after global normalized dedupe BEFORE the
+seeded (42) stratified 80/10/10 split (train 12,902 / val 1,611 / test
+1,615). Email text truncated to 600 chars. Reproduce:
+`ml/download-data.sh` (raw to `ml/data/raw/`, not committed) then
+`node ml/prepare-data.mjs`. Rejected with reasons in `ml/README.md`:
+CloveAI india-spam-sms (templated — 5,586 distinct masked texts in
+20,010 rows, mutated UCI templates), Shade63 multiclass (no source, no
+license, reads generated — the multi-class set we wanted, unusable),
+dbarbedillo multilingual (machine-translated UCI, Devanagari strips to
+nothing), David-Egea (same data as zefang), FredZhang7 (same corpora
+re-merged), plus the Step 14 rejects (bolewara hand-written, bhavya2910
+synthetic, ganesh9353 templated, vichetkao gated, Kaggle no token).
+
+Model (advanced): per-source vocab union (top 1,500 SMS + top 2,500
+email tokens = 3,108, train split only) -> Dense(32, relu) ->
+Dropout(0.2) -> Dense(1, sigmoid); class weights; threshold 0.7 tuned
+on VALIDATION only. Artifact `public/ml/shield-model/model.json`
+547 KB single file, no binary shard. Training accuracy now recorded
+(Step 14 did not log it).
+
+REAL metrics (held-out test, n = 1,615): accuracy **96.22%** (TP 487,
+FP 25, TN 1067, FN 36), precision 95.12%, recall 93.12%. Train 99.90%,
+val 95.84%. Per-source test: SMS 96.50% (precision 85.90%, recall
+90.54%), Enron 96.67%, phishing 95.40%. **99% NOT reached.** Why:
+train 99.9% vs val 95.8% = memorization (val flat ~96% from epoch 1);
+cross-domain conflict — corporate email ham uses spammy words
+legitimately, so merged SMS precision (85.9%) is weaker than the Step
+14 SMS-only model (98.26% / 98.3% precision); noisy truncated email
+text. What 99% would need (in `ml/README.md`): full datasets, richer
+features, and real labeled modern Indian fraud messages, which do not
+exist publicly. No split re-rolled, no test row trained on, no number
+inflated.
+
+Runs (same seeded split, selection by val only): run #1 merged-DF vocab
+3,000, 20 epochs, no dropout — test 95.85%, SMS precision 79.1%
+(vocab dilution: ringtone/kyc/otp/upi/aadhaar missing from vocab);
+run #2 per-source vocab + 12 epochs + dropout — test 96.22%, val
+95.84% — KEPT; run #3 run #2 + word bigrams (vocab 4,010) — test
+95.79%, val 95.65% (phishing 97.2% but SMS precision 85.9% -> 71.6%)
+— reverted, run #2 artifacts restored byte-identical.
+
+Situations: no real labeled multi-class fraud dataset exists, so the
+model stays binary scam/safe. Coverage is a keyword proxy on the
+5,331 spam rows (`ml/README.md` table): covered (>=50) phishing-link,
+investment, loan-app, tech-support, lottery, romance, refund; thin
+(1-49) digital-arrest 44, upi-fraud 40, card-reward 35, visa 26,
+task 21, courier 21, gift-card 16, travel 16, customer-care 12,
+otp 9, sextortion 8, olx 4, electricity/matrimonial/scholarship 3,
+crypto/kyc/sim-swap 2; none (0) qr-scam, upi-collect, delivery-fee,
+rental, remote-access. The rules remain the primary defence there.
+
+Shield wiring: disclosure now says "16,128 real messages (SMS +
+email)" + test accuracy 96.2% + extra-signal-only; `mlModel.test.ts`
+now uses the merged loader, the shipped threshold (0.7), 8 fixtures
+(3 SMS spam + 3 SMS ham + 1 phishing + 1 safe email), and pins the
+SMS-subset accuracy too (±0.05).
+
+Evidence: build green (8.12s); vitest **39/39** (9 files, incl. the
+updated mlModel checks — 8 fixtures, merged test accuracy + SMS subset
+within tolerance); Playwright dashboard **43/43** (2.7m, incl. the
+updated step-15 Shield disclosure test; the step-14 test was updated,
+not deleted) + a temporary step-15 spec 1/1 with axe 0 on Shield
+(spec deleted after use); screenshot read
+(`tests/shots-local/step15-shield-1440.png`: lottery message, KHATRA
+verdict, model score + new disclosure). Secret scan clean. NOT deployed
+— live still serves v6; deploy needs his word.
+
+## Rulings (Step 15)
+
+- The 99% target was NOT reached (96.22% merged test). Never quote
+  99%, never quote train accuracy (99.90%) as model quality — the
+  numbers to quote are the held-out test numbers in `ml/metrics.json`,
+  with the per-source breakdown (SMS 96.50% / Enron 96.67% /
+  phishing 95.40%).
+- The merged model is broader but WEAKER on SMS than Step 14
+  (96.50% vs 98.26%). Say so wherever the model is described; do not
+  present the merge as a pure upgrade.
+- Model selection is by VALIDATION only. Three training runs total on
+  the same seeded split; no further re-rolls to chase 99%.
+- The 32 situations are still NOT training classes. Coverage claims
+  use the keyword-proxy table in `ml/README.md` only.

@@ -81,7 +81,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
             {mlScore !== null && mlMeta && (
               <>
                 <p>Model scam score: {Math.round(mlScore * 100)}% — {mlScore >= 0.5 ? 'model ko ye scam lagta hai' : 'model ko ye safe lagta hai'}.</p>
-                <p className="note">Trained model: {mlMeta.dataset}, {mlMeta.rows.toLocaleString('en-IN')} real SMS; held-out test accuracy {(mlMeta.accuracy * 100).toFixed(1)}% ({mlMeta.testN} messages). Ye sirf ek extra signal hai — upar wale rules hi explanation hain, aur model score rules ke flags ko override nahi karta. Model phone par hi chalta hai — message kahin nahi bheja jata.</p>
+                <p className="note">Trained model: {mlMeta.dataset}, {mlMeta.rows.toLocaleString('en-IN')} real messages (SMS + email); held-out test accuracy {(mlMeta.accuracy * 100).toFixed(1)}% ({mlMeta.testN} messages). Ye sirf ek extra signal hai — upar wale rules hi explanation hain, aur model score rules ke flags ko override nahi karta. Model phone par hi chalta hai — message kahin nahi bheja jata.</p>
               </>
             )}
             {mlScore === null && !mlLoading && <p>Model load nahi hua — rules wala verdict hi maaniye.</p>}
