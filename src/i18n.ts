@@ -1,0 +1,88 @@
+// Dashboard chrome strings (sidebar, header, home headings, settings).
+// The victim-facing panic flow stays Hinglish by design — only the
+// dashboard chrome switches. English is the default (screenshot shows it).
+export type Lang = 'en' | 'hi';
+
+type Dict = Record<string, string>;
+
+const EN: Dict = {
+  navHome: 'Home',
+  navReport: 'Report Fraud',
+  navIncidents: 'Incident Dashboard',
+  navActions: 'Action Plan',
+  navCoach: '1930 Call Coach',
+  navPortal: 'Portal Assistance',
+  navBank: 'Bank Alert Kit',
+  navVault: 'Evidence Vault',
+  navShield: 'Second-Scam Shield',
+  navCare: 'Care Circle',
+  navProof: 'Proof Pack & Verify',
+  navSettings: 'Settings',
+  appSubtitle: 'Golden Hour Fraud Response System',
+  offlineReady: 'Offline Ready (PWA)',
+  online: 'Online',
+  heroTitleA: 'Panic me bhi,',
+  heroTitleB: 'sahi kadam.',
+  heroSub: 'Bolo kya hua. RAKSHIO fraud ka proof, action plan, bank alert, aur family support ready karta hai.',
+  reportVoice: 'Report Fraud (Voice)',
+  reportText: 'Report Fraud (Text)',
+  clockTitle: 'Golden Hour Clock',
+  currentIncident: 'Current Incident',
+  quickActions: 'Quick Actions',
+  actionPlan: 'Your Action Plan',
+  snapshot: 'Incident Snapshot',
+  vault: 'Evidence Vault',
+  shield: 'Second-Scam Shield',
+  progress: 'Progress Tracker',
+  care: 'Care Circle',
+  proof: 'Proof Pack & Verify',
+  followups: 'Follow-up Guardian',
+  noIncident: 'No incident yet',
+  noIncidentHint: 'Report Fraud se shuru karein — RAKSHIO aapki baat se incident card banayega.',
+  startReport: 'Report Fraud shuru karein',
+  settingsTitle: 'Settings',
+  guardianTitle: 'Follow-up Guardian',
+};
+
+const HI: Dict = {
+  navHome: 'Home',
+  navReport: 'Fraud Report Karein',
+  navIncidents: 'Incident Dashboard',
+  navActions: 'Action Plan',
+  navCoach: '1930 Call Coach',
+  navPortal: 'Portal Madad',
+  navBank: 'Bank Alert Kit',
+  navVault: 'Evidence Vault',
+  navShield: 'Second-Scam Shield',
+  navCare: 'Care Circle',
+  navProof: 'Proof Pack aur Verify',
+  navSettings: 'Settings',
+  appSubtitle: 'Golden Hour Fraud Response System',
+  offlineReady: 'Offline Ready (PWA)',
+  online: 'Online',
+  heroTitleA: 'Panic me bhi,',
+  heroTitleB: 'sahi kadam.',
+  heroSub: 'Bolo kya hua. RAKSHIO fraud ka proof, action plan, bank alert, aur family support ready karta hai.',
+  reportVoice: 'Report Fraud (Voice)',
+  reportText: 'Report Fraud (Text)',
+  clockTitle: 'Golden Hour Clock',
+  currentIncident: 'Current Incident',
+  quickActions: 'Quick Actions',
+  actionPlan: 'Aapka Action Plan',
+  snapshot: 'Incident Snapshot',
+  vault: 'Evidence Vault',
+  shield: 'Second-Scam Shield',
+  progress: 'Progress Tracker',
+  care: 'Care Circle',
+  proof: 'Proof Pack aur Verify',
+  followups: 'Follow-up Guardian',
+  noIncident: 'Abhi koi incident nahi',
+  noIncidentHint: 'Report Fraud se shuru karein — RAKSHIO aapki baat se incident card banayega.',
+  startReport: 'Report Fraud shuru karein',
+  settingsTitle: 'Settings',
+  guardianTitle: 'Follow-up Guardian',
+};
+
+export function t(lang: Lang, key: string): string {
+  return (lang === 'hi' ? HI : EN)[key] ?? EN[key] ?? key;
+}

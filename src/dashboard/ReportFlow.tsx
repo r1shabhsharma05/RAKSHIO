@@ -1,0 +1,210 @@
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { canGo, type Screen } from '../engines/orchestrator/machine';
+import { extractIncident, type ExtractedIncident } from '../engines/understanding/extract';
+import { toStored } from '../state/store';
+import { useDashboard } from '../state/dashboardStore';
+import { recognitionSupported, stopSpeaking } from '../voice/VoiceAdapter';
+import { DEMO_TRANSCRIPT } from '../demo/seed';
+import { PanicScreen } from '../screens/Panic';
+import { ListenScreen } from '../screens/Listen';
+import { GapsScreen, type GapField } from '../screens/Gaps';
+import { ConfirmScreen, type ConfirmState } from '../screens/Confirm';
+import { JudgeScreen } from '../screens/Judge';
+import { formatINR, ScreenSkeleton } from '../screens/shared';
+
+gsap.registerPlugin(useGSAP);
+
+function computeGaps(inc: ExtractedIncident): GapField[] {
+  const gaps: GapField[] = [];
+  if (!inc.amount.value || inc.amount.confidence < 0.7) gaps.push('amount');
+  if (!inc.fraudAt.value || inc.fraudAt.confidence < 0.7) gaps.push('fraudAt');
+  if (!inc.method.value || inc.method.confidence < 0.7) gaps.push('method');
+  return gaps;
+}
+
+function summaryText(inc: ExtractedIncident): string {
+  const parts = ['Main ye samjha.'];
+  parts.push(inc.amount.value != null ? `Rashi ${formatINR(inc.amount.value)}.` : 'Rashi pata nahi.');
+  parts.push(inc.fraudAtDisplay.value ? `Samay ${inc.fraudAtDisplay.value}.` : 'Samay pata nahi.');
+  parts.push(inc.method.value ? `Tareeka ${inc.method.value}.` : 'Tareeka pata nahi.');
+  return parts.join(' ');
+}
+
+const EMPTY_CONFIRM: Record<GapField, ConfirmState> = { amount: 'pending', fraudAt: 'pending', method: 'pending' };
+
+// The victim's first touch, unchanged from Steps 1–5 — only the shell
+// around it is new. /report always starts a fresh report at Panic.
+// ?mode=voice|text (from the Home hero) jumps straight into Listen.
+export function ReportFlow() {
+  const [screen, setScreen] = useState<Screen>('panic');
+  const [mode, setMode] = useState<'voice' | 'text'>('voice');
+  const [transcript, setTranscript] = useState('');
+  const [interim, setInterim] = useState('');
+  const [incident, setIncident] = useState<ExtractedIncident | null>(null);
+  const [maskedTranscript, setMaskedTranscript] = useState('');
+  const [masked, setMasked] = useState(false);
+  const [gaps, setGaps] = useState<GapField[]>([]);
+  const [unknownFields, setUnknownFields] = useState<Set<GapField>>(new Set());
+  const [confirmState, setConfirmState] = useState<Record<GapField, ConfirmState>>(EMPTY_CONFIRM);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const autoStarted = useRef(false);
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const settings = useDashboard((s) => s.settings);
+  const setSettings = useDashboard((s) => s.setSettings);
+  const addIncident = useDashboard((s) => s.addIncident);
+
+  // Hero deep-link: ?mode=voice jumps straight to the mic, once.
+  useEffect(() => {
+    if (autoStarted.current) return;
+    const m = params.get('mode');
+    if (m === 'voice' || m === 'text') {
+      autoStarted.current = true;
+      setMode(m);
+      setScreen('listen');
+    }
+  }, [params]);
+
+  // Screen crossfade: 220ms, skipped entirely under reduced motion.
+  useGSAP(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    gsap.fromTo(screenRef.current, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power1.out' });
+  }, { dependencies: [screen], scope: screenRef });
+
+  function go(to: Screen) {
+    setScreen((from) => (canGo(from, to) ? to : from));
+  }
+
+  function handleTranscript(text: string) {
+    if (!text.trim()) return;
+    const { incident: inc, maskedTranscript: mt, masked: m } = extractIncident(text);
+    setIncident(inc);
+    setMaskedTranscript(mt);
+    setMasked(m);
+    setUnknownFields(new Set());
+    setConfirmState(EMPTY_CONFIRM);
+    go('extracting');
+    // A beat of "Samajh raha hoon" so the state change reads as work, not a jump.
+    window.setTimeout(() => {
+      const g = computeGaps(inc);
+      setGaps(g);
+      go(g.length > 0 ? 'gaps' : 'confirm');
+    }, 700);
+  }
+
+  // Gap answers reuse the same deterministic extractor. A bare number-word
+  // answer ("bees hazaar") gets a money cue appended, or it would not parse.
+  function mergeField(field: GapField, text: string) {
+    const cue = field === 'amount' ? `${text} rupaye` : text;
+    const { incident: g } = extractIncident(cue);
+    setIncident((prev) => {
+      if (!prev) return prev;
+      if (field === 'amount') return { ...prev, amount: g.amount.value != null ? g.amount : prev.amount };
+      if (field === 'fraudAt') return {
+        ...prev,
+        fraudAt: g.fraudAt.value ? g.fraudAt : prev.fraudAt,
+        fraudAtDisplay: g.fraudAtDisplay.value ? g.fraudAtDisplay : prev.fraudAtDisplay,
+      };
+      return { ...prev, method: g.method.value ? g.method : prev.method };
+    });
+  }
+
+  function enterConfirm() {
+    // Fields the user already said "pata nahi" to arrive pre-resolved.
+    setConfirmState((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as GapField[]).forEach((f) => {
+        if (unknownFields.has(f)) next[f] = 'unknown';
+      });
+      return next;
+    });
+    go('confirm');
+  }
+
+  function handleConfirmDone() {
+    if (!incident) return;
+    const s = toStored(incident, maskedTranscript, masked, incident.fraudAt.value, settings.caregiver);
+    s.confirmed = {
+      amount: confirmState.amount === 'yes',
+      fraudAt: confirmState.fraudAt === 'yes',
+      method: confirmState.method === 'yes',
+    };
+    s.status = 'reported';
+    addIncident(s);
+    navigate(`/incidents/${s.id}`);
+  }
+
+  function resetAll() {
+    stopSpeaking();
+    setIncident(null);
+    setTranscript('');
+    setInterim('');
+    setGaps([]);
+    setUnknownFields(new Set());
+    setConfirmState(EMPTY_CONFIRM);
+    setScreen('panic');
+  }
+
+  return (
+    <div className="db-flow">
+      <div ref={screenRef} className="screen-stack">
+        {screen === 'panic' && (
+          <PanicScreen
+            voiceSupported={recognitionSupported()}
+            caregiver={settings.caregiver}
+            onCaregiverChange={(v) => setSettings({ caregiver: v })}
+            showCalm={settings.calmPrompt}
+            ttsRate={settings.ttsRate}
+            onStartVoice={() => { setMode('voice'); go('listen'); }}
+            onStartText={() => { setMode('text'); go('listen'); }}
+            onDemo={() => handleTranscript(DEMO_TRANSCRIPT)}
+            onJudge={() => go('judge')}
+            onCall1930={() => undefined}
+          />
+        )}
+        {screen === 'listen' && (
+          <ListenScreen
+            mode={mode}
+            speechLang={settings.speechLang}
+            finalText={transcript}
+            interimText={interim}
+            onFinal={setTranscript}
+            onInterim={setInterim}
+            onStop={(t) => handleTranscript(t || transcript)}
+            onTextSubmit={handleTranscript}
+            onBack={() => go('panic')}
+          />
+        )}
+        {screen === 'extracting' && (
+          <ScreenSkeleton label="Samajh raha hoon…" hint="Aapki baat se rashi, samay aur tareeka nikaal raha hoon. Kuch second lagega." />
+        )}
+        {screen === 'gaps' && (
+          <GapsScreen
+            gaps={gaps}
+            onAnswer={mergeField}
+            onSkip={(f) => setUnknownFields((prev) => new Set(prev).add(f))}
+            onDone={enterConfirm}
+          />
+        )}
+        {screen === 'confirm' && incident && (
+          <ConfirmScreen
+            incident={incident}
+            confirmState={confirmState}
+            summaryText={summaryText(incident)}
+            onResolve={(f, r) => setConfirmState((prev) => ({ ...prev, [f]: r }))}
+            onCorrect={(f, text) => { mergeField(f, text); setConfirmState((prev) => ({ ...prev, [f]: 'pending' })); }}
+            onReopen={(f) => setConfirmState((prev) => ({ ...prev, [f]: 'pending' }))}
+            onDone={handleConfirmDone}
+          />
+        )}
+        {screen === 'judge' && <JudgeScreen onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
+      </div>
+      {screen !== 'panic' && (
+        <button type="button" className="demo-link" onClick={resetAll}>Naya report shuru karein</button>
+      )}
+    </div>
+  );
+}
