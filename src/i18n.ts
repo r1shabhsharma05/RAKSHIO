@@ -1,29 +1,37 @@
 // Dashboard chrome strings (sidebar, header, home headings, settings).
 // The victim-facing panic flow stays Hinglish by design — only the
-// dashboard chrome switches. English is the default (screenshot shows it).
-export type Lang = 'en' | 'hi';
+// dashboard chrome switches. Three locales, each complete: switching
+// must visibly change the UI (Step 9 root cause: the old Hindi dict was
+// nearly identical to English, so "Hindi" changed ~3 labels).
+// en = proper English. hi = Devanagari. hg = Hinglish (Roman Hindi).
+export type Lang = 'en' | 'hi' | 'hg';
 
 type Dict = Record<string, string>;
 
 const EN: Dict = {
   navHome: 'Home',
+  navHomeShort: 'Home',
   navReport: 'Report Fraud',
+  navReportShort: 'Report',
   navIncidents: 'Incident Dashboard',
+  navIncidentsShort: 'Incidents',
   navActions: 'Action Plan',
   navCoach: '1930 Call Coach',
   navPortal: 'Portal Assistance',
   navBank: 'Bank Alert Kit',
   navVault: 'Evidence Vault',
+  navVaultShort: 'Vault',
   navShield: 'Second-Scam Shield',
   navCare: 'Care Circle',
   navProof: 'Proof Pack & Verify',
   navSettings: 'Settings',
+  navSettingsShort: 'Settings',
   appSubtitle: 'Golden Hour Fraud Response System',
   offlineReady: 'Offline Ready (PWA)',
   online: 'Online',
-  heroTitleA: 'Panic me bhi,',
-  heroTitleB: 'sahi kadam.',
-  heroSub: 'Bolo kya hua. RAKSHIO fraud ka proof, action plan, bank alert, aur family support ready karta hai.',
+  heroTitleA: "Don't panic,",
+  heroTitleB: 'take the right step.',
+  heroSub: 'Tell us what happened. RAKSHIO prepares fraud proof, an action plan, a bank alert, and family support.',
   reportVoice: 'Report Fraud (Voice)',
   reportText: 'Report Fraud (Text)',
   clockTitle: 'Golden Hour Clock',
@@ -38,25 +46,78 @@ const EN: Dict = {
   proof: 'Proof Pack & Verify',
   followups: 'Follow-up Guardian',
   noIncident: 'No incident yet',
-  noIncidentHint: 'Report Fraud se shuru karein — RAKSHIO aapki baat se incident card banayega.',
-  startReport: 'Report Fraud shuru karein',
+  noIncidentHint: 'Start with Report Fraud — RAKSHIO will build an incident card from your words.',
+  startReport: 'Start a fraud report',
   settingsTitle: 'Settings',
   guardianTitle: 'Follow-up Guardian',
+  guideTitle: 'Situation Guide',
+  guideSub: 'What to do in every fraud situation — step by step.',
 };
 
 const HI: Dict = {
+  navHome: 'होम',
+  navHomeShort: 'होम',
+  navReport: 'धोखाधड़ी की रिपोर्ट करें',
+  navReportShort: 'रिपोर्ट',
+  navIncidents: 'घटना डैशबोर्ड',
+  navIncidentsShort: 'घटनाएँ',
+  navActions: 'कार्य योजना',
+  navCoach: '1930 कॉल कोच',
+  navPortal: 'पोर्टल सहायता',
+  navBank: 'बैंक अलर्ट किट',
+  navVault: 'साक्ष्य तिजोरी',
+  navVaultShort: 'साक्ष्य',
+  navShield: 'दूसरी ठगी से सुरक्षा',
+  navCare: 'परिवार सर्कल',
+  navProof: 'प्रमाण पैक और सत्यापन',
+  navSettings: 'सेटिंग्स',
+  navSettingsShort: 'सेटिंग्स',
+  appSubtitle: 'गोल्डन आवर धोखाधड़ी प्रतिक्रिया प्रणाली',
+  offlineReady: 'ऑफ़लाइन तैयार (PWA)',
+  online: 'ऑनलाइन',
+  heroTitleA: 'घबराएँ नहीं,',
+  heroTitleB: 'सही कदम उठाएँ।',
+  heroSub: 'बताइए क्या हुआ। RAKSHIO धोखाधड़ी का प्रमाण, कार्य योजना, बैंक अलर्ट और परिवार का सहयोग तैयार करता है।',
+  reportVoice: 'धोखाधड़ी की रिपोर्ट करें (आवाज़)',
+  reportText: 'धोखाधड़ी की रिपोर्ट करें (लिखकर)',
+  clockTitle: 'गोल्डन आवर घड़ी',
+  currentIncident: 'वर्तमान घटना',
+  quickActions: 'त्वरित कार्य',
+  actionPlan: 'आपकी कार्य योजना',
+  snapshot: 'घटना विवरण',
+  vault: 'साक्ष्य तिजोरी',
+  shield: 'दूसरी ठगी से सुरक्षा',
+  progress: 'प्रगति ट्रैकर',
+  care: 'परिवार सर्कल',
+  proof: 'प्रमाण पैक और सत्यापन',
+  followups: 'फॉलो-अप संरक्षक',
+  noIncident: 'अभी कोई घटना नहीं है',
+  noIncidentHint: 'धोखाधड़ी की रिपोर्ट से शुरू करें — RAKSHIO आपकी बात से घटना कार्ड बनाएगा।',
+  startReport: 'धोखाधड़ी की रिपोर्ट शुरू करें',
+  settingsTitle: 'सेटिंग्स',
+  guardianTitle: 'फॉलो-अप संरक्षक',
+  guideTitle: 'स्थिति मार्गदर्शिका',
+  guideSub: 'हर धोखाधड़ी की स्थिति में क्या करें — कदम-दर-कदम।',
+};
+
+const HG: Dict = {
   navHome: 'Home',
+  navHomeShort: 'Home',
   navReport: 'Fraud Report Karein',
+  navReportShort: 'Report',
   navIncidents: 'Incident Dashboard',
+  navIncidentsShort: 'Incidents',
   navActions: 'Action Plan',
   navCoach: '1930 Call Coach',
   navPortal: 'Portal Madad',
   navBank: 'Bank Alert Kit',
   navVault: 'Evidence Vault',
+  navVaultShort: 'Vault',
   navShield: 'Second-Scam Shield',
   navCare: 'Care Circle',
   navProof: 'Proof Pack aur Verify',
   navSettings: 'Settings',
+  navSettingsShort: 'Settings',
   appSubtitle: 'Golden Hour Fraud Response System',
   offlineReady: 'Offline Ready (PWA)',
   online: 'Online',
@@ -81,8 +142,17 @@ const HI: Dict = {
   startReport: 'Report Fraud shuru karein',
   settingsTitle: 'Settings',
   guardianTitle: 'Follow-up Guardian',
+  guideTitle: 'Situation Guide',
+  guideSub: 'Har situation me kya karein — step by step.',
 };
 
 export function t(lang: Lang, key: string): string {
-  return (lang === 'hi' ? HI : EN)[key] ?? EN[key] ?? key;
+  const dict = lang === 'hi' ? HI : lang === 'hg' ? HG : EN;
+  return dict[key] ?? EN[key] ?? key;
+}
+
+// Speech recognition language follows the UI language: Hinglish speakers
+// speak Hindi; only the English UI listens in English.
+export function speechLangFor(lang: Lang): 'hi-IN' | 'en-IN' {
+  return lang === 'en' ? 'en-IN' : 'hi-IN';
 }

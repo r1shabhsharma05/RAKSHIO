@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Theme } from '@astryxdesign/core/theme'
+import '@fontsource-variable/manrope'
 import './index.css'
 import './dashboard.css'
 import App from './App.tsx'

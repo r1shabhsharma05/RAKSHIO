@@ -37,7 +37,7 @@ const FOLLOWUPS_KEY = 'rakshio.followups.v1';
 const SHIELD_LAST_KEY = 'rakshio.shield-last.v1';
 
 export interface Settings {
-  language: 'en' | 'hi';
+  language: 'en' | 'hi' | 'hg';
   calmPrompt: boolean;
   caregiver: boolean;
   ttsRate: number;
@@ -45,7 +45,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  language: 'en',
+  language: 'hg',
   calmPrompt: true,
   caregiver: false,
   ttsRate: 0.85,
@@ -137,7 +137,12 @@ export function setActiveId(id: string | null): void {
 }
 
 export function loadSettings(): Settings {
-  return { ...DEFAULT_SETTINGS, ...(read<Settings>(SETTINGS_KEY) ?? {}) };
+  const stored: Partial<Settings> = read<Settings>(SETTINGS_KEY) ?? {};
+  const settings = { ...DEFAULT_SETTINGS, ...stored };
+  // One-time migration (Step 10): the old 'en' dictionary was Hinglish
+  // strings, so a stored 'en' means the user saw Hinglish — keep it.
+  if (stored.language === 'en') settings.language = 'hg';
+  return settings;
 }
 
 export function saveSettings(s: Settings): void {

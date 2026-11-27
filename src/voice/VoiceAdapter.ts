@@ -4,7 +4,7 @@
 export interface ListenCallbacks {
   onFinal: (transcript: string) => void;
   onInterim: (transcript: string) => void;
-  onError: (kind: 'denied' | 'unavailable' | 'other') => void;
+  onError: (kind: 'denied' | 'network' | 'no-mic' | 'no-speech' | 'other') => void;
 }
 
 export const CALM_RATE = 0.85;
@@ -45,8 +45,15 @@ export function createListener(lang: 'hi-IN' | 'en-IN', cb: ListenCallbacks): { 
     if (interim) cb.onInterim(interim);
   };
   rec.onerror = (e) => {
+    // Distinct kinds so the UI can say exactly what is wrong — a denied
+    // mic, an unreachable speech service, and "no speech heard" are three
+    // different problems with three different fixes.
     const err = (e as unknown as { error?: string }).error;
-    cb.onError(err === 'not-allowed' || err === 'service-not-allowed' ? 'denied' : 'other');
+    if (err === 'not-allowed' || err === 'service-not-allowed') cb.onError('denied');
+    else if (err === 'network') cb.onError('network');
+    else if (err === 'audio-capture') cb.onError('no-mic');
+    else if (err === 'no-speech') cb.onError('no-speech');
+    else cb.onError('other');
   };
   rec.onend = () => {
     // A session also ends on silence; restart while the user is still talking.
@@ -68,6 +75,67 @@ export function createListener(lang: 'hi-IN' | 'en-IN', cb: ListenCallbacks): { 
       try { rec.stop(); } catch { /* already stopped */ }
     },
   };
+}
+
+// Mic permission + a REAL input level meter. getUserMedia forces the browser
+// permission prompt before recognition starts, so a denied mic is caught
+// here with a clear reason instead of failing silently inside recognition.
+// The meter reads the live AnalyserNode — never a fake/static waveform:
+// if the analyser cannot be built, meter is null and the caller shows no
+// meter at all (listening still works).
+export interface MicMeter {
+  level: () => number;
+  stop: () => void;
+}
+
+export type MicAccess =
+  | { ok: true; meter: MicMeter | null }
+  | { ok: false; reason: 'denied' | 'unavailable' };
+
+export async function requestMicAccess(): Promise<MicAccess> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return { ok: false, reason: 'unavailable' };
+  }
+  let stream: MediaStream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    const name = (e as { name?: string }).name;
+    return { ok: false, reason: name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'unavailable' };
+  }
+  // Permission granted. The meter is best-effort: if the audio graph cannot
+  // be built (e.g. a stubbed stream in tests), listening still proceeds.
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return { ok: true, meter: null };
+    const ctx = new Ctx();
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    src.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    return {
+      ok: true,
+      meter: {
+        level() {
+          analyser.getByteTimeDomainData(data);
+          let peak = 0;
+          for (let i = 0; i < data.length; i++) {
+            const v = Math.abs(data[i] - 128) / 128;
+            if (v > peak) peak = v;
+          }
+          return peak;
+        },
+        stop() {
+          stream.getTracks().forEach((track) => track.stop());
+          void ctx.close().catch(() => undefined);
+        },
+      },
+    };
+  } catch {
+    stream.getTracks().forEach((track) => track.stop());
+    return { ok: true, meter: null };
+  }
 }
 
 export function speak(text: string, opts: { rate?: number; lang?: string } = {}): void {

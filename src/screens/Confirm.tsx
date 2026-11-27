@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { ExtractedIncident } from '../engines/understanding/extract';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
@@ -8,8 +8,10 @@ export type ConfirmState = 'pending' | 'yes' | 'unknown';
 export type GapField = 'amount' | 'fraudAt' | 'method';
 
 // The confirmation gate: the incident card stays LOCKED until amount, time
-// and method are each confirmed or explicitly marked "pata nahi". The app
-// reads the summary aloud (slow TTS) and shows it in large text.
+// and method are each confirmed or explicitly marked "pata nahi". The
+// summary is shown in large text; "Summary suniye" reads it aloud only
+// on tap — TTS never starts on its own (Step 10: the auto-readback
+// startled users the same way the calm card did).
 export function ConfirmScreen({
   incident,
   confirmState,
@@ -29,15 +31,19 @@ export function ConfirmScreen({
 }) {
   const [correcting, setCorrecting] = useState<GapField | null>(null);
   const [correction, setCorrection] = useState('');
-  const spokenRef = useRef(false);
+  const [speaking, setSpeaking] = useState(false);
 
-  useEffect(() => {
-    if (!spokenRef.current) {
-      spokenRef.current = true;
-      speak(summaryText, { rate: CALM_RATE });
+  useEffect(() => () => stopSpeaking(), []);
+
+  function toggleSpeak() {
+    if (speaking) {
+      stopSpeaking();
+      setSpeaking(false);
+      return;
     }
-    return () => stopSpeaking();
-  }, [summaryText]);
+    speak(summaryText, { rate: CALM_RATE });
+    setSpeaking(true);
+  }
 
   const allResolved = (Object.values(confirmState) as ConfirmState[]).every((s) => s !== 'pending');
 
@@ -57,6 +63,14 @@ export function ConfirmScreen({
     <>
       <h1>Kya ye sahi hai?</h1>
       <p>Sunn kar ya padh kar batayein — jo galat ho, use sahi karenge.</p>
+      <button
+        type="button"
+        className="rk-primary-btn"
+        onClick={toggleSpeak}
+        aria-pressed={speaking}
+      >
+        {speaking ? 'Bolna band karein' : 'Summary suniye'}
+      </button>
 
       {(Object.keys(labels) as GapField[]).map((field) => (
         <section className="rk-card" key={field}>

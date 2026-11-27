@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
@@ -10,15 +10,13 @@ import { MicIcon } from './shared';
 // the screen (live bug: the whole Panic screen re-rendered every second).
 // The countdown is plain text, NOT part of the button label, so the button
 // itself never re-renders on a tick.
+// TTS never starts on its own: the card used to read itself aloud on
+// mount, which startled users mid-panic. "Suniye" speaks only on tap.
 function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => void }) {
   const [secondsLeft, setSecondsLeft] = useState(10);
-  const spokenRef = useRef(false);
+  const [speaking, setSpeaking] = useState(false);
 
   useEffect(() => {
-    if (!spokenRef.current) {
-      spokenRef.current = true;
-      speak('Aap safe hain. Abhi kisi ko OTP ya paisa mat dijiye.', { rate: ttsRate });
-    }
     const t = window.setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -37,14 +35,34 @@ function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ttsRate]);
 
+  function toggleSpeak() {
+    if (speaking) {
+      stopSpeaking();
+      setSpeaking(false);
+      return;
+    }
+    speak('Aap safe hain. Abhi kisi ko OTP ya paisa mat dijiye.', { rate: ttsRate });
+    setSpeaking(true);
+  }
+
   return (
     <section className="calm-card" aria-live="polite">
       <h2>Aap safe hain</h2>
       <p>Abhi kisi ko OTP ya paisa mat dijiye. Saans lijiye — hum ek-ek kadam karenge.</p>
       <p className="note" aria-live="off">{secondsLeft} second me ye card band ho jayega.</p>
-      <button type="button" className="rk-primary-btn" onClick={onDismiss}>
-        Aage badhein
-      </button>
+      <div className="chip-row">
+        <button type="button" className="rk-primary-btn" onClick={onDismiss}>
+          Aage badhein
+        </button>
+        <button
+          type="button"
+          className="rk-primary-btn"
+          onClick={toggleSpeak}
+          aria-pressed={speaking}
+        >
+          {speaking ? 'Bolna band karein' : 'Suniye'}
+        </button>
+      </div>
     </section>
   );
 }

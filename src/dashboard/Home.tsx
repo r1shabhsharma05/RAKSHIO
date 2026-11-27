@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
-import { ShieldLogo } from './Shell';
+import { ShieldLogo } from './GlassShell';
 import { GoldenHourRing } from './GoldenHour';
 import { ProgressTracker } from './Progress';
 import { FollowUpList } from './FollowUp';
@@ -404,6 +404,9 @@ export function HomePage() {
         <button type="button" className="db-btn db-btn-outline" onClick={() => navigate('/shield')}>
           <Search size={18} aria-hidden="true" /> Check a Message / Number
         </button>
+        <Link to="/guide" className="db-btn db-btn-ghost">
+          Situation Guide — har situation me kya karein <ArrowRight size={16} aria-hidden="true" />
+        </Link>
       </section>
 
       {/* Care Circle */}
