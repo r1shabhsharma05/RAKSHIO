@@ -86,11 +86,11 @@ export function ListenScreen({
           {emptyStop && (
             <p className="step2-note" role="alert">Kuch suna nahi gaya — dobara boliye, ya neeche likh kar batayein.</p>
           )}
-          <p style={{ fontSize: '0.875rem' }}>Mic band karne ke baad hum samjhenge kya hua.</p>
+          <p className="note">Mic band karne ke baad hum samjhenge kya hua.</p>
         </>
       ) : (
         <>
-          <label htmlFor="listen-text" style={{ fontWeight: 600 }}>Kya hua, apne shabdon me likhiye</label>
+          <label htmlFor="listen-text" className="rk-label">Kya hua, apne shabdon me likhiye</label>
           <textarea
             id="listen-text"
             className="rk-input"

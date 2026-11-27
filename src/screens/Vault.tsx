@@ -4,6 +4,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import type { StoredIncident } from '../state/store';
 import { addEvidence, listEvidence, tamperRecord, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
 import { BackButton, NoReportBanner } from './shared';
+import { useToast } from '../components/Toast';
 
 // Evidence Vault: capture screenshots/SMS/notes, hash-chained in IndexedDB.
 // Verify turns the chain green — or red, naming the tampered record.
@@ -15,7 +16,9 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
   const [label, setLabel] = useState('');
   const [text, setText] = useState('');
   const [verify, setVerify] = useState<{ ok: boolean; brokenAt?: number; count: number } | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const [tampered, setTampered] = useState(false);
+  const showToast = useToast();
 
   async function refresh() {
     setRows(await listEvidence(stored.id));
@@ -32,6 +35,7 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
     setLabel('');
     setVerify(null);
     await refresh();
+    showToast('Saboot save ho gaya');
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -51,7 +55,12 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
   }
 
   async function onVerify() {
-    setVerify(await verifyChain(stored.id));
+    setVerifying(true);
+    try {
+      setVerify(await verifyChain(stored.id));
+    } finally {
+      setVerifying(false);
+    }
   }
 
   async function onTamperTest() {
@@ -71,39 +80,39 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
 
       <section className="rk-card">
         <h2>Naya saboot jodein</h2>
-        <label htmlFor="ev-kind" style={{ fontWeight: 600 }}>Kis type ka saboot?</label>
+        <label htmlFor="ev-kind" className="rk-label">Kis type ka saboot?</label>
         <select id="ev-kind" className="rk-input" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
           <option value="sms">SMS / Message</option>
           <option value="screenshot">Screenshot (text)</option>
           <option value="note">Note</option>
           <option value="file">File / Photo</option>
         </select>
-        <label htmlFor="ev-label" style={{ fontWeight: 600 }}>Label</label>
+        <label htmlFor="ev-label" className="rk-label">Label</label>
         <input id="ev-label" className="rk-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Jaise: Fraud SMS, Bank statement" />
         {kind === 'file' ? (
           <input type="file" accept="image/*" onChange={onFile} aria-label="Photo ya file chunein" />
         ) : (
           <>
-            <label htmlFor="ev-text" style={{ fontWeight: 600 }}>Text</label>
+            <label htmlFor="ev-text" className="rk-label">Text</label>
             <textarea id="ev-text" className="rk-input" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="SMS ya note yahan likhein ya paste karein" />
           </>
         )}
-        <p style={{ fontSize: '0.875rem' }}>OTP/PIN aur card/Aadhaar number save karne se pehle chhupa diye jayenge.</p>
+        <p className="note">OTP/PIN aur card/Aadhaar number save karne se pehle chhupa diye jayenge.</p>
         <button type="button" className="rk-primary-btn" disabled={kind !== 'file' && text.trim().length < 1} onClick={add}>Vault me save karein</button>
       </section>
 
       <section className="rk-card">
         <h2>Saved evidence ({rows.length})</h2>
-        {rows.length === 0 && <p>Abhi koi saboot nahi hai.</p>}
+        {rows.length === 0 && <p className="note">Abhi koi saboot nahi hai. Upar SMS ya note likh kar “Vault me save karein” dabaiye — har entry ka hash banta hai.</p>}
         {rows.map((r) => (
           <div key={r.id} className="field-row">
-            <span className="label">[{r.kind}] {r.label}{r.byCaregiver ? ' (caregiver)' : ''}<br /><span style={{ fontWeight: 400, fontSize: '0.9375rem' }}>{r.text.slice(0, 120)}</span></span>
-            <span className="value" style={{ fontSize: '0.875rem', fontWeight: 400 }}>{r.hash.slice(0, 12)}…</span>
+            <span className="label">[{r.kind}] {r.label}{r.byCaregiver ? ' (caregiver)' : ''}<br /><span className="ev-text">{r.text.slice(0, 120)}</span></span>
+            <span className="value ev-hash">{r.hash.slice(0, 12)}…</span>
           </div>
         ))}
-        <Button label="Chain verify karein" variant="secondary" size="lg" width="100%" onClick={onVerify} />
+        <Button label={verifying ? 'Check ho raha hai…' : 'Chain verify karein'} variant="secondary" size="lg" width="100%" isDisabled={verifying} onClick={onVerify} />
         {verify && (
-          <p role="status" style={{ fontWeight: 700, color: verify.ok ? '#16a34a' : '#dc2626' }}>
+          <p role="status" className={verify.ok ? 'status-ok' : 'status-bad'}>
             {verify.ok
               ? `✓ Chain sahi hai — ${verify.count} entries, koi badlaav nahi.`
               : `✗ Chain TOOTI — record #${verify.brokenAt} badla gaya hai. (${verify.count} entries)`}
@@ -112,7 +121,7 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
         {rows.length > 0 && (
           <Button label="Tamper test (demo) — pehli entry badal kar dekhein" variant="ghost" size="lg" width="100%" onClick={onTamperTest} />
         )}
-        {tampered && <p style={{ fontSize: '0.875rem' }}>Tamper test: pehli entry ko bina hash badle edit kiya gaya. Verify ab laal hona chahiye.</p>}
+        {tampered && <p className="note">Tamper test: pehli entry ko bina hash badle edit kiya gaya. Verify ab laal hona chahiye.</p>}
       </section>
       {rows.length > 0 && <p><Badge label="Hash-chained • SHA-256" variant="success" /></p>}
       <BackButton onBack={onBack} />

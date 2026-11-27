@@ -26,7 +26,7 @@ export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBac
           </div>
         ))}
       </section>
-      <p style={{ fontSize: '0.875rem' }}>
+      <p className="note">
         {r.path === 'lost-money'
           ? 'Paisa gaya hai isliye 1930 sabse pehle — fund freeze ka chance pehle ghante me sabse zyada hota hai.'
           : r.path === 'attempted-fraud'

@@ -47,7 +47,7 @@ export function GapsScreen({
   return (
     <>
       <NoReportBanner />
-      <p style={{ fontSize: '0.875rem' }}>Sawaal {index + 1} / {gaps.length}</p>
+      <p className="note">Sawaal {index + 1} / {gaps.length}</p>
       <h1>{q}</h1>
       <VoiceInput value={answer} onChange={setAnswer} placeholder={hint} label="Jawaab" />
       <button

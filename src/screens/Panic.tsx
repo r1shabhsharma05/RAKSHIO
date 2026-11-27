@@ -80,8 +80,7 @@ export function PanicScreen({
       <section className="rk-card emergency-row" aria-label="Emergency">
         <h2>Turant madad</h2>
         <Button label="1930 par call karein" variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCall1930} />
-        <Button label="Bank helpline (Step 2 me aayega)" variant="secondary" size="lg" width="100%" isDisabled />
-        <Button label="Parivar ko alert karein (Step 2 me aayega)" variant="secondary" size="lg" width="100%" isDisabled />
+        <p className="note">Bank helpline aur parivar ko alert karna aage ke kadam me aayega.</p>
       </section>
 
       <label className="caregiver-toggle">

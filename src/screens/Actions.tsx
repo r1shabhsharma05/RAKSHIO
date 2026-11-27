@@ -59,16 +59,16 @@ export function ActionsScreen({
       </div>
 
       <h2>Aage ke kadam — pehle sabse zaroori</h2>
-      <div ref={cardsRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div ref={cardsRef} className="card-stack">
         {actions.map((a, i) => (
           <section className="rk-card action-card" key={a.id}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="row-between">
               <h3>{i + 1}. {a.title}</h3>
               {a.urgent && <span className="badge-wrap"><Badge label="Turant" variant="warning" /></span>}
             </div>
             <p className="why">{a.why}</p>
             {a.id === 'stop' && (
-              <p style={{ fontSize: '1rem' }}>
+              <p>
                 1. Bank app kholein — card/UPI block karein. 2. UPI PIN badlein. 3. Kisi ko OTP mat dijiye.
               </p>
             )}

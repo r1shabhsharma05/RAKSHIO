@@ -42,7 +42,7 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
           <section className="rk-card">
             <h2>SOS card preview</h2>
             <p className="script-box">{sosText}</p>
-            <label htmlFor="care-number" style={{ fontWeight: 600 }}>Parivar ka WhatsApp number</label>
+            <label htmlFor="care-number" className="rk-label">Parivar ka WhatsApp number</label>
             <input
               id="care-number"
               className="rk-input"
@@ -51,7 +51,7 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
               onChange={(e) => setNumber(e.target.value)}
               placeholder="Jaise: 98765 43210"
             />
-            <p style={{ fontSize: '0.875rem' }}>Ye number save nahi hota — sirf link banane ke liye use hota hai.</p>
+            <p className="note">Ye number save nahi hota — sirf link banane ke liye use hota hai.</p>
             {waLink && (
               <a className="rk-primary-btn" href={waLink}>WhatsApp par SOS bhejein</a>
             )}
@@ -60,7 +60,7 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
           <section className="rk-card">
             <h2>Offline QR SOS card</h2>
             <p>Internet na ho to ye QR dikhayein — scan karne par SOS text mil jayega.</p>
-            {qr && <img src={qr} alt="SOS card QR code" style={{ width: '16rem', height: '16rem', alignSelf: 'center' }} />}
+            {qr && <img src={qr} alt="SOS card QR code" className="qr-img" />}
           </section>
         </>
       )}

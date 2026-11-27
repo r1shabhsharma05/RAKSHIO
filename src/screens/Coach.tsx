@@ -81,7 +81,7 @@ export function CoachScreen({
         </>
       )}
 
-      <p style={{ fontSize: '1rem' }}>Line busy ho to 2 minute baad dobara try karein. Call ke baad 24 ghante me portal complaint poori karein: <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a></p>
+      <p>Line busy ho to 2 minute baad dobara try karein. Call ke baad 24 ghante me portal complaint poori karein: <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a></p>
       <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />
     </>
   );

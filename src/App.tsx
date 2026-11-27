@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -14,15 +14,20 @@ import { ConfirmScreen, type ConfirmState } from './screens/Confirm';
 import { IncidentScreen } from './screens/Incident';
 import { ActionsScreen } from './screens/Actions';
 import { CoachScreen } from './screens/Coach';
-import { VaultScreen } from './screens/Vault';
 import { ShieldScreen } from './screens/Shield';
 import { TriageScreen } from './screens/Triage';
 import { BankKitScreen } from './screens/BankKit';
-import { CareScreen } from './screens/Care';
-import { ProofScreen } from './screens/Proof';
 import { JudgeScreen } from './screens/Judge';
 import { AckBridgeScreen } from './screens/AckBridge';
-import { formatINR } from './screens/shared';
+import { formatINR, ScreenSkeleton } from './screens/shared';
+
+// Heavy screens load on demand, not on first paint: Proof pulls pdf-lib +
+// JSZip + QR, Vault pulls Dexie, Care pulls QR. Everything else in the
+// first-load bundle is the panic path. Suspense shows a skeleton, never
+// a blank gap.
+const VaultScreen = lazy(() => import('./screens/Vault').then((m) => ({ default: m.VaultScreen })));
+const ProofScreen = lazy(() => import('./screens/Proof').then((m) => ({ default: m.ProofScreen })));
+const CareScreen = lazy(() => import('./screens/Care').then((m) => ({ default: m.CareScreen })));
 
 gsap.registerPlugin(useGSAP);
 
@@ -171,7 +176,7 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <div ref={screenRef} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div ref={screenRef} className="screen-stack">
           {screen === 'panic' && (
             <PanicScreen
               voiceSupported={recognitionSupported()}
@@ -197,10 +202,7 @@ export default function App() {
             />
           )}
           {screen === 'extracting' && (
-            <section className="rk-card" aria-live="polite">
-              <h1>Samajh raha hoon…</h1>
-              <p>Aapki baat se rashi, samay aur tareeka nikaal raha hoon. Kuch second lagega.</p>
-            </section>
+            <ScreenSkeleton label="Samajh raha hoon…" hint="Aapki baat se rashi, samay aur tareeka nikaal raha hoon. Kuch second lagega." />
           )}
           {screen === 'gaps' && (
             <GapsScreen
@@ -230,12 +232,12 @@ export default function App() {
           {screen === 'coach' && stored && (
             <CoachScreen stored={stored} onCallTap={logCallTap} onDone={logCallTap} onOpenAck={() => go('ack')} onBack={() => go('actions')} />
           )}
-          {screen === 'vault' && stored && <VaultScreen stored={stored} caregiver={caregiver} onBack={() => go('incident')} />}
+          {screen === 'vault' && stored && <Suspense fallback={<ScreenSkeleton label="Evidence Vault khul raha hai…" />}><VaultScreen stored={stored} caregiver={caregiver} onBack={() => go('incident')} /></Suspense>}
           {screen === 'shield' && <ShieldScreen onBack={() => go('incident')} />}
           {screen === 'triage' && stored && <TriageScreen stored={stored} onBack={() => go('incident')} />}
           {screen === 'bank' && stored && <BankKitScreen stored={stored} onBack={() => go('incident')} />}
-          {screen === 'care' && stored && <CareScreen stored={stored} onBack={() => go('incident')} />}
-          {screen === 'proof' && stored && <ProofScreen stored={stored} onBack={() => go('incident')} />}
+          {screen === 'care' && stored && <Suspense fallback={<ScreenSkeleton label="Care Circle khul raha hai…" />}><CareScreen stored={stored} onBack={() => go('incident')} /></Suspense>}
+          {screen === 'proof' && stored && <Suspense fallback={<ScreenSkeleton label="Proof Pack khul raha hai…" />}><ProofScreen stored={stored} onBack={() => go('incident')} /></Suspense>}
           {screen === 'judge' && <JudgeScreen onStart={() => handleTranscript(DEMO_TRANSCRIPT)} />}
           {screen === 'ack' && stored && <AckBridgeScreen stored={stored} onBack={() => go('incident')} />}
         </div>

@@ -66,14 +66,14 @@ export function ConfirmScreen({
             <span className={display(field) === 'Pata nahi' ? 'value unknown' : 'value'}>{display(field)}</span>
           </div>
           {confirmState[field] === 'pending' && correcting !== field && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="field-col">
               <button type="button" className="rk-primary-btn" onClick={() => onResolve(field, 'yes')}>Haan, sahi hai</button>
               <Button label="Galat hai" variant="secondary" size="lg" width="100%" onClick={() => { setCorrecting(field); setCorrection(''); }} />
               <Button label="Pata nahi" variant="ghost" size="lg" width="100%" onClick={() => onResolve(field, 'unknown')} />
             </div>
           )}
           {correcting === field && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="field-col">
               <VoiceInput value={correction} onChange={setCorrection} placeholder="Sahi jaankari boliye ya likhiye" label="Sahi karein" />
               <button
                 type="button"
@@ -87,7 +87,7 @@ export function ConfirmScreen({
             </div>
           )}
           {confirmState[field] !== 'pending' && correcting !== field && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="row-between">
               <span>{confirmState[field] === 'yes' ? '✓ Sahi hai' : 'Pata nahi — aage badhenge'}</span>
               <Button label="Badlein" variant="ghost" size="lg" onClick={() => onReopen(field)} />
             </div>
@@ -96,7 +96,7 @@ export function ConfirmScreen({
       ))}
 
       <button type="button" className="rk-primary-btn" disabled={!allResolved} onClick={onDone}>Ye sahi hai — aage badhein</button>
-      {!allResolved && <p style={{ fontSize: '0.875rem' }}>Teeno sawaal ka jawaab dijiye — phir aage badh sakte hain.</p>}
+      {!allResolved && <p className="note">Teeno sawaal ka jawaab dijiye — phir aage badh sakte hain.</p>}
     </>
   );
 }

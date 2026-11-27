@@ -21,7 +21,7 @@ export function JudgeScreen({ onStart }: { onStart: () => void }) {
           <li>Proof Pack: PDF/ZIP download hota hai.</li>
         </ul>
       </section>
-      <p style={{ fontSize: '0.875rem' }}>Judge Mode sirf demo ke liye hai — asli incident Panic screen se shuru karein.</p>
+      <p className="note">Judge Mode sirf demo ke liye hai — asli incident Panic screen se shuru karein.</p>
     </>
   );
 }

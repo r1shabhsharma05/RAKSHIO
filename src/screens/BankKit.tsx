@@ -21,7 +21,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
       <p>Bank ko suchit karein — dispute darj hoga, aur reference number milega.</p>
 
       <section className="rk-card">
-        <label htmlFor="bank-select" style={{ fontWeight: 600 }}>Bank chunein</label>
+        <label htmlFor="bank-select" className="rk-label">Bank chunein</label>
         <select id="bank-select" className="rk-input" value={selected} onChange={(e) => setSelected(e.target.value)}>
           {BANKS.map((b) => (
             <option key={b.name} value={b.name}>{b.name}</option>
@@ -43,9 +43,9 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
 
       <section className="rk-card">
         <h2>Bank ko draft (review karke bhejein)</h2>
-        <p style={{ fontSize: '0.875rem', fontWeight: 700 }}>Bhejne se pehle padh lein — RAKSHIO ye draft kahin nahi bhejta.</p>
+        <p className="note-strong">Bhejne se pehle padh lein — RAKSHIO ye draft kahin nahi bhejta.</p>
         <textarea className="rk-input" rows={8} value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Bank draft" />
-        <label htmlFor="bank-ref" style={{ fontWeight: 600 }}>Bank reference number (call ke baad milega)</label>
+        <label htmlFor="bank-ref" className="rk-label">Bank reference number (call ke baad milega)</label>
         <input
           id="bank-ref"
           className="rk-input"

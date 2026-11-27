@@ -54,7 +54,7 @@ export function IncidentScreen({
           <p className="step2-note" role="alert">Aapne OTP/PIN share kiya tha — turant card/UPI block karein, aur kisi ko OTP mat dijiye.</p>
         )}
         {stored.maskedCredentials && (
-          <p style={{ fontSize: '0.875rem' }}>OTP/PIN wale number chhupakar save kiye gaye hain — RAKSHIO kabhi OTP/PIN store nahi karta.</p>
+          <p className="note">OTP/PIN wale number chhupakar save kiye gaye hain — RAKSHIO kabhi OTP/PIN store nahi karta.</p>
         )}
       </section>
 

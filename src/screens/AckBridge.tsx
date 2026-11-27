@@ -3,7 +3,8 @@ import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { loadAck, portalCopyDeck, portalDeadline, saveAck } from '../engines/ack/ack';
 import { formatDuration } from '../engines/orchestrator/clock';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton, NoReportBanner, copyText } from './shared';
+import { useToast } from '../components/Toast';
 
 // Ack Bridge: 1930 call ke baad mila acknowledgement number yahan bharein —
 // 24 ghante ka portal countdown shuru hota hai, aur Portal Copy Deck
@@ -12,7 +13,7 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
   const [ackNumber, setAckNumber] = useState('');
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
-  const [copied, setCopied] = useState<string | null>(null);
+  const showToast = useToast();
 
   useEffect(() => {
     const a = loadAck();
@@ -31,13 +32,13 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
   const remaining = deadline ? deadline.getTime() - now.getTime() : null;
   const deck = portalCopyDeck(stored, savedAt ? { ackNumber, calledAt: savedAt, incidentId: stored.id } : null);
 
+  // One feedback mechanism for copy: the toast. The old inline label flip
+  // ("Copy hua ✓") is gone — two mechanisms for one job was noise.
   async function copy(value: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(label);
-      window.setTimeout(() => setCopied(null), 2000);
-    } catch {
-      setCopied(null);
+    if (await copyText(value)) {
+      showToast(`Copy ho gaya: ${label}`);
+    } else {
+      showToast('Copy nahi ho paya — text ko lamba dabakar copy karein');
     }
   }
 
@@ -49,7 +50,7 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
 
       <section className="rk-card">
         <h2>Acknowledgement number</h2>
-        <label htmlFor="ack-input" style={{ fontWeight: 600 }}>Ack number (1930 call se)</label>
+        <label htmlFor="ack-input" className="rk-label">Ack number (1930 call se)</label>
         <input id="ack-input" className="rk-input" value={ackNumber} onChange={(e) => setAckNumber(e.target.value)} placeholder="Jaise: 1930XXXXXXXX" />
         <button
           type="button"
@@ -59,12 +60,13 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
             const at = new Date().toISOString();
             saveAck({ ackNumber: ackNumber.trim(), calledAt: at, incidentId: stored.id });
             setSavedAt(at);
+            showToast('Ack number save ho gaya');
           }}
         >
           Save karein
         </button>
         {deadline && remaining !== null && (
-          <p role="timer" style={{ fontWeight: 700, color: remaining <= 0 ? '#dc2626' : '#0369a1' }}>
+          <p role="timer" className={remaining <= 0 ? 'timer-overdue' : 'timer-left'}>
             Portal ke liye bacha samay: {remaining <= 0 ? 'Samay khatm — phir bhi complaint karein' : formatDuration(remaining)}
           </p>
         )}
@@ -72,11 +74,11 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
 
       <section className="rk-card">
         <h2>Portal Copy Deck — cybercrime.gov.in</h2>
-        <p style={{ fontSize: '0.875rem' }}>Har row ko copy karke portal form me paste karein. Dobara yaad se bharne ki zaroorat nahi.</p>
+        <p className="note">Har row ko copy karke portal form me paste karein. Dobara yaad se bharne ki zaroorat nahi.</p>
         {deck.map((row) => (
           <div key={row.label} className="field-row">
             <span className="label">{row.label}: {row.value}</span>
-            <Button label={copied === row.label ? 'Copy hua ✓' : 'Copy'} variant="secondary" size="lg" onClick={() => copy(row.value, row.label)} />
+            <Button label="Copy" variant="secondary" size="lg" onClick={() => copy(row.value, row.label)} />
           </div>
         ))}
         <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in kholein</a>
