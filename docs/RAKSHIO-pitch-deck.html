@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>RAKSHIO — Pitch Deck</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #0c4a6e; }
+  .slide {
+    width: 960px; height: 540px; padding: 56px 64px;
+    page-break-after: always; break-after: page;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .slide::after {
+    content: 'RAKSHIO'; position: absolute; bottom: 18px; right: 28px;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #38bdf8;
+  }
+  .kicker { font-size: 14px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #0369a1; margin-bottom: 16px; }
+  h1 { font-size: 56px; line-height: 1.05; margin-bottom: 16px; }
+  h2 { font-size: 40px; line-height: 1.1; margin-bottom: 18px; }
+  p, li { font-size: 21px; line-height: 1.45; }
+  ul { padding-left: 26px; }
+  li { margin-bottom: 10px; }
+  .tag { font-size: 24px; color: #0369a1; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; }
+  .card { background: #f0f9ff; border: 1px solid #e7eff5; border-radius: 12px; padding: 18px 20px; }
+  .card h3 { font-size: 20px; margin-bottom: 6px; }
+  .card p { font-size: 17px; }
+  .warn { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 12px; padding: 16px 20px; font-size: 19px; }
+  .num { font-size: 44px; font-weight: 800; color: #0369a1; }
+  .foot { font-size: 14px; color: #0369a1; margin-top: 20px; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: 960px 540px; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<section class="slide">
+  <div class="kicker">Scaler × Wispr Flow — India Runs on Voice · Round 2 · Track 5 Everyday Access</div>
+  <h1>RAKSHIO</h1>
+  <p class="tag">Fraud Golden Hour Response System</p>
+  <p style="margin-top:18px">Voice-first companion for the first hour after cyber fraud.</p>
+  <p class="tag" style="margin-top:8px">Panic me bhi, sahi kadam.</p>
+  <p class="foot">Solo entry · Rishabh · November 2026</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">01 · Problem</div>
+  <h2>The first 60 minutes decide everything — and panic wastes them</h2>
+  <ul>
+    <li>After UPI fraud, the victim panics. They don't know the amount, date, UTR — or that <b>1930</b> exists.</li>
+    <li>Reporting fast matters: 1930 recommends reporting within <b>48 hours</b>; the portal complaint within <b>24 hours</b>; RBI zero liability if the bank is told within <b>3 working days</b>.</li>
+    <li>While panicking, victims fall for a <b>second scam</b> — fake "recovery agents" who charge a fee and vanish.</li>
+    <li>Existing tools are screen-first forms. A scared, low-literacy user cannot fill a form.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <div class="kicker">02 · Users</div>
+  <h2>Who it's for</h2>
+  <div class="grid">
+    <div class="card"><h3>Elderly smartphone users</h3><p>Can talk, can't navigate forms. Large text, one action per screen.</p></div>
+    <div class="card"><h3>First-time UPI users</h3><p>Fraud is their first encounter with banking disputes.</p></div>
+    <div class="card"><h3>Low digital literacy</h3><p>Hindi/Hinglish voice in, plain-language steps out.</p></div>
+    <div class="card"><h3>Families &amp; caregivers</h3><p>Caregiver Mode + Care Circle SOS — someone trusted helps.</p></div>
+  </div>
+  <p class="foot">Pilot target: 100 users, Mathura, Dec 2026–Jan 2027 (target to evaluate, not a guaranteed outcome).</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">03 · Product</div>
+  <h2>One core flow, done by speaking</h2>
+  <ul>
+    <li><b>Boliye kya hua?</b> — 1–2 minutes of free speech, Hindi/Hinglish. No login, no form.</li>
+    <li><b>Samajh raha hoon</b> — deterministic extraction: amount, time, UTR, bank, fraud type. Nothing guessed.</li>
+    <li><b>Kya ye sahi hai?</b> — the app reads it back; the card locks only when the victim confirms.</li>
+    <li><b>Golden Hour Clock</b> — live countdowns to the 1930 / portal / bank deadlines; the action queue re-orders itself.</li>
+    <li><b>1930 Call Coach</b> — a 30-second script written from the confirmed facts.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <div class="kicker">04 · What makes it different</div>
+  <h2>Five differentiators</h2>
+  <div class="grid">
+    <div class="card"><h3>Golden Hour Clock</h3><p>Deadlines as data, with sources. Actions re-order as time runs out.</p></div>
+    <div class="card"><h3>Ack Bridge + Portal Copy Deck</h3><p>1930 ack number in, 24h countdown on, portal fields copy-ready.</p></div>
+    <div class="card"><h3>Tamper-evident Evidence Chain</h3><p>SHA-256 hash-chained vault. Edit a record and Verify turns red.</p></div>
+    <div class="card"><h3>Smart Triage Router</h3><p>Money lost → 1930/bank/portal. Attempted fraud → Chakshu (30 days).</p></div>
+    <div class="card"><h3>Second-Scam Shield 2.0</h3><p>Weighted red-flag rules + Truth Card. 50-message test set: 100%.</p></div>
+    <div class="card"><h3>Zero-key, on-device</h3><p>No backend, no keys, no server. Starts anywhere, works offline.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">05 · Demo — what it does</div>
+  <h2>Working prototype, today</h2>
+  <ul>
+    <li>Full voice loop + confirmation gate + incident card + timeline.</li>
+    <li>Evidence Vault, Ack Bridge, Triage, Shield, Bank Alert Kit, Care Circle, Proof Pack (PDF/ZIP + root-hash QR).</li>
+    <li><b>Judge Mode:</b> one button runs the seeded ₹20,000 UPI scenario — no mic needed.</li>
+  </ul>
+  <div class="warn" style="margin-top:18px"><b>What it does NOT do:</b> it never files a report, never guarantees recovery, never asks for or stores OTP / PIN / CVV.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">06 · Launch plan</div>
+  <h2>From prototype to pilot</h2>
+  <ul>
+    <li><b>Dec 2026 – Jan 2027:</b> 100-user pilot, Mathura. Measure action, not money recovered: 1930 contacted within 1 hour, portal complaint within 24 hours, recovery agents recognised and refused.</li>
+    <li><b>Feb – Apr 2027:</b> regional languages, Fraud Fire-Drill, top-15 bank playbooks.</li>
+    <li><b>From May 2027:</b> partnerships with banks, cyber cells, and community organisations.</li>
+  </ul>
+  <p class="foot">Main risk, stated plainly: false reassurance — a user thinking that talking to RAKSHIO equals having reported. The app says, on every screen, that it files nothing.</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">07 · Ask</div>
+  <h2>What RAKSHIO needs next</h2>
+  <ul>
+    <li><b>Pilot users</b> — 100 fraud-affected families in Mathura who will try the flow and tell us what broke.</li>
+    <li><b>Partners</b> — banks and cyber cells who will take the Proof Pack as a handover, not a form to re-fill.</li>
+    <li><b>Judges' scrutiny</b> — try Judge Mode, tamper the evidence, paste a recovery-agent message. Break it, and tell us.</li>
+  </ul>
+  <p class="tag" style="margin-top:20px">RAKSHIO guides. Reporting stays with the victim — faster, calmer, with proof.</p>
+</section>
+
+</body>
+</html>

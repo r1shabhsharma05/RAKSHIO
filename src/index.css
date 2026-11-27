@@ -1,0 +1,261 @@
+@import '@astryxdesign/core/reset.css';
+@import '@astryxdesign/core/astryx.css';
+@import '@astryxdesign/theme-neutral/theme.css';
+
+/* Calm Mode tokens — from the ui-ux-pro-max design-system lookup
+   (Trust & Authority + Conversion pattern, Accessible & Ethical style).
+   One job per screen, large text, high contrast, nothing that shouts. */
+:root {
+  --rk-primary: #0369a1;
+  --rk-on-primary: #ffffff;
+  --rk-secondary: #38bdf8;
+  --rk-accent: #16a34a;
+  --rk-bg: #f0f9ff;
+  --rk-fg: #0c4a6e;
+  --rk-card: #ffffff;
+  --rk-muted: #e7eff5;
+  --rk-destructive: #dc2626;
+  --rk-ring: #0369a1;
+  --rk-warn-bg: #fef3c7;
+  --rk-warn-fg: #78350f;
+  --rk-radius: 1rem;
+
+  /* rem units only, so the user's OS text scale is respected. */
+  font-size: 1.125rem;
+  color-scheme: light;
+  color: var(--rk-fg);
+  background: var(--rk-bg);
+  font-family: system-ui, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; background: var(--rk-bg); }
+
+#root {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--rk-bg);
+}
+
+h1, h2, h3 { color: var(--rk-fg); line-height: 1.25; margin: 0; }
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.125rem; }
+p { margin: 0; line-height: 1.5; }
+
+/* Every interactive element is at least 48px tall — elderly hands, shaky hands. */
+button, a, input, textarea, [role="button"] { min-height: 3rem; }
+button, input, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 0.1875rem solid var(--rk-ring);
+  outline-offset: 0.125rem;
+  border-radius: 0.375rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--rk-card);
+  border-bottom: 1px solid var(--rk-muted);
+}
+.app-header .wordmark { font-size: 1.375rem; font-weight: 800; letter-spacing: 0.02em; }
+.app-header .tagline { font-size: 0.875rem; color: var(--rk-primary); }
+
+.app-main { flex: 1; display: flex; flex-direction: column; padding: 1rem; gap: 1rem; }
+.app-footer { padding: 0.75rem 1rem 1.25rem; font-size: 0.875rem; text-align: center; color: var(--rk-primary); }
+
+/* Permanent banner: the one honest sentence, on every screen. */
+.no-report-banner {
+  background: var(--rk-warn-bg);
+  color: var(--rk-warn-fg);
+  border: 1px solid #f59e0b;
+  border-radius: var(--rk-radius);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.calm-card, .rk-card {
+  background: var(--rk-card);
+  border: 1px solid var(--rk-muted);
+  border-radius: var(--rk-radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.calm-card { background: #e0f2fe; border-color: var(--rk-secondary); }
+
+.mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1rem 0; }
+
+/* Giant mic: one thumb, one job. Press feedback is a 160ms scale, never a loop. */
+.mic-btn {
+  width: 10rem;
+  height: 10rem;
+  min-height: 10rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  box-shadow: 0 0.5rem 1.5rem rgba(3, 105, 161, 0.35);
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.mic-btn:active { transform: scale(0.97); }
+.mic-btn.listening { background: var(--rk-destructive); }
+.mic-btn .mic-label { font-size: 1.125rem; font-weight: 700; }
+
+.emergency-row { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.step2-note {
+  font-size: 0.875rem;
+  color: var(--rk-primary);
+  background: var(--rk-muted);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rk-muted);
+}
+.field-row:last-child { border-bottom: none; }
+.field-row .label { font-weight: 600; }
+.field-row .value { font-weight: 700; text-align: right; }
+.field-row .value.unknown { color: var(--rk-primary); font-weight: 600; }
+
+.transcript-box {
+  background: var(--rk-card);
+  border: 1px solid var(--rk-muted);
+  border-radius: var(--rk-radius);
+  padding: 1rem;
+  min-height: 8rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.transcript-box .interim { color: var(--rk-primary); }
+
+textarea.rk-input, input.rk-input {
+  width: 100%;
+  border: 2px solid var(--rk-primary);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--rk-card);
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.clock-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.deadline-chip {
+  flex: 1 1 30%;
+  min-width: 7rem;
+  background: var(--rk-card);
+  border: 1px solid var(--rk-muted);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+.deadline-chip .time { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.deadline-chip .name { font-size: 0.875rem; }
+.deadline-chip.soon { border-color: #f59e0b; background: var(--rk-warn-bg); }
+.deadline-chip.overdue { border-color: var(--rk-destructive); background: #fee2e2; }
+.deadline-chip.overdue .time { color: var(--rk-destructive); }
+
+.action-card { gap: 0.5rem; }
+.action-card .why { font-size: 1rem; }
+
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 0.75rem; padding-bottom: 1rem; position: relative; }
+.timeline-item::before {
+  content: '';
+  width: 0.875rem; height: 0.875rem; border-radius: 50%;
+  background: var(--rk-primary); flex: none; margin-top: 0.375rem;
+}
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute; left: 0.375rem; top: 1.375rem; bottom: 0;
+  width: 0.125rem; background: var(--rk-muted);
+}
+.timeline-item.done::before { background: var(--rk-accent); }
+.timeline-item.pending::before { background: var(--rk-muted); border: 2px solid var(--rk-primary); }
+.timeline-item .when { font-size: 0.875rem; color: var(--rk-primary); }
+
+/* The one forward action per screen. Astryx secondary reads as disabled
+   (light gray); Astryx primary renders black-on-black (axe 1.21). So the
+   forward action is a hand-built native button in the Calm palette. */
+.rk-primary-btn {
+  width: 100%;
+  min-height: 3rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--rk-primary);
+  color: var(--rk-on-primary);
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  transition: transform 160ms ease-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rk-primary-btn:active { transform: scale(0.97); }
+.rk-primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Action card headers: the Urgent badge must never be squeezed out. */
+.action-card h3 { flex: 1 1 auto; min-width: 0; }
+.action-card .badge-wrap { flex: none; }
+
+.checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.checklist li { display: flex; gap: 0.75rem; align-items: flex-start; font-size: 1.125rem; }
+.checklist input[type="checkbox"] { width: 1.5rem; height: 1.5rem; min-height: 1.5rem; flex: none; margin-top: 0.125rem; accent-color: var(--rk-primary); }
+
+.script-box {
+  background: var(--rk-muted);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.demo-link {
+  background: none; border: none; color: var(--rk-primary);
+  font-size: 0.9375rem; text-decoration: underline; cursor: pointer;
+  padding: 0.5rem;
+}
+
+.caregiver-toggle { display: flex; gap: 0.75rem; align-items: flex-start; font-size: 1rem; }
+.caregiver-toggle input[type="checkbox"] { width: 1.5rem; height: 1.5rem; min-height: 1.5rem; flex: none; margin-top: 0.125rem; accent-color: var(--rk-primary); }
+
+/* Motion: calm only. Nothing loops, nothing hides information,
+   nothing delays the 1930 action. Reduced motion = no motion at all. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

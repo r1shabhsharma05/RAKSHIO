@@ -1,0 +1,85 @@
+import Dexie, { type Table } from 'dexie';
+import { sha256Hex, canonical } from './hash';
+import { maskCredentials } from '../understanding/extract';
+
+// Evidence Vault: IndexedDB, append-only, hash-chained. Each record's hash
+// covers the previous record's hash, so editing any record breaks every
+// hash after it — the Verify screen turns red and names the broken record.
+export interface EvidenceRecord {
+  id?: number;
+  incidentId: string;
+  kind: 'screenshot' | 'sms' | 'note' | 'file';
+  label: string;
+  text: string;
+  data?: string;
+  capturedAt: string;
+  prevHash: string;
+  hash: string;
+  byCaregiver: boolean;
+  redacted: boolean;
+}
+
+class RakshioDb extends Dexie {
+  evidence!: Table<EvidenceRecord, number>;
+  constructor() {
+    super('rakshio-vault');
+    this.version(1).stores({ evidence: '++id, incidentId, capturedAt' });
+  }
+}
+
+export const db = new RakshioDb();
+
+export async function addEvidence(
+  rec: Omit<EvidenceRecord, 'id' | 'prevHash' | 'hash' | 'redacted'> & { text: string },
+): Promise<EvidenceRecord> {
+  const last = await db.evidence.orderBy('id').last();
+  const prevHash = last?.hash ?? '';
+  const { text, redacted } = redactText(rec.text);
+  const base = { ...rec, text, redacted, prevHash };
+  const hash = await sha256Hex(canonical(base));
+  const id = await db.evidence.add({ ...base, hash });
+  return { ...base, hash, id };
+}
+
+export async function listEvidence(incidentId: string): Promise<EvidenceRecord[]> {
+  return db.evidence.where('incidentId').equals(incidentId).sortBy('capturedAt');
+}
+
+export async function verifyChain(incidentId: string): Promise<{ ok: boolean; brokenAt?: number; count: number }> {
+  const rows = await listEvidence(incidentId);
+  let prev = '';
+  for (const r of rows) {
+    const { id, hash, ...rest } = r;
+    const recomputed = await sha256Hex(canonical(rest));
+    if (recomputed !== hash || r.prevHash !== prev) return { ok: false, brokenAt: id, count: rows.length };
+    prev = hash;
+  }
+  return { ok: true, count: rows.length };
+}
+
+export async function rootHash(incidentId: string): Promise<string | null> {
+  const rows = await listEvidence(incidentId);
+  return rows.length ? rows[rows.length - 1].hash : null;
+}
+
+// Test/demo aid only: edits a record without re-hashing, so Verify must fail.
+export async function tamperRecord(id: number, text: string): Promise<void> {
+  await db.evidence.update(id, { text });
+}
+
+// OTP/PIN digits are masked by the extractor; card and Aadhaar numbers are
+// masked here (keep last 4). Masking happens before storage, never after.
+export function redactText(text: string): { text: string; redacted: boolean } {
+  const masked = maskCredentials(text);
+  let out = masked.text;
+  let redacted = masked.masked;
+  out = out.replace(/\b(\d{4})[\s-]?\d{4}[\s-]?\d{4}[\s-]?(\d{4})\b/g, (_m, a: string, b: string) => {
+    redacted = true;
+    return `${a} •••• •••• ${b}`;
+  });
+  out = out.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, (m) => {
+    redacted = true;
+    return `•••• •••• ${m.slice(-4)}`;
+  });
+  return { text: out, redacted };
+}

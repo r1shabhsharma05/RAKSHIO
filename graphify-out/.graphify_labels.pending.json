@@ -1,0 +1,23 @@
+{
+  "0": "compilerOptions",
+  "1": "package.json",
+  "2": "compilerOptions",
+  "3": "devDependencies",
+  "4": "App",
+  "5": ".oxlintrc.json",
+  "6": "shared.tsx",
+  "7": "RAKSHIO — Fraud Golden Hour Response System",
+  "8": "tsconfig.json",
+  "9": "extract.ts",
+  "10": "AckBridge.tsx",
+  "11": "dependencies",
+  "12": "speech-recognition.d.ts",
+  "13": "Build ledger — RAKSHIO (Scaler × Wispr Flow, Round 2)",
+  "14": "ADR-003: Astryx for primitives, hand-built panic surfaces",
+  "15": "vault.ts",
+  "16": "BankKit.tsx",
+  "17": "ADR-001: Local-only storage, no backend",
+  "18": "ADR-002: Deterministic understanding engine, no LLM",
+  "19": "RAKSHIO — Demo Script (3 minutes, record 29 Nov)",
+  "20": "RAKSHIO — Privacy"
+}

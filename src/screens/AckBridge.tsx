@@ -1,0 +1,87 @@
+import { useEffect, useState } from 'react';
+import { Button } from '@astryxdesign/core/Button';
+import type { StoredIncident } from '../state/store';
+import { loadAck, portalCopyDeck, portalDeadline, saveAck } from '../engines/ack/ack';
+import { formatDuration } from '../engines/orchestrator/clock';
+import { BackButton, NoReportBanner } from './shared';
+
+// Ack Bridge: 1930 call ke baad mila acknowledgement number yahan bharein —
+// 24 ghante ka portal countdown shuru hota hai, aur Portal Copy Deck
+// field-by-field copy deta hai, taaki portal form dobara yaad se na bharna pade.
+export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
+  const [ackNumber, setAckNumber] = useState('');
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    const a = loadAck();
+    if (a && a.incidentId === stored.id) {
+      setAckNumber(a.ackNumber);
+      setSavedAt(a.calledAt);
+    }
+  }, [stored.id]);
+
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+
+  const deadline = savedAt ? portalDeadline(savedAt) : null;
+  const remaining = deadline ? deadline.getTime() - now.getTime() : null;
+  const deck = portalCopyDeck(stored, savedAt ? { ackNumber, calledAt: savedAt, incidentId: stored.id } : null);
+
+  async function copy(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(label);
+      window.setTimeout(() => setCopied(null), 2000);
+    } catch {
+      setCopied(null);
+    }
+  }
+
+  return (
+    <>
+      <NoReportBanner />
+      <h1>Ack Bridge — 1930 ke baad</h1>
+      <p>1930 call par jo acknowledgement number mila, use yahan bharein. Portal complaint 24 ghante me poori karni hoti hai.</p>
+
+      <section className="rk-card">
+        <h2>Acknowledgement number</h2>
+        <label htmlFor="ack-input" style={{ fontWeight: 600 }}>Ack number (1930 call se)</label>
+        <input id="ack-input" className="rk-input" value={ackNumber} onChange={(e) => setAckNumber(e.target.value)} placeholder="Jaise: 1930XXXXXXXX" />
+        <button
+          type="button"
+          className="rk-primary-btn"
+          disabled={ackNumber.trim().length < 3}
+          onClick={() => {
+            const at = new Date().toISOString();
+            saveAck({ ackNumber: ackNumber.trim(), calledAt: at, incidentId: stored.id });
+            setSavedAt(at);
+          }}
+        >
+          Save karein
+        </button>
+        {deadline && remaining !== null && (
+          <p role="timer" style={{ fontWeight: 700, color: remaining <= 0 ? '#dc2626' : '#0369a1' }}>
+            Portal ke liye bacha samay: {remaining <= 0 ? 'Samay khatm — phir bhi complaint karein' : formatDuration(remaining)}
+          </p>
+        )}
+      </section>
+
+      <section className="rk-card">
+        <h2>Portal Copy Deck — cybercrime.gov.in</h2>
+        <p style={{ fontSize: '0.875rem' }}>Har row ko copy karke portal form me paste karein. Dobara yaad se bharne ki zaroorat nahi.</p>
+        {deck.map((row) => (
+          <div key={row.label} className="field-row">
+            <span className="label">{row.label}: {row.value}</span>
+            <Button label={copied === row.label ? 'Copy hua ✓' : 'Copy'} variant="secondary" size="lg" onClick={() => copy(row.value, row.label)} />
+          </div>
+        ))}
+        <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in kholein</a>
+      </section>
+      <BackButton onBack={onBack} />
+    </>
+  );
+}

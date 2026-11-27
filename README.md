@@ -1,0 +1,126 @@
+# RAKSHIO — Fraud Golden Hour Response System
+
+Voice-first cyber fraud recovery companion for India. After UPI fraud, an
+unauthorised debit, a fake customer-care call or an OTP scam, the victim
+speaks what happened in Hindi/Hinglish — RAKSHIO extracts the facts,
+confirms them back, and walks the victim through the first hour: stop the
+loss, call 1930, notify the bank, complete the portal complaint.
+
+Built for Scaler × Wispr Flow **"India Runs on Voice"** — Round 2, Track 5
+(Everyday Access). Solo entry, Rishabh.
+
+## What RAKSHIO does NOT do
+
+- **It never files a report.** It guides the victim to call 1930 and to file
+  at cybercrime.gov.in — it does not call, file, or recover anything itself.
+- **It never guarantees recovery or a refund.**
+- **It never asks for or stores OTP, PIN, CVV, UPI PIN, card numbers, or
+  Aadhaar.** Numbers spoken next to OTP/PIN words are masked before storage.
+- **It has no backend, no API keys, no server.** All data stays in the
+  browser's localStorage on the victim's own phone.
+
+## Quick Start
+
+```bash
+npm install
+npm run dev     # http://localhost:5173
+npm run build   # production build (tsc + vite)
+npm test        # vitest unit tests (21)
+npx playwright test  # smoke flow + axe-core (3 tests)
+npm run preview # serve the production build
+```
+
+Requires Node 20+. Speech recognition needs Chrome/Edge (Web Speech API);
+without it the app silently offers Text Mode instead of a dead mic button.
+
+## Step 1 — what works (Phase 0–1 of the master plan)
+
+- Panic screen: giant mic, 10-second skippable calm prompt (slow TTS),
+  1930 call button, bank/family placeholders labelled Step 2.
+- Voice Adapter: SpeechRecognition + SpeechSynthesis behind one interface,
+  hi-IN primary / en-IN fallback, silence-restart, Text Mode fallback.
+- Understanding Engine: deterministic rules only, no LLM — Hindi number
+  words (`bees hazaar` = 20,000, `dedh lakh` = 150,000), Devanagari digits
+  and words, 12-digit UTR, bank/UPI-app lexicon, weighted fraud-type
+  scorer, date/time words. Every field carries a confidence score; missing
+  fields are never guessed.
+- Flow: Panic → Listen → Extract → Gap questions (one at a time, "Pata
+  nahi" allowed) → Confirmation gate (TTS + large text, card locked until
+  amount/time/method are confirmed or marked unknown) → Incident card +
+  Panic-to-Proof timeline.
+- Golden Hour Clock: live timer, deadlines as data with sources (1930
+  within 48h, portal within 24h, bank within 3 working days); the Action
+  Queue re-orders as deadlines approach.
+- 1930 Call Coach: `tel:1930` button, 30-second script from confirmed
+  facts, checklist, "Done" logs only that the button was tapped.
+- Demo aid: "Demo data bharo (₹20,000 UPI scenario)" fills the seeded
+  story so the loop runs without a mic.
+
+## Step 2 — what works (Phase 2 differentiators)
+
+- **Evidence Vault:** IndexedDB + SHA-256 hash chain + redaction + Verify
+  screen. Tamper test turns the chain red and names the broken record.
+- **Ack Bridge:** 1930 acknowledgement number + 24-hour portal countdown +
+  field-by-field Portal Copy Deck.
+- **Smart Triage Router:** lost money → 1930/bank/portal; attempted fraud,
+  no loss → Chakshu (Sanchar Saathi, 30 days).
+- **Second-Scam Shield 2.0:** 12 weighted red-flag rules + Truth Card.
+  50-message test set: **50/50 (100%)**, target was 90%.
+- **Bank Alert Kit:** 10 banks, helplines verified 2026-11-27; block steps;
+  pre-filled draft (review before sending — RAKSHIO never sends it);
+  reference-number field; NPCI link.
+- **Care Circle:** consent-first SOS card, WhatsApp deep link (number never
+  stored), offline QR SOS card.
+- **Bilingual Proof Pack:** Latin-script Hinglish PDF + ZIP + root-hash QR.
+- **Judge Mode:** seeded ₹20,000 scenario, one button, no mic.
+- **Caregiver Mode:** badge on every screen, records labelled.
+
+## Step 3 — proof
+
+- Vitest: 21 tests (understanding 12, shield 50-message set, vault 3,
+  triage 4) — `npm test`.
+- Playwright smoke flow (real Chromium): demo → confirm gate → incident
+  card → Golden Hour Clock → Vault add/verify/tamper → back; plus Shield
+  Truth Card — `npx playwright test`. axe-core: 0 violations on Panic and
+  Incident screens.
+- Docs: `docs/PRIVACY.md`, `docs/THREAT_MODEL.md`, `docs/DEMO.md` (exact
+  3-minute script for 29 Nov), `docs/decisions/` (3 ADRs),
+  `docs/RAKSHIO-pitch-deck.pdf` (8 slides; source `.html`, export via
+  `node scripts/export-deck.mjs`).
+
+## Deliberately NOT done
+
+- Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
+- Deploy, GitHub repo, submission — all need Rishabh's word.
+- Service worker / offline install (manifest only).
+- Custom Astryx theme via `defineTheme` (neutral theme used as-is;
+  see ADR-003).
+
+## Architecture
+
+```
+src/
+  voice/          VoiceAdapter (SpeechRecognition/Synthesis), prompts
+  engines/
+    understanding/  extract.ts — deterministic parser (Appendix A rules)
+    orchestrator/   machine.ts (screen state machine),
+                    deadlines.config.ts (deadlines as data + sources),
+                    clock.ts (deadline states, action ordering)
+  screens/        Panic, Listen, Gaps, Confirm, Incident, Actions, Coach
+  state/          store.ts — localStorage only
+  demo/           seed.ts — ₹20,000 UPI demo scenario
+```
+
+Design: Calm Mode tokens (18px min text, 48px touch targets, high
+contrast, one action per screen). Motion is calm only — 220ms crossfades,
+press feedback, no loops, reduced-motion respected. Primitives from
+Astryx (Button, Badge, Card); the giant mic button is hand-built because
+no library ships a 160px calm panic button.
+
+## Docs
+
+- `docs/PRIVACY.md`, `docs/THREAT_MODEL.md`, `docs/DEMO.md`
+- `docs/decisions/` — ADRs for the significant calls (local-only storage,
+  deterministic engine, no backend, Astryx primitives).
+- `docs/RAKSHIO-pitch-deck.pdf` — 8-slide pitch deck (source
+  `docs/RAKSHIO-pitch-deck.html`, export with `node scripts/export-deck.mjs`).
