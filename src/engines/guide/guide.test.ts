@@ -3,7 +3,7 @@ import { GUIDES, guideById, guideForFraudType, guideForShieldRule } from './guid
 
 describe('situation guide engine', () => {
   it('every guide is complete: title + all five sections with at least 2 items', () => {
-    expect(GUIDES.length).toBeGreaterThanOrEqual(12);
+    expect(GUIDES.length).toBeGreaterThanOrEqual(30);
     for (const g of GUIDES) {
       expect(g.title.length).toBeGreaterThan(0);
       expect(g.recognize.length).toBeGreaterThanOrEqual(2);
@@ -49,7 +49,9 @@ describe('situation guide engine', () => {
     expect(guideForShieldRule('recovery-promise')?.id).toBe('refund-scam');
     expect(guideForShieldRule('remote-access')?.id).toBe('remote-access');
     expect(guideForShieldRule('kyc-threat')?.id).toBe('kyc-scam');
-    expect(guideForShieldRule('prize-lottery')).toBeNull();
+    expect(guideForShieldRule('prize-lottery')?.id).toBe('lottery-scam');
+    expect(guideForShieldRule('courier')?.id).toBe('courier-scam');
+    expect(guideForShieldRule('upi-collect')?.id).toBe('upi-collect-scam');
     expect(guideForShieldRule('urgency')).toBeNull();
     expect(guideForShieldRule('id-demand')).toBeNull();
     expect(guideForShieldRule(null)).toBeNull();
@@ -67,10 +69,13 @@ describe('situation guide engine', () => {
         expect(r).not.toBe(g.id);
       }
     }
-    // Exactly the three most common situations are pinned.
+    // Exactly the six most common situations are pinned.
     expect(GUIDES.filter((g) => g.common).map((g) => g.id).sort()).toEqual([
+      'courier-scam',
+      'digital-arrest',
       'fake-customer-care',
       'otp-scam',
+      'task-scam',
       'upi-fraud',
     ]);
   });

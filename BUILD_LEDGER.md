@@ -905,3 +905,61 @@ NOT deployed — live still serves v6; deploy needs his word.
 - Dashboard chrome is fully keyed (221 keys × 3 locales); `t()` takes
   optional `{var}` interpolation. New user-facing dashboard strings go
   in `src/i18n.ts` — never hardcoded. Panic flow stays Hinglish by design.
+
+## Step 13: complete (2026-11-27) — Situation Guide 14 → 32 situations
+
+User call 27 Nov 22:50 IST: "or situation dal or upgarde kr kam se kam
+30 situtaion dal". Added 18 new guides, every one with the same full
+structure as the existing ones (recognize, first-5-minutes, report steps,
+dontDo, evidence, category, timeNote from the official windows only,
+related links that resolve):
+
+- courier-scam (money-lost, common) — parcel held / "drugs in parcel"
+  threat, customs-fee link
+- lottery-scam — prize won, processing fee first
+- electricity-scam — power-disconnection threat, fake bill link
+- matrimonial-scam — shaadi rishta, advance/gift before marriage
+- romance-scam — dating/online rishta, emergency money
+- tech-support-scam (account) — fake virus pop-up, "support" number
+- sextortion-scam (message) — video-call blackmail
+- card-reward-scam — reward-points expiry / card-block, OTP demand
+- olx-buyer-scam — fake payment screenshot, QR / "₹1 verify karo"
+- upi-collect-scam — collect request sold as incoming payment
+- delivery-fee-scam — address-update fee link
+- crypto-scam — fake trading app, withdrawal fee/tax
+- visa-scam — guaranteed visa, escalating fees
+- rental-scam — too-cheap listing, advance before viewing
+- gift-card-scam — payment demanded as a gift-card code
+- task-scam (money-lost, common) — like/rating tasks, premium deposit
+- scholarship-scam — fake admission/scholarship, processing fee
+- travel-scam — fake flight/hotel booking, no confirmation
+
+Common row is six now (was three): upi-fraud, otp-scam,
+fake-customer-care, digital-arrest (newly pinned), courier-scam,
+task-scam. Counts: Sabhi 32, Paisa gaya 25, Paisa nahi gaya 1, Account 4,
+Call/Message 2.
+Shield wiring: 'courier' → courier-scam (was phishing-link),
+'prize-lottery' → lottery-scam (was null), 'upi-collect' →
+upi-collect-scam (was upi-fraud). Extractor mapping unchanged — all 8
+extractor outputs already map.
+No GuidePage code change: search, filter chips, counts, and the common
+row all derive from GUIDES. The common row is a 3-column grid — six
+items render as two rows; mobile 1 column.
+Evidence: build green (3.02s); vitest 37/37 (8 files; guide tests now
+assert count ≥30, the six commons, and the new shield mappings);
+Playwright dashboard 42/42 (incl. 1 new Step 13 test: list count, common
+row, courier search + detail); axe 0 in-suite. Screenshots read
+(`tests/shots-local/step13-guide-*.png`): list counts right, courier
+detail full, 390 no overflow. NOTE: the shots render the light theme
+(headless default) — the files were renamed to drop the wrong "-dark"
+suffix. Secret scan clean. NOT deployed — live still serves v6; deploy
+needs his word.
+
+## Rulings (Step 13)
+
+- Guide count is pinned at ≥30 by test (`guide.test.ts`). New situations
+  must use the full structure and only the official windows in timeNote.
+- Common row is capped at 6 — a seventh common needs the user's word.
+- Shield rule → guide mappings must point at the most specific guide
+  (courier → courier-scam, not the generic phishing guide). When a new
+  guide covers an existing Shield rule better, re-point the rule.

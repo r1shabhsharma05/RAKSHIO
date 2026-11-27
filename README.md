@@ -233,6 +233,11 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **12 live-E2E bugs fixed in the same change.** Extraction: "7 baje bees hazaar" no longer reads ₹7 — time expressions are stripped before amount parsing, Hindi number words parse strictly (vitest on the exact sentence → ₹20,000). Languages: dashboard chrome is now fully translated — 221 keys × English/Hindi/Hinglish (Home, shell, FollowUp, Settings, empty states, Incidents); panic flow stays Hinglish by design. Light mode: glass panels raised to 78–92% opacity so text reads on the photo. Golden Hour text is deadline-aware (no more "deadlines still open" next to a "Samay khatm" chip). Coach Done toasts + logs visibly. Tamper test runs on a copy — the real evidence chain stays intact. Layout: scroll padding clears the bottom dock, flow widened, exactly one H1 per page. Shield shows an OTP info note without inflating the score. Settings label spacing fixed. Judge Mode is searchable, routable (#/judge), and linked from Home — no 13th dock item. Voice/mic live test still needs Rishabh on his own Chrome.
 - Evidence: build green, vitest **37/37**, Playwright dashboard **41/41**, axe 0 in-suite (light + dark); verification screenshots read (home/bank 1366 light + dark, home 390 light + dark). NOT deployed — live still serves v6.
 
+## Step 13 — Situation Guide: 32 situations (27 Nov)
+
+- **18 new situations, 14 → 32.** Courier/parcel scam, lottery/prize, electricity-bill threat, matrimonial, romance/dating, fake tech-support pop-up, sextortion (video-call blackmail), card reward-points/card-block, OLX buyer, UPI collect-request, delivery-fee/address-update, crypto/fake trading app, fake visa agent, fake rental listing, gift-card, part-time task scam, fake admission/scholarship, fake travel booking. Every new guide has the same full structure (recognition, first 5 minutes, 1930/bank/portal steps, what NOT to do, evidence) and time notes use only the official windows. Most-common row is six now (UPI fraud, OTP, fake customer care, digital arrest, courier, task scam). Counts: Sabhi 32, Paisa gaya 25, Paisa nahi gaya 1, Account 4, Call/Message 2. Shield Truth Card links improved too: courier → courier guide, prize-lottery → lottery guide, UPI collect → collect-request guide. No layout, colour, font, or other feature changed; still a deterministic on-device engine — no model, no AI.
+- Evidence: build green, vitest **37/37**, Playwright dashboard **42/42**, axe 0 in-suite; guide list + courier detail screenshots read (1440 + 390, no overflow). NOT deployed — live still serves v6.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
@@ -251,7 +256,7 @@ src/
   screens/        Panic, Listen, Gaps, Confirm, Incident, Actions, Coach
   dashboard/      GlassShell (Glassy design), Home, GuidePage, ToolPages,
                   SettingsPage, ReportFlow — HashRouter, 12 routes + /guide
-  engines/guide/  guide.ts — deterministic situation guides (14 situations)
+  engines/guide/  guide.ts — deterministic situation guides (32 situations)
   theme/          rakshioTheme.ts — Astryx defineTheme on the Calm palette
   components/     Toast (confirmation toasts), ErrorBoundary (calm fallback)
   state/          store.ts — localStorage only

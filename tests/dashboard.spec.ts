@@ -582,6 +582,24 @@ test('step 11: guide page is full — strip, search, filters, common, detail', a
   await expect(page.getByRole('link', { name: 'Refund / recovery agent dhokha' })).toBeVisible();
 });
 
+test('step 13: guide engine has 32 situations — list, common row, new detail', async ({ page }) => {
+  // User order 27 Nov 22:50 IST: at least 30 situations. 14 → 32.
+  await page.goto('/#/guide');
+  await expect(page.getByRole('heading', { name: 'Saare guides (32)' })).toBeVisible();
+  // Common row is six now (was three): the three new ones are pinned too.
+  await expect(page.getByRole('button', { name: /Digital arrest dhamki/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Parcel \/ courier dhokha/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Part-time task dhokha/ })).toBeVisible();
+  // Search finds a new situation; its detail is full.
+  await page.getByLabel('Situation dhoondhein…').fill('courier');
+  await expect(page.getByRole('link', { name: 'Parcel / courier dhokha' })).toBeVisible();
+  await page.getByRole('link', { name: 'Parcel / courier dhokha' }).click();
+  await expect(page.getByRole('heading', { name: 'Parcel / courier dhokha' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pehle 5 minute' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Isse jude guides' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Delivery fee / address-update dhokha' })).toBeVisible();
+});
+
 test('step 11: empty states are enriched — checklists, helplines, previews', async ({ page }) => {
   await page.goto('/#/actions');
   await expect(page.getByRole('heading', { name: 'Kya yaad rakhein' })).toBeVisible();
