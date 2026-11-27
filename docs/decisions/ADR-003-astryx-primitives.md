@@ -1,7 +1,12 @@
 # ADR-003: Astryx for primitives, hand-built panic surfaces
 
 ## Status
-Accepted
+Accepted — amended Step 4 (2026-11-27): the deferred custom theme is done.
+`src/theme/rakshioTheme.ts` (defineTheme extends neutralTheme) re-seats the
+accent on Calm #0369a1 and tints secondary buttons Calm-blue, so they read
+as tappable. The neutral theme is no longer used as-is. The forward action
+stays a hand-built `.rk-primary-btn` (Astryx `primary` still renders
+black-on-black, axe 1.21 — unchanged).
 
 ## Date
 2026-11-27
@@ -31,9 +36,9 @@ timeline, and the checklist in plain CSS under the Calm Mode tokens.
   not apply (no backend to send audio to).
 
 ### Full custom theme via defineTheme
-- Deferred: palette generation is a real job, not a Step 1 job. The
-  neutral theme is used as-is; the Calm Mode palette applies to app
-  chrome and custom components.
+- Done in Step 4 (2026-11-27): `src/theme/rakshioTheme.ts` — accent
+  re-seeded on Calm #0369a1 via HCT, surfaces tinted, secondary buttons
+  Calm-blue. Verified by screenshots + axe 0 violations.
 
 ## Consequences
 - axe-core found the neutral theme's `primary` Button variant renders

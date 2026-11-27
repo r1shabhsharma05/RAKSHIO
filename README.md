@@ -24,9 +24,9 @@ Built for Scaler × Wispr Flow **"India Runs on Voice"** — Round 2, Track 5
 ```bash
 npm install
 npm run dev     # http://localhost:5173
-npm run build   # production build (tsc + vite)
-npm test        # vitest unit tests (21)
-npx playwright test  # smoke flow + axe-core (3 tests)
+npm run build   # production build (tsc strict + vite)
+npm test        # vitest unit tests (26)
+npx playwright test  # smoke flow + axe-core + production checks (9 tests)
 npm run preview # serve the production build
 ```
 
@@ -82,19 +82,38 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - Playwright smoke flow (real Chromium): demo → confirm gate → incident
   card → Golden Hour Clock → Vault add/verify/tamper → back; plus Shield
   Truth Card — `npx playwright test`. axe-core: 0 violations on Panic and
-  Incident screens.
+  Incident screens. Production spec adds: offline reload via service
+  worker, corrupt-storage fallback to Panic, lazy Proof load + PDF
+  download + toast, Ack save/copy toasts, keyboard-focusable mic,
+  render-crash fallback (fault injection).
 - Docs: `docs/PRIVACY.md`, `docs/THREAT_MODEL.md`, `docs/DEMO.md` (exact
   3-minute script for 29 Nov), `docs/decisions/` (3 ADRs),
   `docs/RAKSHIO-pitch-deck.pdf` (8 slides; source `.html`, export via
   `node scripts/export-deck.mjs`).
 
+## Step 4 — production upgrade (27 Nov)
+
+- **Offline PWA:** service worker (`public/sw.js`, versioned cache) — app
+  shell loads offline after the first visit; updates never break the panic
+  path mid-session. Manifest has a stable `id`.
+- **Code-splitting:** Vault, Proof and Care load on demand (React.lazy).
+  First-load JS 1,287 kB → 656 kB (−49%; gzip 456 → 213 kB); the heavy
+  Proof Pack (pdf-lib) only loads when opened.
+- **Custom RAKSHIO theme:** Astryx `defineTheme` on the Calm palette —
+  secondary buttons finally read as tappable, not disabled.
+- **Error boundary + toasts + skeletons:** a render crash shows a calm
+  fallback with 1930 one tap away; every save/download/copy confirms with
+  a toast; Extracting and lazy screens show skeletons.
+- **Polish:** inline styles 44 → 0 (classes + typed components), helper
+  text at the 18px Calm minimum, dead buttons removed from Panic, OG/Twitter
+  meta, shield favicon. TypeScript `strict: true`, zero `any`.
+- Stack: React 19 + TypeScript + Vite — no plain-HTML pages; index.html is
+  only the Vite entry shell.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
 - Deploy, GitHub repo, submission — all need Rishabh's word.
-- Service worker / offline install (manifest only).
-- Custom Astryx theme via `defineTheme` (neutral theme used as-is;
-  see ADR-003).
 
 ## Architecture
 
@@ -107,6 +126,8 @@ src/
                     deadlines.config.ts (deadlines as data + sources),
                     clock.ts (deadline states, action ordering)
   screens/        Panic, Listen, Gaps, Confirm, Incident, Actions, Coach
+  theme/          rakshioTheme.ts — Astryx defineTheme on the Calm palette
+  components/     Toast (confirmation toasts), ErrorBoundary (calm fallback)
   state/          store.ts — localStorage only
   demo/           seed.ts — ₹20,000 UPI demo scenario
 ```

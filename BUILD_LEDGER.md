@@ -120,3 +120,94 @@ flex:none. Verified by re-screenshot.
 - Lazy-load Proof/Vault screens to cut the 1.29 MB bundle.
 - PWA service worker (manifest only for now).
 - Bank helpline re-verification before the pilot (last checked 2026-11-27).
+
+## Step 4: complete (2026-11-27) — production upgrade
+Goal: production-grade + design polish for judges, inside Calm Mode.
+Stack unchanged and confirmed: React 19 + TypeScript + Vite — no plain-HTML
+pages added (index.html stays only the Vite entry shell). `strict: true`
+added to tsconfig.app.json; tsc green. No `any` anywhere in src.
+
+1. **PWA service worker** — `public/sw.js` (versioned cache `rakshio-v1`,
+   shell cached on install, hashed /assets cache-first, pages network-first
+   with cache fallback; old cache deleted on activate, no skipWaiting, so an
+   update never breaks the panic path mid-session). Registered in main.tsx,
+   production only. Manifest gained stable `"id": "/"` + `"scope": "/"`.
+   Playwright offline test: load → worker active → reload → offline →
+   reload → Panic screen still renders. Gap: no 192/512 PNG icons — the
+   manifest keeps the SVG icon; PNGs would be new binaries, unpushable via
+   the text-only API route (same as the deck PDF — web upload if wanted).
+2. **Code-splitting** — Vault, Proof, Care are React.lazy + Suspense with a
+   skeleton fallback. Before: one chunk 1,287.21 kB (gzip 456.18 kB), chunk
+   warning on first load. After: index 655.74 kB (gzip 213.18 kB),
+   Proof 519.88 kB, vault 99.15 kB, Vault 4.26 kB, Care 2.10 kB.
+   First-load JS −49% (−53% gzip). The >500 kB warning remains only for the
+   lazy Proof chunk, which never blocks first paint.
+3. **Custom RAKSHIO theme** — `src/theme/rakshioTheme.ts`, defineTheme
+   extends neutralTheme: accent re-seeded on Calm #0369a1 (HCT scale,
+   on-accent computed), surfaces #f0f9ff/#ffffff, secondary buttons
+   Calm-tinted (#e0f2fe bg, #0c4a6e text) so they read as tappable, not
+   disabled. Verified by 390×844 screenshots: Panic "Likh kar batayein"
+   and Actions secondaries are visibly enabled now; axe 0 violations.
+4. **Error boundary** — `src/components/ErrorBoundary.tsx` (class boundary
+   in main.tsx): calm fallback, banner copy kept, tel:1930 one tap away,
+   reset reloads to '/'. Vitest covers the fallback copy; the catch path is
+   covered by a Playwright fault-injection test (throwing
+   Date.toLocaleString → fallback renders). SSR cannot test the catch:
+   legacy renderToString rethrows, and renderToPipeableStream aborts the
+   shell on a sync throw — documented, not worked around.
+5. **Loading + feedback** — Toast (`src/components/Toast.tsx`, hand-built
+   ~60 lines: ui-motion-kit toast meta timing 220/160ms, polite live
+   region, pause on hover/focus, reduced-motion 0ms; the kit's component
+   needs motion + @base-ui/react, two new deps for one pattern — not
+   installed). Wired: Vault save, Proof PDF/ZIP, Ack save, copy-deck copy.
+   Copy's old inline "Copy hua ✓" label flip deleted — one mechanism per
+   job. Clipboard helper has an execCommand fallback for old webviews.
+   Skeletons: Extracting step + lazy-screen Suspense fallback (aria-busy,
+   static under reduced motion). Vault Verify has a busy state.
+6. **Meta/OG + favicon** — og:title/description/type + twitter:card
+   (summary) in index.html; no og:image (no share image asset — not
+   invented). Favicon is now a Calm-blue shield SVG (was the Vite purple
+   lightning bolt). Theme-color already present.
+7. **Empty states + 404** — Vault empty state now names the next step;
+   Proof empty state warns the PDF would be empty and routes to Vault.
+   Corrupt localStorage (`{broken json`) falls back to Panic (loadIncident
+   already try/catches) — Playwright test. No router exists, so no 404
+   surface: every load starts at Panic or resumes a valid incident.
+8. **Design polish (charles-unslop, within Calm Mode)** — direction:
+   calm, exact, a little warm; world = a help-desk counter; moment = the
+   giant mic + Golden Hour Clock; signature = the permanent honest banner.
+   Subtracted: two disabled buttons on Panic ("Bank helpline (Step 2 me
+   aayega)" etc.) → one quiet line; inline styles 44 → 0 in TSX (labels,
+   notes, layout stacks, verdict colours now classes in index.css).
+   Helper notes (.step2-note, footer, .note) raised 0.875rem → 1rem (the
+   18px Calm minimum); cards gained one soft shadow; primary-button
+   consistency comes from the theme (secondary no longer reads disabled).
+   TTS rate 0.85 and the 10s skippable calm prompt untouched.
+9. **Accessibility re-check** — axe-core 0 violations on Panic + Incident
+   (smoke spec, after changes); mic button keyboard-focusable (Playwright).
+10. **Performance** — no render-blocking regressions: build 1.70s, preview
+    smoke / 200, /sw.js 200, /manifest 200, /favicon.svg 200, title + root
+    div present, entry JS/CSS 200.
+
+Evidence: `npm run build` green (tsc strict + vite, 1.70s);
+`npx vitest run` **26/26** (21 old + lazy 1 + pwa 3 + fallback 1);
+`npx playwright test` **9/9** (smoke 2 incl. axe 0/0, production 6,
+shots 1). Fresh 390×844 screenshots in `tests/shots-local/` (local only,
+NOT committed — before/after compared visually: secondaries tappable,
+Turant badge intact, hierarchy unchanged). Secret scan clean (only the
+OTP-masking regex false positives from Step 3). No .env files.
+
+## Rulings (Step 4)
+- Toast test lesson: `getByRole('status', {name})` never matches the toast
+  — the accessible name folds in the close button's label. Tests assert
+  the visible text instead; role="status" stays for screen readers.
+- `getByRole('status')` matches 11 elements: every aria-live="polite"
+  region has implicit status role. Not a bug.
+- ui-motion-kit checked first (standing rule): toast + skeleton patterns
+  adapted from its meta (timing, a11y); its components not copied — they
+  need motion + @base-ui/react + Tailwind tokens this plain-CSS app
+  doesn't have. Lenis still skipped (single-screen, native scroll).
+- `npm audit` still BLOCKED by registry policy — not run, not a pass
+  (same as Step 3). Strix still not installed.
+- Proof Pack PDF stays Latin-script Hinglish (pdf-lib has no Devanagari
+  glyphs) — stated in UI, unchanged.
