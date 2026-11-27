@@ -203,6 +203,12 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Kept deliberately:** green/purple Quick Action buttons (the approved photo's design), bold hero, ✓/✗ text status marks. No gradients, glows, pulse, shimmer, emoji, or exclamation marks anywhere.
 - Evidence: build green, vitest 26/26, Playwright **32/32** (dashboard 20/20 incl. 2 new unslop tests), axe 0; vault + incidents screenshots re-taken after the fix and read.
 
+## Step 8 — GSAP Home entrance + Lenis ruling (27 Nov)
+
+- **GSAP was already in the app** (Actions, Incident, ReportFlow — 220ms crossfades). The gap was Home: no entrance animation at all. Added the same pattern to `src/dashboard/Home.tsx`: 220ms fade+rise per card, 40ms stagger, transform+opacity only, skipped under reduced motion.
+- **Lenis NOT applied — its own skill forbids dashboards/app UIs** ("Never inside app dashboards"), and this is a panic app where native scroll must never delay the 1930 action.
+- Evidence: build green, tsc clean, vitest 26/26, Playwright dashboard **21/21** (incl. new gsap test: cards end at opacity 1; reduced motion skips the entrance); Home screenshot read.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

@@ -332,3 +332,25 @@ test('fix 5: timeline date is one script; calm button label never ticks', async 
   await page.waitForTimeout(2500);
   await expect(page.getByRole('button', { name: 'Aage badhein', exact: true })).toBeVisible();
 });
+
+test('gsap step 8: home cards end visible; reduced motion skips the entrance', async ({ page }) => {
+  await page.goto('/#/');
+  // Entrance finishes: every card ends at full opacity, nothing stuck hidden.
+  await expect
+    .poll(async () => {
+      const opacities = await page
+        .locator('.db-grid-home .db-card')
+        .evaluateAll((els) => els.map((el) => Number.parseFloat(getComputedStyle(el).opacity)));
+      return opacities.length > 0 && opacities.every((o) => o === 1);
+    })
+    .toBe(true);
+  // Reduced motion: no entrance at all — cards are fully visible at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Panic me bhi, sahi kadam.' })).toBeVisible();
+  const opacities = await page
+    .locator('.db-grid-home .db-card')
+    .evaluateAll((els) => els.map((el) => Number.parseFloat(getComputedStyle(el).opacity)));
+  expect(opacities.length).toBeGreaterThan(0);
+  expect(opacities.every((o) => o === 1)).toBe(true);
+});

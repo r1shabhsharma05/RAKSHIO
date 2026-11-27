@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import {
   ArrowRight,
   BadgeCheck,
@@ -32,6 +34,8 @@ import { formatINR, fraudTypeLabel } from '../screens/shared';
 import { STATUS_LABELS } from '../state/incidents';
 import { useToast } from '../components/Toast';
 import type { StoredIncident } from '../state/store';
+
+gsap.registerPlugin(useGSAP);
 
 function shortId(id: string): string {
   return `#${id.replace(/^rk-/, 'RK-').toUpperCase()}`;
@@ -71,6 +75,24 @@ export function HomePage() {
   const [evidence, setEvidence] = useState<EvidenceRecord[]>([]);
   const [verify, setVerify] = useState<{ ok: boolean; count: number } | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const homeRef = useRef<HTMLDivElement>(null);
+
+  // Home entrance: GSAP micro-animation, 220ms fade+rise per card, 40ms
+  // stagger. Skipped entirely under reduced motion; transform+opacity only,
+  // so the 1930 button stays clickable from the first frame.
+  useGSAP(
+    () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const cards = homeRef.current?.querySelectorAll('.db-card');
+      if (!cards || cards.length === 0) return;
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.22, ease: 'power1.out', stagger: 0.04 },
+      );
+    },
+    { scope: homeRef },
+  );
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000);
@@ -142,7 +164,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="db-grid-home">
+    <div className="db-grid-home" ref={homeRef}>
       {/* Hero + right rail */}
       <section className="db-card db-span-8" aria-label="Report fraud">
         <div className="db-hero">

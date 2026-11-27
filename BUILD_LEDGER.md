@@ -463,3 +463,42 @@ select + status list; smoke 2/2, production incl. offline reload,
 shots, all-screens); axe 0 (dashboard spec); screenshots re-taken
 after the fix (vault + incidents) and read. NOT deployed — live link
 still serves the Step 4 build; deploy on his word.
+
+## Step 8: complete (2026-11-27) — GSAP Home entrance + Lenis ruling
+
+His order: "lenis skill use kr lena or gsap bhi frontend ke liye". Both
+skills read in full first.
+
+- **GSAP was already in the app.** `gsap` + `@gsap/react` were installed
+  and in use in 3 screens (Actions, Incident, ReportFlow — 220ms
+  crossfades, reduced-motion skipped). The gap was Home: the dashboard
+  home had NO entrance animation at all — hero + widget cards appeared
+  instantly. Added the missing piece in `src/dashboard/Home.tsx`
+  (same established pattern): `useGSAP` + `gsap.fromTo` on
+  `.db-card` — 220ms fade+rise, 40ms stagger, transform+opacity only,
+  skipped entirely under reduced motion, 1930 button clickable from
+  the first frame. TS caught one thing: `querySelectorAll` can be
+  undefined — guarded before the tween.
+- **Lenis NOT applied — the skill itself forbids it.** Lenis skill:
+  "NOT for dashboards/app UIs where native scroll is expected" /
+  "Never inside app dashboards, admin panels, data tables". RAKSHIO is
+  a dashboard app UI, and it is a panic app — smooth-scroll hijacking
+  could delay reaching the 1930 action. Native scroll stays. No
+  landing/marketing page exists in the app where Lenis would fit.
+- New test in `tests/dashboard.spec.ts` (dashboard now 21 tests):
+  "gsap step 8: home cards end visible; reduced motion skips the
+  entrance" — poll asserts every `.db-card` ends at opacity 1, then
+  `emulateMedia({ reducedMotion: 'reduce' })` + reload asserts cards
+  are fully visible at once with no entrance.
+- Screenshot `tests/shots-local/gsap-home-1440.png` read: hero, tiles,
+  clock, incident, quick actions all fully visible after the entrance;
+  single honest banner; dim text inside the empty-state cards is the
+  pre-existing muted empty copy, not the animation.
+
+Evidence: build green (`tsc -b && vite build`); tsc clean; vitest
+26/26; Playwright dashboard **21/21** (run against the 4175 preview —
+4173 was Healthcare Hub, 4174 portfolio; same port rule as Step 7).
+Deploy: v4 (Step 6+7) went live 17:39 IST, verified live
+(`db-status-list` in the live IncidentsPage chunk, "Madad ke tools"
+in the live index chunk, `NoReportBanner` 0, all v4 chunk filenames
+200). This Step 8 build is NOT deployed yet — v5 deploy follows.
