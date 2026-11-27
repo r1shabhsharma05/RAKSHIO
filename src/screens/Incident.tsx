@@ -79,7 +79,7 @@ export function IncidentScreen({
       <button type="button" className="rk-primary-btn" onClick={onActions}>Aage ke kadam dekhein</button>
 
       <section className="rk-card">
-        <h2>Step 2 tools</h2>
+        <h2>Madad ke tools</h2>
         <Button label="Evidence Vault — saboot save karein" variant="secondary" size="lg" width="100%" onClick={() => onTool('vault')} />
         <Button label="Second-Scam Shield — message check karein" variant="secondary" size="lg" width="100%" onClick={() => onTool('shield')} />
         <Button label="Triage — mera rasta kya hai?" variant="secondary" size="lg" width="100%" onClick={() => onTool('triage')} />

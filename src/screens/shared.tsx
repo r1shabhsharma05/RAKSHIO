@@ -86,15 +86,15 @@ export function MicIcon({ size = 64 }: { size?: number }) {
 
 // Loading placeholder for lazy screens and the Extracting step: static
 // bars that reserve the layout (ui-motion-kit skeleton meta — aria-busy on
-// the region, shapes hidden from assistive tech, no shimmer under
-// reduced motion, which the CSS enforces).
+// the region, shapes hidden from assistive tech). Static on purpose: the
+// bars mark loading, a shimmer loop would be motion with no job.
 export function ScreenSkeleton({ label, hint }: { label: string; hint?: string }) {
   return (
     <section className="rk-card" aria-live="polite" aria-busy="true">
       <h1>{label}</h1>
-      <div className="skeleton skeleton-bar skeleton-pulse" aria-hidden="true" />
-      <div className="skeleton skeleton-bar skeleton-pulse" aria-hidden="true" />
-      <div className="skeleton skeleton-bar skeleton-short skeleton-pulse" aria-hidden="true" />
+      <div className="skeleton skeleton-bar" aria-hidden="true" />
+      <div className="skeleton skeleton-bar" aria-hidden="true" />
+      <div className="skeleton skeleton-bar skeleton-short" aria-hidden="true" />
       {hint && <p>{hint}</p>}
     </section>
   );

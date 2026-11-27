@@ -211,3 +211,78 @@ OTP-masking regex false positives from Step 3). No .env files.
   (same as Step 3). Strix still not installed.
 - Proof Pack PDF stays Latin-script Hinglish (pdf-lib has no Devanagari
   glyphs) — stated in UI, unchanged.
+
+## Step 5: complete (2026-11-27) — Damir unslop pass ("kill ai gradient")
+Skill: `~/workspace/custom-skills/unslop/` (Damir Sokolovsky, CC BY 4.0) +
+refs/signs.md, tokens.md, visuals.md, refs.md — read in full before the
+pass. Scope: the current mobile-first Calm Mode panic flow only; no
+redesign, no new brand, no desktop dashboard (separate unconfirmed job).
+Rishabh's order was "just do it", so the skill's wait-for-direction step
+was skipped; the direction below is shown in the report.
+
+Direction (5 lines, from the product, same as Step 4's, now formal):
+- Product: RAKSHIO gets a panicking fraud victim — often elderly, often
+  alone — through the first hour after fraud, in the right order, with
+  proof that holds up.
+- Character: calm, exact, a little warm.
+- World: a help-desk counter at a bank branch — paper forms, a stamped
+  receipt, the helpline number written in ink.
+- Moments: the giant blue mic ("Boliye, kya hua?") and the Golden Hour
+  Clock — the two things a panicked person looks at first.
+- Signature: the permanent honest banner ("RAKSHIO report file nahi
+  karta…") on every screen.
+
+Audit (signs.md, one line per sign — real screenshots, 390×844 + 1440px):
+- Colored glow on the mic: `.mic-btn` box-shadow
+  `0 0.5rem 1.5rem rgba(3,105,161,0.35)` — blue halo visible in both
+  screenshots. FOUND, fixed.
+- Same colored-shadow pattern on `.toast`
+  (`rgba(12,74,110,0.35)`). FOUND, fixed.
+- Gradients: none in src/index.css, screens, or components. PASS.
+- Gradient text, radial washes, blobs, neon borders: none. PASS.
+- Emoji as icons/decoration: none (✓/✗/✕ are text glyphs, not emoji;
+  mic is inline SVG). PASS.
+- Exclamation marks, greeting headline, hype words, unverified claims:
+  none in UI strings. PASS.
+- Uppercase tracked labels, italic emphasis: none. PASS.
+- Headline with trailing period: "Aap safe hain." (Panic h2). FOUND, fixed.
+- Internal jargon in UI: "Step 2 tools" (Incident h2 — a build-phase
+  label, not user language). FOUND, fixed.
+- Type weights 800 (wordmark, deadline-chip time) — above the token cap
+  of 600. FOUND, softened to 700 (700 kept elsewhere: buttons, values,
+  status — legibility for elderly victims, deliberate).
+- Skeleton shimmer loop (`rk-shimmer`, infinite alternate) — looping
+  motion. FOUND, removed; bars are static now.
+- Spacing: rem steps consistent, equal rows share sizes; root is 18px so
+  0.75rem = 13.5px, not a literal 4px grid — rhythm even, no fix.
+- 1440px: narrow 28rem centered column, wide empty margins — deliberate
+  mobile-first panic app; desktop layout is the separate unconfirmed job.
+  Noted, no fix.
+- Motion otherwise: no pulse/ping/transition-all/hover:scale; one 220ms
+  crossfade + one short stagger per screen, reduced-motion safe. PASS.
+- Verdict: LIGHT SLOP. One real sign (the glow) + small copy/type/motion
+  nits. No redesign warranted.
+
+Changes, by pass (spacing/icons/layout/details/visuals: pass, no change):
+- Color: mic glow → neutral `0 0.5rem 1rem rgba(12,74,110,0.12)`; toast
+  shadow → neutral `rgba(0,0,0,0.20)`. Mic keeps prominence through
+  size + solid Calm blue, not glow.
+- Copy: "Aap safe hain." → "Aap safe hain" (visible h2 only; TTS string
+  keeps its period — speech needs it). "Step 2 tools" → "Madad ke tools".
+- Type: wordmark 800 → 700; deadline-chip time 800 → 700.
+- Motion: `rk-shimmer` keyframes + `.skeleton-pulse` deleted (CSS +
+  shared.tsx); skeleton bars static, aria-busy still announces loading.
+
+Evidence: `npm run build` green (1.89s); `npx vitest run` **26/26**;
+`npx playwright test` **9/9** (smoke incl. axe 0 violations on Panic +
+Incident). Fresh 390×844 screenshots in `tests/shots-local/` (local
+only, NOT committed): mic is a flat solid circle, no halo; heading
+period gone. Secret scan clean; no .env files; no binaries pushed.
+
+## Rulings (Step 5)
+- 700 weights kept on buttons/values/status on purpose: Calm Mode is an
+  accessibility-first product for panicked elderly users; the token cap
+  (600) assumes a dashboard audience. Only the two 800s were softened.
+- The desktop-width empty margins are NOT slop here — the app is a
+  phone-first panic tool by design. Widening it belongs to the desktop
+  dashboard job, not this pass.

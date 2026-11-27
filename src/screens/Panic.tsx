@@ -56,7 +56,7 @@ export function PanicScreen({
       <NoReportBanner />
       {calmVisible && (
         <section className="calm-card" aria-live="polite">
-          <h2>Aap safe hain.</h2>
+          <h2>Aap safe hain</h2>
           <p>Abhi kisi ko OTP ya paisa mat dijiye. Saans lijiye — hum ek-ek kadam karenge.</p>
           <button type="button" className="rk-primary-btn" onClick={() => setCalmVisible(false)}>
             {secondsLeft > 0 ? `Aage badhein (${secondsLeft})` : 'Aage badhein'}

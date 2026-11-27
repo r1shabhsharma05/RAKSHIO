@@ -110,6 +110,26 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - Stack: React 19 + TypeScript + Vite — no plain-HTML pages; index.html is
   only the Vite entry shell.
 
+## Step 5 — Damir unslop pass (27 Nov, "kill ai gradient")
+
+- **Verdict: light slop.** Audit against the unslop signs list found one
+  real sign — a blue glow halo on the giant mic button — plus small
+  copy/type/motion nits. No gradients anywhere, no emoji, no hype copy.
+- **Color:** mic glow (`rgba(3,105,161,0.35)` shadow) → soft neutral
+  shadow; toast shadow likewise neutralised. The mic keeps prominence
+  through size + solid Calm blue, not glow.
+- **Copy:** "Aap safe hain." → "Aap safe hain" (headline, no trailing
+  period); "Step 2 tools" → "Madad ke tools" (build-phase jargon out of
+  the UI).
+- **Type:** wordmark and deadline figures 800 → 700 (700 kept on buttons
+  and values — legibility for elderly victims, deliberate).
+- **Motion:** skeleton shimmer loop removed; loading bars are static now.
+- Direction kept from Step 4: calm, exact, a little warm; help-desk
+  counter world; moments = giant mic + Golden Hour Clock; signature = the
+  permanent honest banner.
+- Evidence: build green, vitest 26/26, Playwright 9/9, axe 0 violations;
+  fresh screenshots confirm the halo is gone.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
