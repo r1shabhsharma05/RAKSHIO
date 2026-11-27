@@ -177,7 +177,10 @@ without it the app silently offers Text Mode instead of a dead mic button.
   the button label into its own text, and the ticking lives in a child
   component so the mic button never re-renders per second; (6) offline
   PWA reload verified by the suite's offline test — service worker
-  serves the report screen with the network off.
+  serves the report screen with the network off. A 7th flaw found in
+  post-push verification: after the report flow, Home opened scrolled
+  down and the sticky header clipped the honest banner — fixed with
+  ScrollToTop on every route change, test-pinned.
 - **Two real bugs found by the suite itself:** a Zustand selector
   (`s.followups[id] ?? {}`) returned a fresh object on every snapshot,
   looping React to error #185 and crashing every page with follow-ups —
@@ -188,8 +191,8 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Cost:** first-load JS 655.74 kB → 983.20 kB (gzip 318.96 kB) — the
   shell (router + zustand + framer-motion + lucide + Dexie); charts
   (440 kB) and proof pack (517.51 kB) stay lazy and never block paint.
-- Evidence: build green, vitest 26/26, Playwright **28/28** (dashboard
-  17/17 incl. the 5 fix tests, smoke 2/2, production incl. offline
+- Evidence: build green, vitest 26/26, Playwright **29/29** (dashboard
+  18/18 incl. the 5 fix tests + scroll-reset test, smoke 2/2, production incl. offline
   reload, shots, all-screens), axe 0 violations on home, incidents,
   Panic and Incident screens; mobile 390 no horizontal scroll.
 

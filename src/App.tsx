@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { useDashboard } from './state/dashboardStore';
 import { Shell } from './dashboard/Shell';
 import { HomePage } from './dashboard/Home';
@@ -24,6 +24,17 @@ import {
 // IncidentsPage (Recharts) is lazy: charts never block first paint.
 const IncidentsPage = lazy(() => import('./dashboard/IncidentsPage').then((m) => ({ default: m.IncidentsPage })));
 
+// Hash navigation keeps the scroll offset: after the report flow (scrolled
+// down), Home opened with the page scrolled — the sticky header then covered
+// the honest banner's top half. Reset scroll on every route change.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   const load = useDashboard((s) => s.load);
   useEffect(() => {
@@ -32,6 +43,7 @@ export default function App() {
 
   return (
     <HashRouter>
+      <ScrollToTop />
       <Routes>
         <Route element={<Shell />}>
           <Route index element={<HomePage />} />

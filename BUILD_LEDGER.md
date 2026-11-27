@@ -355,6 +355,13 @@ The six live-E2E fixes (each has a Playwright test in dashboard.spec.ts):
    never re-render per tick. TTS rate now follows the settings value.
 6. Offline: the suite's offline reload test (production.spec.ts) passes
    — service worker serves the report screen with the network off.
+- Post-push verification caught a 7th flaw (not in the E2E list): after
+  the report flow, Home opened with the old scroll offset — hash
+  navigation keeps scroll, so the sticky header covered the honest
+  banner's top half. Fixed with `ScrollToTop` in App.tsx (scroll to 0
+  on every pathname change), pinned by a dashboard.spec.ts test
+  (scrollY 0 + banner below the 68px header). Verified by screenshot
+  before/after.
 
 Bugs the suite itself caught (all fixed in this step):
 - FollowUpList crashed every page it rendered on: the Zustand selector

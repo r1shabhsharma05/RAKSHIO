@@ -220,6 +220,17 @@ test('mobile 390: bottom nav, drawer, no horizontal scroll', async ({ page }) =>
 
 // Live E2E fixes (27 Nov real-Chrome walk): each test pins one bug found on
 // the Step 4 live site, so it cannot regress in the dashboard rebuild.
+test('route change resets scroll — banner fully visible after report flow', async ({ page }) => {
+  await seedDemo(page);
+  await page.goto('/#/');
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  const banner = page.getByRole('note');
+  await expect(banner).toBeVisible();
+  const box = await banner.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y).toBeGreaterThan(68); // below the sticky 68px header
+});
+
 test('fix 1: back buttons work — Judge, Triage, and browser Back', async ({ page }) => {
   await page.goto('/#/report');
   await page.getByRole('button', { name: /Judge Mode/ }).click();
