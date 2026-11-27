@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@astryxdesign/core/Button';
 import { analyzeShield, type ShieldVerdict } from '../engines/shield/shield';
+import { guideForShieldRule } from '../engines/guide/guide';
 import { BackButton } from './shared';
 
 const EXAMPLES: { label: string; text: string }[] = [
@@ -53,6 +55,22 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
             </>
           )}
           <p><strong>Kya karein:</strong> {verdict.advice}</p>
+          {/* Truth Card → Situation Guide: the strongest matched rule picks
+              the guide; rules with no specific guide fall back to the list. */}
+          {(() => {
+            const guide = verdict.flags.length > 0 ? guideForShieldRule(verdict.flags[0].rule) : null;
+            return guide ? (
+              <p>
+                <Link to={`/guide?id=${guide.id}`}>
+                  Is situation me kya karein — {guide.title} guide dekhein
+                </Link>
+              </p>
+            ) : (
+              <p>
+                <Link to="/guide">Situation Guide dekhein — har situation me kya karein</Link>
+              </p>
+            );
+          })()}
         </section>
       )}
       <p className="note">Shield sirf rules se check karta hai — koi bhi message 100% safe nahi hota. Shak ho to 1930 par pooch lein.</p>

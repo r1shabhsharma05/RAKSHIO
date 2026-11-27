@@ -175,6 +175,7 @@ export function ReportFlow() {
             onInterim={setInterim}
             onStop={(t) => handleTranscript(t || transcript)}
             onTextSubmit={handleTranscript}
+            onTextMode={() => setMode('text')}
             onBack={() => go('panic')}
           />
         )}

@@ -3,7 +3,7 @@ import { useDashboard } from '../state/dashboardStore';
 import { localStorageBytes } from '../state/incidents';
 import { db } from '../engines/evidence/vault';
 import { FollowUpList } from './FollowUp';
-import { t } from '../i18n';
+import { t, speechLangFor, type Lang } from '../i18n';
 import { useToast } from '../components/Toast';
 
 // Settings: language, Calm/Caregiver, speech, storage, export, delete, wipe.
@@ -69,10 +69,16 @@ export function SettingsPage() {
             className="db-input w-48 shrink-0"
             aria-label="Dashboard language"
             value={settings.language}
-            onChange={(e) => setSettings({ language: e.target.value as 'en' | 'hi' })}
+            onChange={(e) => {
+              const language = e.target.value as Lang;
+              // UI language drives the speech language: Hinglish/Hindi
+              // speakers speak Hindi; only the English UI listens in English.
+              setSettings({ language, speechLang: speechLangFor(language) });
+            }}
           >
             <option value="en">English</option>
             <option value="hi">हिंदी</option>
+            <option value="hg">Hinglish</option>
           </select>
         </div>
         <div className="db-setting-row">

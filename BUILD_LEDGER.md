@@ -502,3 +502,150 @@ Deploy: v4 (Step 6+7) went live 17:39 IST, verified live
 (`db-status-list` in the live IncidentsPage chunk, "Madad ke tools"
 in the live index chunk, `NoReportBanner` 0, all v4 chunk filenames
 200). This Step 8 build is NOT deployed yet — v5 deploy follows.
+
+## Step 10: complete (2026-11-27) — Glassy dashboard redesign + Step 9 fixes
+
+His order: "is dashboard ko mere dashboard se replace kr de mera purana
+vala dashboard design hta ye vala lga de but mera data ho" — the
+21st.dev GlassyDashboard component, with ALL RAKSHIO data and features,
+plus the Step 9 bug fixes (language, TTS, mic, situation guide, Report
+Fraud hardening) and the live-probe sidebar finding.
+
+- **GlassyDashboard, verbatim.** `src/components/ui/glassy-dashboard.tsx`
+  (1,360 lines) copied verbatim from the pasted source — markers
+  verified (`gd-app` 31 hits, `studioPhoto`, `ATLAS`, `routeFromHash`).
+  One additive deviation only: `export { dashboardStyles }` appended so
+  the adapted shell reuses the same ~700 lines of CSS instead of
+  duplicating them. The verbatim `GlassyDashboard` component itself is
+  NOT rendered (it ships sample e-commerce views); `GlassShell`
+  (`src/dashboard/GlassShell.tsx`) reuses only its `dashboardStyles` CSS
+  + Dock/GSAP patterns and wires the 12 real RAKSHIO routes (HashRouter),
+  the top pill bar (brand, ask/search dialog, language select, Caregiver
+  badge, Offline Ready pill, theme toggle, settings), the 12-item side
+  dock, the 5-item bottom dock, and the GSAP blur/fade route transition
+  (320ms, skipped under reduced motion). Old `Shell.tsx` DELETED;
+  `dashboard.css` rewritten (old chrome classes gone; all `.db-*`
+  content classes kept). Background photo downloaded to
+  `public/rakshio-bg.jpg` (271,505 bytes, local copy so the offline PWA
+  keeps the look); Unsplash credit kept in the footer. Manrope installed
+  (`@fontsource-variable/manrope`). Theme follows the pasted `demo.tsx`:
+  auto-detect via prefers-color-scheme, toggle in the top bar, default
+  light. No sample e-commerce data anywhere — every number is real saved
+  data or the seeded ₹20,000 demo.
+- **Language ×3 (Step 9.1).** `Lang = 'en' | 'hi' | 'hg'`; complete
+  dicts for every key — en proper English, hi full Devanagari, hg
+  Hinglish (the old Roman-Hindi strings). Default `'hg'`; stored `'en'`
+  migrates to `'hg'` (old EN was Hinglish), stored `'hi'` stays.
+  `speechLang` follows the UI language (hi/hg → hi-IN, en → en-IN).
+  Panic-flow strings stay Hinglish by design. The dropdown bug is
+  fixed: `<option>` elements get the component surface explicitly
+  (light `#f6ece2`/`#25201e`, dark `#241c16`/`#fff6e9`) — verified in the
+  dark-theme screenshot and by a computed-style test.
+- **TTS tap-only (Step 9.2).** Auto-speak REMOVED from the calm card
+  (`Panic.tsx` CalmPrompt) and from the Confirm readback — both now have
+  an explicit button ("Suniye" / "Summary suniye") that speaks only on
+  tap; `stopSpeaking` on dismiss/unmount. TTS never starts without a tap.
+- **Mic (Step 9.3).** `VoiceAdapter` requests the mic first via
+  `getUserMedia({audio:true})` (forces the permission prompt), verifies
+  live input with an `AnalyserNode` level meter built from REAL mic data
+  only (no meter when no real level — never a fake waveform), then stops
+  the tracks. `Listen.tsx` is permission-first with distinct UI per
+  error (denied → how-to steps + Retry + Text Mode; network → service
+  unreachable; audio-capture → no mic found; no-speech → 15s window of
+  zero interim/final/audio peak, then guidance while KEEPING listening +
+  Retry). `continuous=true` + restart loop kept. Real-mic test still
+  needs Rishabh on his own Chrome — never verified here.
+- **Situation Guide engine (Step 9.4).** `src/engines/guide/` —
+  deterministic, on-device, rule-based. NEVER called a trained model /
+  AI / ML anywhere in UI, code, or docs (vitest asserts that). 14
+  situations: upi-fraud, otp-scam, fake-customer-care, phishing-link,
+  kyc-scam, refund-scam, investment-scam, sim-swap, qr-scam, job-scam,
+  loan-app-scam, attempted-fraud, digital-arrest, remote-access. Each:
+  recognize / first-5-minutes / 1930-bank-portal steps / don't-do /
+  evidence to save. Only established official windows (1930 ≤48h, portal
+  ≤24h, bank ≤3 working days); never promises recovery. Wired: after the
+  Understanding Engine extracts a fraud type, the Incident screen shows
+  "Is situation me kya karein"; route `/guide` (list + detail),
+  reachable from Shield, Incident, and Home — NO dock entry; Shield
+  Truth Card links to the matching guide. `guideForFraudType` covers
+  all 8 extractor outputs; `guideForShieldRule` maps shield rule ids.
+- **Sidebar (live probe).** The probe found navigation itself worked —
+  all 7 gated sections rendered the IDENTICAL "Pehle incident banayein"
+  panel, which read as "nothing opens". Every gated tool's empty state
+  is now SECTION-SPECIFIC (`NeedsIncident({title, what, preview})`):
+  name + what it does + why it needs an incident + a preview of what it
+  will show + the "Report Fraud shuru karein" CTA. SW cache bumped
+  `rakshio-v1` → `rakshio-v2` (+ `/rakshio-bg.jpg` in the shell list).
+  Chunk-load recovery (`src/components/chunkRecovery.tsx`): a failed lazy
+  chunk hard-reloads once, then shows a "Naya version aaya — reload
+  karein" panel — never a silent blank.
+- **Report Fraud hardening (Step 9.5).** TTS + mic + language-aware
+  recognition + guide after extraction (above); Text Mode fallback
+  always visible; calm card keeps its 10s dismiss (no auto-speak).
+
+Verification — the five failures found by the suite, and what each was:
+1. Quick actions (line 101): 'Bank Alert Kit' heading ×2 (view-head h1
+   + screen h1) — test now uses `.first()`.
+2. Axe: 6 color-contrast nodes — the glassy inline `<style>` rule
+   `.gd-app :where(button){color:inherit}` ties with `.db-btn-red` on
+   specificity but loads later, so buttons inherited dark ink. Fix:
+   `.gd-app .db-btn-*` prefix (wins) + deeper 700-shade backgrounds
+   (white on #ef4444/#15803d is 3.8:1; #b91c1c 5.9:1, #166534 7.0:1).
+   Plus 1 label-content-name-mismatch: the ask pill's aria-label didn't
+   contain its visible text — aria-label removed, the visible text is
+   the name now (test updated to match it).
+3. Mobile 390: 1px overflow — the actions row is 357px in a 346px bar
+   (the component's own breakpoint is 760px, not 720px). Fix at ≤760px:
+   hide the informational status pill (`.gd-pill-status`; Caregiver
+   pill stays), the brand subtitle, and the top-bar Settings link (the
+   mobile bottom dock already has Settings). One mis-fire caught by
+   grep: the class first landed on the Caregiver pill — moved to the
+   Offline pill (line 283).
+4. Fix 1 (line 275): 'Report Fraud' link renamed 'Fraud Report Karein'
+   under the hg default — test updated.
+5. Vault widget — the long hunt. The test asserted on
+   `getByText('Test SMS')`, but that matches the TEXTAREA's own value
+   before any save, so `goto('/')` fired while the Dexie write was
+   still in flight and Home's read saw a pre-write snapshot (0 rows).
+   The Dexie indexed query was EXONERATED: a `toArray()` detour showed
+   the same 0-while-raw-getAll-found-1 pattern, and the instrumented
+   logs showed Home's read transaction was created before the write
+   committed. The `toArray` change was reverted (indexed
+   `where().equals().sortBy()` restored — it was never the problem).
+   Fix: the test now waits for the 'Saboot save ho gaya' toast, which
+   fires only after the write committed AND the re-read returned the
+   row. Vault test 5/5 after the fix. Real-app note: the save toast is
+   the app's own "write committed" signal; a user navigating mid-save
+   would see the same stale-empty Home until revisit — accepted, the
+   toast is the completion signal.
+
+Evidence: build green (`tsc -b && vite build`, 2.61s); vitest
+**32/32** (8 files, incl. 6 new guide tests); Playwright dashboard
+**29/29** (2.1m; one incidents-test flake in an intermediate run —
+passed in isolation and in the re-run); axe 0 on home + incidents
+(inside the suite). First-load JS index chunk 905,113 bytes
+(884K; was 983.20 kB Step 6 — shell cost, charts/proof lazy).
+Screenshots read (`tests/shots-local/glassy-*.png`): light + dark home
+1440, gated Action Plan empty state, Guide list (14 situations),
+Settings (Hinglish select visible), home 390 (two-row top bar, bottom
+dock labelled, no overflow). Secret scan clean. NOT deployed — live
+still serves the Step 8 build; deploy needs his word.
+
+## Rulings (Step 10)
+
+- The verbatim GlassyDashboard component is a reference, not a
+  render target: its views are sample e-commerce data. Only its CSS +
+  Dock/GSAP patterns are reused; every number on screen is RAKSHIO
+  data. Do not render its demo views.
+- The bottom dock floats at all widths (component's own design:
+  `position:absolute; bottom:-24px`, same as the side dock hanging
+  left). Left as the source intends — it is quick access, not a bug.
+- The `.gd-app` prefix rule: anything overriding the glassy inline
+  `<style>` needs higher specificity than the component's own selectors
+  (the inline style loads after the external sheet). `.gd-app .x`
+  beats `.x`. Remember this for every future glass override.
+- The vault test race is a standing lesson: never assert a save with a
+  locator that also matches the input's own value — wait for the
+  completion signal (toast / rendered row). An IndexedDB read created
+  before a write commits sees the pre-write snapshot; that is not a
+  Dexie bug.

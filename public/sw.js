@@ -2,8 +2,8 @@
 // from public/. Bump CACHE on every deploy; the old cache is deleted on
 // activate, and the running page keeps the old worker until reload, so an
 // update can never break the panic path mid-session.
-const CACHE = 'rakshio-v1';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
+const CACHE = 'rakshio-v2';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg', '/rakshio-bg.jpg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));

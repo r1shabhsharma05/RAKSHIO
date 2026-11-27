@@ -12,6 +12,7 @@
   "dependencies": {
     "@astryxdesign/core": "^0.7.17",
     "@astryxdesign/theme-neutral": "^0.7.17",
+    "@fontsource-variable/manrope": "^5.3.0",
     "@gsap/react": "^2.1.2",
     "@stylexjs/stylex": "^0.19.2",
     "@tailwindcss/vite": "^4.3.5",

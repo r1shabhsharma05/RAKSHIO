@@ -1,10 +1,12 @@
 import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
+import { guideForFraudType } from '../engines/guide/guide';
 import { formatINR, fraudTypeLabel, methodLabel } from './shared';
 
 gsap.registerPlugin(useGSAP);
@@ -57,6 +59,26 @@ export function IncidentScreen({
         {stored.maskedCredentials && (
           <p className="note">OTP/PIN wale number chhupakar save kiye gaye hain — RAKSHIO kabhi OTP/PIN store nahi karta.</p>
         )}
+      </section>
+
+      {/* Situation Guide: the Understanding Engine already extracted a fraud
+          type — show the matching step-by-step guide for this situation. */}
+      <section className="rk-card">
+        <h2>Is situation me kya karein</h2>
+        {(() => {
+          const guide = guideForFraudType(stored.fraudType);
+          return guide ? (
+            <p>
+              <Link to={`/guide?id=${guide.id}`}>
+                {guide.title} — pehle 5 minute, report ke kadam, aur kya na karein, step by step.
+              </Link>
+            </p>
+          ) : (
+            <p>
+              <Link to="/guide">Situation Guide dekhein — har situation me kya karein, step by step.</Link>
+            </p>
+          );
+        })()}
       </section>
 
       <section className="rk-card">

@@ -209,6 +209,17 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Lenis NOT applied — its own skill forbids dashboards/app UIs** ("Never inside app dashboards"), and this is a panic app where native scroll must never delay the 1930 action.
 - Evidence: build green, tsc clean, vitest 26/26, Playwright dashboard **21/21** (incl. new gsap test: cards end at opacity 1; reduced motion skips the entrance); Home screenshot read.
 
+## Step 10 — Glassy dashboard + Step 9 fixes (27 Nov)
+
+- **Design replaced, data kept.** The 21st.dev GlassyDashboard component (verbatim, `src/components/ui/glassy-dashboard.tsx`) replaces the old dark dashboard chrome: top pill bar (brand, search, language, Caregiver badge, Offline Ready pill, theme toggle, settings), 12-icon side dock, 5-item bottom dock, glass stage, GSAP route transitions, Manrope, light/dark themes (auto-detect, toggle in the top bar). Old `Shell.tsx` deleted. Background photo is a local copy (`public/rakshio-bg.jpg`) so the offline PWA keeps the look. Every number on screen is real saved data or the seeded ₹20,000 demo — no sample e-commerce data.
+- **Language ×3:** English / Hindi (full Devanagari) / Hinglish — every dashboard string, default Hinglish; speech recognition follows the UI language (hi/hg → hi-IN). The select's options are styled dark so they read on Windows Chrome. Panic-flow strings stay Hinglish by design.
+- **TTS never speaks alone:** calm card and Confirm readback are tap-only buttons now ("Suniye" / "Summary suniye").
+- **Mic fixed:** permission prompt first (getUserMedia), live level meter from real mic data only, 15s no-speech window with keep-listening + Retry, distinct guidance per error (permission / network / no mic / no speech). Real-mic test still needs Rishabh on his own Chrome.
+- **Situation Guide engine** (`src/engines/guide/`): deterministic on-device rules for 14 fraud situations — never called AI/ML/model anywhere. Wired after extraction, on `/guide`, and from the Shield Truth Card.
+- **Sidebar fixed (live probe):** the 7 gated sections no longer show the identical "Pehle incident banayein" panel — each empty state is section-specific (what the tool does + preview + CTA). SW cache `rakshio-v2`; lazy-chunk failure now shows a reload action instead of a blank.
+- **Axe/mobile fixes:** coloured buttons got white text that actually wins over the glassy CSS + deeper backgrounds (4.5:1); 390px overflow fixed (status pill, brand subtitle, top-bar Settings link hidden ≤760px — Caregiver pill stays, Settings lives in the bottom dock).
+- Evidence: build green, vitest **32/32**, Playwright dashboard **29/29**, axe 0; light/dark home, empty state, Guide, Settings, mobile screenshots read. NOT deployed — live still serves Step 8.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
@@ -225,6 +236,9 @@ src/
                     deadlines.config.ts (deadlines as data + sources),
                     clock.ts (deadline states, action ordering)
   screens/        Panic, Listen, Gaps, Confirm, Incident, Actions, Coach
+  dashboard/      GlassShell (Glassy design), Home, GuidePage, ToolPages,
+                  SettingsPage, ReportFlow — HashRouter, 12 routes + /guide
+  engines/guide/  guide.ts — deterministic situation guides (14 situations)
   theme/          rakshioTheme.ts — Astryx defineTheme on the Calm palette
   components/     Toast (confirmation toasts), ErrorBoundary (calm fallback)
   state/          store.ts — localStorage only
