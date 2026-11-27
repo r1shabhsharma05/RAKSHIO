@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 import { screenToPath } from './routes';
 import { BANKS, loadBankRef } from '../engines/banks/banks';
 import { ActionsScreen } from '../screens/Actions';
@@ -39,6 +40,7 @@ export function NeedsIncident({
   extra?: ReactNode;
 }) {
   const navigate = useNavigate();
+  const lang = useDashboard((s) => s.settings.language);
   return (
     <div className="db-flow">
       <div className="db-card">
@@ -46,18 +48,18 @@ export function NeedsIncident({
         <p className="db-muted">{what}</p>
         <p className="db-muted">{preview}</p>
         {extra}
-        <h3>Kya yaad rakhein</h3>
+        <h3>{t(lang, 'emptyRememberTitle')}</h3>
         <ul className="db-tips">
           {tips.map((tip) => (
             <li key={tip}>{tip}</li>
           ))}
         </ul>
         <p className="db-muted">
-          Iske liye pehle ek incident chahiye — Report Fraud se apni baat batayein, RAKSHIO incident card bana dega.
+          {t(lang, 'emptyNeedIncident')}
         </p>
         <div>
           <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
-            Report Fraud shuru karein
+            {t(lang, 'startReport')}
           </button>
         </div>
       </div>
@@ -69,9 +71,10 @@ export function NeedsIncident({
 // the Bank Alert Kit uses (checked 2026-11-27). First four banks only;
 // the full list of 10 lives in the kit itself.
 function BankHelplinePreview() {
+  const lang = useDashboard((s) => s.settings.language);
   return (
     <div>
-      <h3>Verified helplines — turant call kar sakte hain</h3>
+      <h3>{t(lang, 'bankPreviewTitle')}</h3>
       <div className="db-rows">
         {BANKS.slice(0, 4).map((b) => (
           <div key={b.name} className="db-row">
@@ -82,7 +85,7 @@ function BankHelplinePreview() {
           </div>
         ))}
       </div>
-      <p className="db-muted">Poori list (10 banks) Bank Alert Kit me hai — incident banne par.</p>
+      <p className="db-muted">{t(lang, 'bankPreviewNote')}</p>
     </div>
   );
 }
@@ -102,17 +105,14 @@ function useToolNav() {
 
 export function ActionsPage() {
   const { navigate, active, backToIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
       <NeedsIncident
-        title="Action Plan"
-        what="Ye aapke incident ke saare kadam ek jagah dikhata hai — 1930 call, portal complaint, bank alert — kis order me, kab tak."
-        preview="Incident banne par yahan milega: 5 kadam ki list, har kadam ki deadline aur status."
-        tips={[
-          'Kadam clock ke hisaab se order me hain — jo deadline nazdeek, woh pehle.',
-          'Har kadam poora hone par status badalta hai — kuch bhi apne aap complete nahi hota.',
-          'Portal ki window (24h) 1930 (48h) se pehle khatm hoti hai.',
-        ]}
+        title={t(lang, 'navActions')}
+        what={t(lang, 'emptyActionsWhat')}
+        preview={t(lang, 'emptyActionsPreview')}
+        tips={[t(lang, 'emptyActionsTip1'), t(lang, 'emptyActionsTip2'), t(lang, 'emptyActionsTip3')]}
       />
     );
   }
@@ -130,17 +130,14 @@ export function ActionsPage() {
 
 export function CoachPage() {
   const { navigate, active, logCallTap } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
       <NeedsIncident
-        title="1930 Call Coach"
-        what="1930 par call karne se pehle aur call ke dauraan kya bolna hai — taiyaar script aur checklist."
-        preview="Incident banne par yahan milega: call ki taiyaari, kya-kya bolna hai, aur call ke baad ack number bharne ki jagah."
-        tips={[
-          'Call se pehle ye taiyaar rakhein: rashi, date/time, UTR ya reference.',
-          'Line busy ho to 10 minute baad dobara try karein — number save karke rakhein.',
-          'Call ke baad ack number yahin bhar dein — wahi aapki complaint ki pehchan hai.',
-        ]}
+        title={t(lang, 'navCoach')}
+        what={t(lang, 'emptyCoachWhat')}
+        preview={t(lang, 'emptyCoachPreview')}
+        tips={[t(lang, 'emptyCoachTip1'), t(lang, 'emptyCoachTip2'), t(lang, 'emptyCoachTip3')]}
       />
     );
   }
@@ -153,17 +150,14 @@ export function CoachPage() {
 
 export function PortalPage() {
   const { active, backToIncident, updateIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
       <NeedsIncident
-        title="Portal Madad"
-        what="cybercrime.gov.in par complaint likhne ke liye har field ka ready-to-copy text."
-        preview="Incident banne par yahan milega: complaint ka poora text, field-by-field copy button, aur ack number ki 24-ghante ki countdown."
-        tips={[
-          'Complaint me rashi, date, UTR aur bank ka naam likhna hota hai — sab kuch incident card se copy ho jayega.',
-          'Ack number milte hi yahan save karein — 24 ghante ki countdown chalegi.',
-          'Portal par complaint khud bharni hoti hai — RAKSHIO sirf text taiyaar karta hai.',
-        ]}
+        title={t(lang, 'navPortal')}
+        what={t(lang, 'emptyPortalWhat')}
+        preview={t(lang, 'emptyPortalPreview')}
+        tips={[t(lang, 'emptyPortalTip1'), t(lang, 'emptyPortalTip2'), t(lang, 'emptyPortalTip3')]}
       />
     );
   }
@@ -184,17 +178,14 @@ export function PortalPage() {
 
 export function BankPage() {
   const { active, backToIncident, updateIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
       <NeedsIncident
-        title="Bank Alert Kit"
-        what="Aapke bank ko turant alert karne ke liye helpline number aur ready draft message."
-        preview="Incident banne par yahan milega: aapke bank ki helpline, dispute ka draft, aur reference number save karne ki jagah."
-        tips={[
-          'Bank ko turant batana sabse zaroori hai — dispute 3 working days ke andar.',
-          'Draft message pehle se likha milega — bhejne se pehle khud padh lein.',
-          'Reference number save karein — wahi bank se baat karne ka proof hai.',
-        ]}
+        title={t(lang, 'navBank')}
+        what={t(lang, 'emptyBankWhat')}
+        preview={t(lang, 'emptyBankPreview')}
+        tips={[t(lang, 'emptyBankTip1'), t(lang, 'emptyBankTip2'), t(lang, 'emptyBankTip3')]}
         extra={<BankHelplinePreview />}
       />
     );
@@ -218,19 +209,16 @@ export function BankPage() {
 
 export function VaultPage() {
   const { active, backToIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   const caregiver = useDashboard((s) => s.settings.caregiver);
   const { Page: VaultScreen, failed } = useChunk(loadVault);
   if (!active) {
     return (
       <NeedsIncident
-        title="Evidence Vault"
-        what="Fraud ke saboot — screenshot, SMS, receipt — yahan safe rakhte hain, hash-chain ke saath."
-        preview="Incident banne par yahan milega: saboot upload, har file ka SHA-256 hash, aur chain verify karne ka button."
-        tips={[
-          'Saboot woh hai jo hua tha: SMS, screenshot, receipt, call ka number.',
-          'Har file ka SHA-256 hash banta hai — badlaav pakda jata hai.',
-          'Tamper test karke dekh sakte hain — chain tooti to saaf dikhega.',
-        ]}
+        title={t(lang, 'navVault')}
+        what={t(lang, 'emptyVaultWhat')}
+        preview={t(lang, 'emptyVaultPreview')}
+        tips={[t(lang, 'emptyVaultTip1'), t(lang, 'emptyVaultTip2'), t(lang, 'emptyVaultTip3')]}
       />
     );
   }
@@ -258,17 +246,14 @@ export function ShieldPage() {
 
 export function TriagePage() {
   const { active, backToIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
       <NeedsIncident
-        title="Smart Triage"
-        what="3 sawaal — aapki situation ke hisaab se sahi raasta batata hai: 1930, bank, ya Chakshu."
-        preview="Incident banne par yahan milega: aapki situation ka assessment aur agla kadam."
-        tips={[
-          '3 sawaal — paisa gaya ya sirf koshish hui, yehi raasta tay karta hai.',
-          'Paisa gaya ho to 1930; sirf koshish hui ho to Chakshu.',
-          "Jawab 'pata nahi' ho to safe raasta chuna jata hai.",
-        ]}
+        title={t(lang, 'triageTitle')}
+        what={t(lang, 'emptyTriageWhat')}
+        preview={t(lang, 'emptyTriagePreview')}
+        tips={[t(lang, 'emptyTriageTip1'), t(lang, 'emptyTriageTip2'), t(lang, 'emptyTriageTip3')]}
       />
     );
   }
@@ -281,18 +266,15 @@ export function TriagePage() {
 
 export function CarePage() {
   const { active, backToIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   const { Page: CareScreen, failed } = useChunk(loadCare);
   if (!active) {
     return (
       <NeedsIncident
-        title="Care Circle"
-        what="Parivar ke bharosemand logon ko incident ki summary share karne ka tareeka — aapki permission se."
-        preview="Incident banne par yahan milega: WhatsApp share, offline QR SOS card, aur consent preview."
-        tips={[
-          'Summary share karne se pehle aapko preview dikhega — bina permission kuch nahi jata.',
-          'Number kabhi store nahi hota.',
-          'Offline QR card bina internet ke bhi kaam karta hai.',
-        ]}
+        title={t(lang, 'navCare')}
+        what={t(lang, 'emptyCareWhat')}
+        preview={t(lang, 'emptyCarePreview')}
+        tips={[t(lang, 'emptyCareTip1'), t(lang, 'emptyCareTip2'), t(lang, 'emptyCareTip3')]}
       />
     );
   }
@@ -306,18 +288,15 @@ export function CarePage() {
 
 export function ProofPage() {
   const { active, backToIncident } = useToolNav();
+  const lang = useDashboard((s) => s.settings.language);
   const { Page: ProofScreen, failed } = useChunk(loadProof);
   if (!active) {
     return (
       <NeedsIncident
-        title="Proof Pack aur Verify"
-        what="Incident ka poora proof pack — PDF summary, ZIP, aur QR — bank aur portal ke liye."
-        preview="Incident banne par yahan milega: bilingual PDF, evidence ZIP, aur verify karne ka QR."
-        tips={[
-          'PDF me incident summary, timeline aur evidence list hoti hai — bilingual.',
-          'ZIP me saare saboot + verification file.',
-          'QR se koi bhi chain verify kar sakta hai.',
-        ]}
+        title={t(lang, 'navProof')}
+        what={t(lang, 'emptyProofWhat')}
+        preview={t(lang, 'emptyProofPreview')}
+        tips={[t(lang, 'emptyProofTip1'), t(lang, 'emptyProofTip2'), t(lang, 'emptyProofTip3')]}
       />
     );
   }

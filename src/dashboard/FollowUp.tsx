@@ -1,4 +1,5 @@
 import type { StoredIncident } from '../state/store';
+import { t } from '../i18n';
 import { useDashboard } from '../state/dashboardStore';
 import type { FollowupId } from '../state/incidents';
 import { formatINR } from '../screens/shared';
@@ -21,6 +22,15 @@ export const REMINDERS: { id: FollowupId; label: string; detail: string; hours: 
 ];
 
 const EMPTY_FOLLOWUPS: Partial<Record<FollowupId, 'done'>> = {};
+
+// Reminder copy is dashboard chrome, so it is keyed at render time (Bug 2).
+// The REMINDERS const stays Hinglish: buildIcs reuses it for the .ics file.
+const REMINDER_TEXT: Record<FollowupId, { labelKey: string; detailKey: string }> = {
+  '1h': { labelKey: 'rem1hLabel', detailKey: 'rem1hDetail' },
+  '24h': { labelKey: 'rem24hLabel', detailKey: 'rem24hDetail' },
+  '3d': { labelKey: 'rem3dLabel', detailKey: 'rem3dDetail' },
+  '7d': { labelKey: 'rem7dLabel', detailKey: 'rem7dDetail' },
+};
 
 export function remindersFor(incident: StoredIncident): Reminder[] {
   const base = new Date(incident.createdAt).getTime();
@@ -67,6 +77,7 @@ export function downloadIcs(incident: StoredIncident, reminders: Reminder[], fil
 }
 
 export function FollowUpList({ incident, compact = false }: { incident: StoredIncident; compact?: boolean }) {
+  const lang = useDashboard((s) => s.settings.language);
   // Cached empty record: a `?? {}` literal here would hand Zustand a NEW
   // object on every getSnapshot call, and React's useSyncExternalStore
   // then loops forever ("getSnapshot should be cached", error #185).
@@ -79,18 +90,18 @@ export function FollowUpList({ incident, compact = false }: { incident: StoredIn
 
   if (compact) {
     if (!next) {
-      return <p className="db-muted">Sabhi follow-ups poore ho gaye — achha kaam.</p>;
+      return <p className="db-muted">{t(lang, 'fuAllDone')}</p>;
     }
     const overdue = next.due.getTime() <= now.getTime();
     return (
       <div className="db-setting-row">
         <div>
-          <strong>{next.label}</strong>
-          <p className="db-muted">{next.detail}</p>
-          <p className="db-muted">Due: {next.due.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{overdue ? ' — overdue' : ''}</p>
+          <strong>{t(lang, REMINDER_TEXT[next.id].labelKey)}</strong>
+          <p className="db-muted">{t(lang, REMINDER_TEXT[next.id].detailKey)}</p>
+          <p className="db-muted">{t(lang, 'fuDue')} {next.due.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{overdue ? ` — ${t(lang, 'fuBadgeOverdue')}` : ''}</p>
         </div>
         <button type="button" className="db-btn db-btn-sm" onClick={() => markFollowup(incident.id, next.id)}>
-          Done mark karein
+          {t(lang, 'fuMarkDone')}
         </button>
       </div>
     );
@@ -104,26 +115,26 @@ export function FollowUpList({ incident, compact = false }: { incident: StoredIn
         return (
           <div key={r.id} className="db-setting-row">
             <div>
-              <strong>{r.label}</strong>{' '}
-              {done ? <span className="db-badge green">Done</span> : overdue ? <span className="db-badge red">Overdue</span> : <span className="db-badge gray">Upcoming</span>}
-              <p className="db-muted">{r.detail}</p>
-              <p className="db-muted">Due: {r.due.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+              <strong>{t(lang, REMINDER_TEXT[r.id].labelKey)}</strong>{' '}
+              {done ? <span className="db-badge green">{t(lang, 'fuBadgeDone')}</span> : overdue ? <span className="db-badge red">{t(lang, 'fuBadgeOverdue')}</span> : <span className="db-badge gray">{t(lang, 'fuBadgeUpcoming')}</span>}
+              <p className="db-muted">{t(lang, REMINDER_TEXT[r.id].detailKey)}</p>
+              <p className="db-muted">{t(lang, 'fuDue')} {r.due.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {!done && (
                 <button type="button" className="db-btn db-btn-sm" onClick={() => markFollowup(incident.id, r.id)}>
-                  Done mark karein
+                  {t(lang, 'fuMarkDone')}
                 </button>
               )}
               <button type="button" className="db-btn db-btn-sm db-btn-outline" onClick={() => downloadIcs(incident, [r], `rakshio-followup-${r.id}.ics`)}>
-                .ics download
+                {t(lang, 'fuDownloadOne')}
               </button>
             </div>
           </div>
         );
       })}
       <button type="button" className="db-btn db-btn-outline" onClick={() => downloadIcs(incident, reminders, 'rakshio-followups.ics')}>
-        Sabhi reminders .ics me download karein
+        {t(lang, 'fuDownloadAll')}
       </button>
     </div>
   );

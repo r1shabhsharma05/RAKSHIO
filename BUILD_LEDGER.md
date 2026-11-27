@@ -787,6 +787,106 @@ headings ≤32px at 1440 + 390); axe 0 in-suite. Screenshots read
 as `step12-before-*.png`. Secret scan clean. NOT deployed — live still
 serves v6 (Steps 10+11); deploy needs his word.
 
+Second half (same day, 22:03 IST): the live E2E probe on v6 found 12 bugs;
+all folded into this same change, one push. Font target corrected SMALLER
+than the first half (probe measured hero ~30–32px, section titles ~28–32px,
+body/buttons ~17–18px as still oversized vs a typical 14–16px body):
+hero 2rem→1.75rem (28px), view-head clamp max 32→28px, `.db-btn`
+1rem→0.9375rem (15px), stat `.n` 1.5→1.375rem (22px). Measured after:
+hero 28px, view-head 28px at 1440; 24px at 390. Buttons stay ≥44px tall
+(min-height 3rem, test-pinned).
+
+1. Extraction (MAJOR): "Mere SBI account se kal shaam 7 baje bees hazaar
+   rupaye kat gaye" extracted ₹7 — the "7" from "7 baje" borrowed "hazaar"
+   from the real amount via a 4-word lookahead window, and
+   `parseNumberWords` scanned forward past non-number words. Fix in
+   `src/engines/understanding/extract.ts`: `parseNumberWords` now parses
+   only a run starting at the current word and returns `{value, consumed}`;
+   `parseAmount` strips time expressions (`/\b(?:\d{1,2}|[a-z]+)\s+baje\b/`)
+   before any scan, and validates only the run's own words (scale word in
+   the run, or a money word immediately after). Vitest: the exact probe
+   sentence → ₹20,000, SBI, fraudAt yesterday 19:00; "7 baje" with money
+   but no amount → no amount.
+2. Languages: only ~30–40% translated — body copy was hardcoded Hinglish,
+   not keyed. Fix: 221 keys per locale in `src/i18n.ts` (EN real English,
+   HI Devanagari, HG Hinglish), `t()` gained optional `{var}`
+   interpolation; wired Home, GlassShell (banner/footer/search/theme),
+   FollowUp (reminder labels at render; the .ics file keeps the Hinglish
+   source strings), Settings, ToolPages (all 8 empty states + helpline
+   preview), IncidentsPage, IncidentDetail. Panic flow stays Hinglish by
+   design. Test: home body copy changes across en/hi/hg. Note: several
+   existing spec assertions had to move to the keyed names (theme toggle,
+   search prompt, export/wipe buttons, plan buttons, 'Sabhi' filter).
+3. Light-mode contrast: glass panels were 23–48% opaque over the photo
+   (`--gd-frame` 23%, `--gd-card` 46%, `--gd-inner` 37%) — text washed
+   out. Raised: frame 82%, card 88%, card-light 80%, inner 78%, raised
+   92%, rail 80%. Verified by screenshot (light home/bank 1366, home 390)
+   + a new test asserting card alpha ≥0.8 + axe 0 in light.
+4. Home contradiction: Golden Hour over-text said "1930 (48h) aur portal
+   (24h) ki deadlines abhi bhi khuli hain" while the portal chip said
+   "Samay khatm". Fix: `GoldenHour.tsx` reads `deadlineStatuses` and the
+   line is deadline-aware — portal over + 1930 open says so and tells the
+   user to still file on the portal; both over says both windows passed
+   and to still call 1930 + bank. No invented deadlines. Test-pinned with
+   the seeded demo (~30h old: portal over, 1930 open).
+5. Coach Done: the button already showed a note + Ack button, but the
+   probe saw no feedback. Fix: explicit toast ("Call tap log ho gaya —
+   agla kadam: ack number bharein") + the note now starts "✓ Logged —".
+   Test-pinned (toast + Logged note + Ack button).
+6. Tamper test had no undo: it mutated the only vault entry via
+   `tamperRecord`. Fix: new pure `tamperTestCopy(rows)` in `vault.ts` —
+   clones rows in memory, corrupts the clone, reports what verification
+   WOULD say; real Dexie rows never touched. UI shows the demo result in
+   its own panel ("ye test copy par chala, asli Vault me kuch nahi badla")
+   + an "Asli chain verify karein" button. `tamperRecord` stays exported
+   (vault.test.ts uses it). Vitest: copy breaks, real chain verifies
+   clean, real text untouched. Dashboard test: after tamper test, real
+   entry verifies clean.
+7. Layout overlaps at 1366×633: fixed bottom dock covered content;
+   `.db-flow` was 28rem (narrow extraction panel); most pages had two
+   H1s. Fix: `.gd-stage-scroll` bottom padding 41px→96px (desktop),
+   17px→88px (mobile ≤760px); `.db-flow` 28rem→36rem; every content h1
+   demoted to h2 (17 screens incl. Gaps ×2 + Skeleton, Home hero,
+   IncidentsPage, IncidentDetail, SettingsPage, chunkRecovery) — the shell
+   keeps the single H1; ErrorBoundary keeps its own (renders without the
+   shell); the verbatim Glassy component's h1 is dead code, untouched.
+   Test: exactly one h1 on all 13 routes (empty + seeded). Verified at
+   1366×633 + 390, light + dark, 0 horizontal overflow. Known remaining
+   cosmetic: the view-head title and the screen's own title still show
+   the same words stacked (e.g. "Bank Alert Kit" twice on the page) —
+   that is the pre-existing design, not a second H1.
+8. Shield quirk: safe example "Your OTP is 482913" scored 0 — correct
+   (a plain OTP notification with no share-request is NOT a scam; the
+   score stays honest), but the rule looked blind. Fix: new `otpNote`
+   field on `ShieldVerdict` — set when an OTP + 4–6 digits are present,
+   rendered as an amber info note, never adds to the score. Vitest with
+   the exact example (safe, score 0, note present) + dashboard test.
+9. Settings label: "Calm prompt kitni dheere bole —0.70×." — the JSX
+   space before the value was unreliable. Fix: single template string
+   with the space guaranteed + "(1.00× = normal speed)" context; the
+   label is now also keyed (`settingsTtsHint`, `{rate}` interpolation).
+10. Judge Mode hard to find: not in search, #/judge fell through to Home.
+    Fix: `navJudge` key (EN/HI/HG); `SEARCHABLE` = NAV + judge (Scale
+    icon) in the palette; `EXTRA_TITLES['/judge']`; new
+    `src/dashboard/JudgePage.tsx` route rendering `JudgeScreen` (seeding
+    mirrors ReportFlow's confirm → incident detail); Home demo note links
+    to /judge. No 13th dock item — search + link only. Test-pinned
+    (search → navigate, direct #/judge, seed from the route, Home link).
+11. Voice/mic live: NOT fixed from here — no mic-permission prompt
+    appeared in the probe environment; needs the user on his own Chrome.
+    Not claimed fixed anywhere.
+12. Fonts: covered above (smaller targets).
+
+Evidence (second half): build green (2.88s); vitest 37/37 (8 files: +2
+extraction, +1 shield, +1 vault); Playwright dashboard 41/41 (2.6m,
+incl. 8 new Step 12 tests: body-copy x3, coach toast, tamper-copy,
+one-h1-per-page, judge route+search, shield OTP note, light alpha+axe,
+deadline-aware text); axe 0 in-suite (light home+incidents, dark home).
+Screenshots read (`tests/shots-local/step12-verify-*.png`): home 1366
+light + dark, bank 1366 light, home 390 light + dark — light panels
+solid, text reads, no overflow, dock clears content. Secret scan clean.
+NOT deployed — live still serves v6; deploy needs his word.
+
 ## Rulings (Step 12)
 
 - Type scale is pinned by test now (root 16px, hero/view-head ≤32px at
@@ -794,3 +894,14 @@ serves v6 (Steps 10+11); deploy needs his word.
 - The old Calm 18px minimum is dead: `:root` is 1rem. Do not reintroduce
   an 18px root "for accessibility" — the user explicitly called the text
   too big, and 16px body with 48px targets is the accessible floor here.
+- One H1 per page, owned by the shell. Content titles are h2. A bare
+  `getByRole('heading', { name })` assertion on a tool page now matches
+  the shell h1 AND the screen h2 — scope with `.first()` or the card.
+- The tamper test runs on a COPY only (`tamperTestCopy`). Never call
+  `tamperRecord` from UI code — it mutates real evidence.
+- Amount extraction strips time expressions before any scan
+  (`parseNumberWords` is strict-start, run-local guard only). A clock
+  time must never become money.
+- Dashboard chrome is fully keyed (221 keys × 3 locales); `t()` takes
+  optional `{var}` interpolation. New user-facing dashboard strings go
+  in `src/i18n.ts` — never hardcoded. Panic flow stays Hinglish by design.

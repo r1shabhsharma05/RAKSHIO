@@ -7,6 +7,7 @@ import { ReportFlow } from './dashboard/ReportFlow';
 import { IncidentDetailPage } from './dashboard/IncidentDetail';
 import { SettingsPage } from './dashboard/SettingsPage';
 import { GuidePage } from './dashboard/GuidePage';
+import { JudgePage } from './dashboard/JudgePage';
 import { ChunkFallback, useChunk } from './components/chunkRecovery';
 import {
   ActionsPage,
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="care" element={<CarePage />} />
           <Route path="proof" element={<ProofPage />} />
           <Route path="guide" element={<GuidePage />} />
+          <Route path="judge" element={<JudgePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>

@@ -12,6 +12,7 @@ import {
   Mic,
   Moon,
   Phone,
+  Scale,
   Search,
   Settings,
   Shield,
@@ -78,7 +79,13 @@ const BOTTOM_SHORT: Record<string, string> = {
   '/settings': 'navSettingsShort',
 };
 // Routes with no dock entry still need a page title.
-const EXTRA_TITLES: Record<string, string> = { '/guide': 'guideTitle' };
+const EXTRA_TITLES: Record<string, string> = { '/guide': 'guideTitle', '/judge': 'navJudge' };
+// Search covers the 12 dock sections PLUS Judge Mode — Judge has no dock
+// item (12 stay 12) but must be findable from the palette.
+const SEARCHABLE = [
+  ...NAV,
+  { to: '/judge', key: 'navJudge', icon: Scale, end: false },
+] as const;
 
 function SearchDialog({ close }: { close: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -87,7 +94,7 @@ function SearchDialog({ close }: { close: () => void }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const results = NAV.filter(({ key }) =>
+  const results = SEARCHABLE.filter(({ key }) =>
     terms.every((term) => t(lang, key).toLowerCase().includes(term)),
   );
 
@@ -109,8 +116,8 @@ function SearchDialog({ close }: { close: () => void }) {
     >
       <section className="gd-dialog-inner">
         <header>
-          <h2 id={label}>Search RAKSHIO</h2>
-          <button type="button" className="gd-icon-button" aria-label="Close dialog" onClick={() => ref.current?.close()}>
+          <h2 id={label}>{t(lang, 'searchTitle')}</h2>
+          <button type="button" className="gd-icon-button" aria-label={t(lang, 'closeDialog')} onClick={() => ref.current?.close()}>
             <X aria-hidden="true" />
           </button>
         </header>
@@ -118,8 +125,8 @@ function SearchDialog({ close }: { close: () => void }) {
           <Search aria-hidden="true" />
           <input
             type="search"
-            aria-label="Find a section"
-            placeholder="Find a section"
+            aria-label={t(lang, 'searchPlaceholder')}
+            placeholder={t(lang, 'searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -144,7 +151,7 @@ function SearchDialog({ close }: { close: () => void }) {
           ))}
           {results.length === 0 && (
             <p className="gd-empty" role="status">
-              No matching sections.
+              {t(lang, 'searchNoMatch')}
             </p>
           )}
         </div>
@@ -271,7 +278,7 @@ export function GlassShell() {
             onClick={() => setSearchOpen(true)}
           >
             <span className="gd-orb" aria-hidden="true" />
-            <span className="gd-prompt">Search sections, reports, tools…</span>
+            <span className="gd-prompt">{t(lang, 'searchPrompt')}</span>
             <Search aria-hidden="true" className="gd-ask-search" />
           </button>
           <div className="gd-top-actions">
@@ -299,13 +306,13 @@ export function GlassShell() {
             <button
               type="button"
               className="gd-icon-button"
-              title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
-              aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+              title={theme === 'light' ? t(lang, 'themeToDark') : t(lang, 'themeToLight')}
+              aria-label={theme === 'light' ? t(lang, 'themeToDark') : t(lang, 'themeToLight')}
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             >
               {theme === 'light' ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />}
             </button>
-            <Link to="/settings" className="gd-icon-button" aria-label="Settings kholein">
+            <Link to="/settings" className="gd-icon-button" aria-label={t(lang, 'settingsOpen')}>
               <Settings aria-hidden="true" />
             </Link>
           </div>
@@ -336,7 +343,7 @@ export function GlassShell() {
                 </div>
               </header>
               <p className="gd-banner" role="note">
-                RAKSHIO report file nahi karta. Aapko 1930 / bank ko khud contact karna hoga.
+                {t(lang, 'bannerText')}
               </p>
               <div className="gd-content" ref={content} key={location.pathname}>
                 <Outlet />
@@ -353,7 +360,7 @@ export function GlassShell() {
           </nav>
         </div>
         <footer className="gd-footer">
-          <span>RAKSHIO kabhi OTP / PIN / CVV nahi mangta. Aapka data sirf is device par rehta hai.</span>
+          <span>{t(lang, 'footerText')}</span>
           <a href="https://unsplash.com/photos/e0oJLc5FYsg" target="_blank" rel="noreferrer">
             Photo by GoodLifeConstruction
           </a>

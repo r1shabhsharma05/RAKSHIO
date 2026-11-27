@@ -84,27 +84,27 @@ test('hero report buttons jump into voice and text listen', async ({ browser }) 
 test('quick actions and action-plan buttons navigate to real tools', async ({ page }) => {
   await seedDemo(page);
   await page.goto('/#/');
-  await expect(page.getByRole('link', { name: /Call 1930/ }).first()).toHaveAttribute('href', 'tel:1930');
+  await expect(page.getByRole('link', { name: /1930 par call karein/ }).first()).toHaveAttribute('href', 'tel:1930');
   await page.getByRole('link', { name: /Bank Alert/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Bank Alert Kit' }).first()).toBeVisible();
   await page.goto('/#/');
   await page.getByRole('link', { name: /Care Circle/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Care Circle' }).first()).toBeVisible();
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Call 1930', exact: true }).first().click();
+  await page.getByRole('button', { name: '1930 par call karein', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: '1930 Call Coach' }).first()).toBeVisible();
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Open Portal' }).click();
+  await page.getByRole('button', { name: 'Portal kholein' }).click();
   await expect(page.getByRole('heading', { name: 'Ack Bridge' })).toBeVisible();
   await page.goto('/#/');
   await page.getByRole('button', { name: 'Bank Kit' }).click();
   await expect(page.getByRole('heading', { name: 'Bank Alert Kit' }).first()).toBeVisible();
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Add Evidence' }).click();
+  await page.getByRole('button', { name: 'Saboot jodein' }).click();
   await expect(page.getByRole('heading', { name: 'Evidence Vault' }).first()).toBeVisible();
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Check Guide' }).click();
-  await expect(page.getByRole('heading', { name: 'Second-Scam Shield' })).toBeVisible();
+  await page.getByRole('button', { name: 'Guide dekhein' }).click();
+  await expect(page.getByRole('heading', { name: 'Second-Scam Shield' }).first()).toBeVisible();
 });
 
 test('vault widget: add evidence, verify chain green', async ({ page }) => {
@@ -121,7 +121,7 @@ test('vault widget: add evidence, verify chain green', async ({ page }) => {
   await expect(page.getByText('Test SMS', { exact: false })).toBeVisible();
   await page.goto('/#/');
   await expect(page.getByText('1 items saved', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Verify Chain Integrity' }).click();
+  await page.getByRole('button', { name: 'Chain ki integrity verify karein' }).click();
   await expect(page.getByRole('region', { name: 'Evidence Vault' }).getByText(/Chain sahi hai/)).toBeVisible();
 });
 
@@ -132,14 +132,14 @@ test('shield widget: recovery-scam check shows High Risk on home', async ({ page
   await page.getByRole('button', { name: 'Check karein' }).click();
   await expect(page.getByText('KHATRA')).toBeVisible();
   await page.goto('/#/');
-  await expect(page.getByText('High Risk – Likely Scam')).toBeVisible();
+  await expect(page.getByText('High Risk – Likely Scam', { exact: true })).toBeVisible();
 });
 
 test('proof export downloads a real PDF from home', async ({ page }) => {
   await seedDemo(page);
   await page.goto('/#/');
   const download = page.waitForEvent('download', { timeout: 15000 });
-  await page.getByRole('button', { name: 'Export Proof Pack (PDF)' }).click();
+  await page.getByRole('button', { name: 'Proof Pack export karein (PDF)' }).click();
   expect((await download).suggestedFilename()).toBe('RAKSHIO-proof.pdf');
   await expect(page.getByText('PDF download ho gaya')).toBeVisible();
 });
@@ -158,14 +158,14 @@ test('incidents page: search, filter, charts, detail status + delete', async ({ 
   await page.getByLabel('Incidents search karein').fill('');
   await page.getByRole('button', { name: /^Reported/ }).click();
   await expect(page.getByText('₹20,000').first()).toBeVisible();
-  await page.getByRole('button', { name: /^All/ }).click();
+  await page.getByRole('button', { name: /^Sabhi/ }).click();
   await page.locator('.db-incident-card').first().click();
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
   await page.getByLabel('Incident status badlein').selectOption('closed');
   await expect(page.getByText('Closed').first()).toBeVisible();
   await page.getByRole('button', { name: 'Delete karein' }).last().click();
   await page.getByRole('button', { name: 'Pakka delete karein' }).click();
-  await expect(page.getByRole('heading', { name: 'Incident Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Incident Dashboard' }).first()).toBeVisible();
   await expect(page.locator('.db-incident-card')).toHaveCount(1);
 });
 
@@ -190,10 +190,10 @@ test('settings: Hindi switch, toggles, export, one-tap wipe', async ({ page }) =
   await page.getByRole('switch', { name: 'Calm prompt' }).click();
   await expect(page.getByRole('switch', { name: 'Calm prompt' })).toHaveAttribute('aria-checked', 'false');
   const download = page.waitForEvent('download', { timeout: 10000 });
-  await page.getByRole('button', { name: 'Sab kuch export karein (JSON)' }).click();
+  await page.getByRole('button', { name: 'Export everything (JSON)' }).click();
   expect((await download).suggestedFilename()).toBe('rakshio-export.json');
-  await page.getByRole('button', { name: 'Sab kuch saaf karein' }).click();
-  await page.getByRole('button', { name: 'Pakka — sab kuch saaf karein' }).click();
+  await page.getByRole('button', { name: 'Wipe everything' }).click();
+  await page.getByRole('button', { name: 'Confirm — wipe everything' }).click();
   await expect(page.getByText('No incident yet')).toBeVisible({ timeout: 8000 });
 });
 
@@ -254,7 +254,7 @@ test('unslop step 7: vault select is readable in the dark theme, incidents statu
   await page.goto('/#/vault');
   const select = page.locator('#ev-kind');
   await expect(select).toBeVisible();
-  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await page.getByRole('button', { name: 'Dark theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
   // The old bug: the select fell back to the UA white default on a dark
   // page. In the dark theme its background must not be white.
@@ -386,7 +386,7 @@ test('step 10: language switch x3 visibly changes the UI', async ({ page }) => {
 
 test('step 10: language select options are dark and readable in the dark theme', async ({ page }) => {
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await page.getByRole('button', { name: 'Dark theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
   // The reported bug: options rendered light-on-white (white box). The
   // option must carry the dark surface, not the UA white default.
@@ -517,15 +517,15 @@ test('step 10: situation guide list, detail, and shield truth-card link', async 
 
 test('step 10: theme toggle and search dialog navigate', async ({ page }) => {
   await page.goto('/#/');
-  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await page.getByRole('button', { name: 'Dark theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
-  await page.getByRole('button', { name: 'Switch to light theme' }).click();
+  await page.getByRole('button', { name: 'Light theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'light');
 
-  await page.getByRole('button', { name: /Search sections/ }).click();
+  await page.getByRole('button', { name: /dhoondhein/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
-  await dialog.getByLabel('Find a section').fill('vault');
+  await dialog.getByLabel('Section dhoondhein').fill('vault');
   await dialog.getByRole('button', { name: /Evidence Vault/ }).click();
   await expect(page.getByRole('heading', { name: 'Evidence Vault' }).first()).toBeVisible({ timeout: 8000 });
 });
@@ -534,7 +534,7 @@ test('step 10: theme toggle and search dialog navigate', async ({ page }) => {
 test('step 11: dark theme is true black, light theme unchanged', async ({ page }) => {
   await page.goto('/#/');
   await page.waitForTimeout(900);
-  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await page.getByRole('button', { name: 'Dark theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
   const darkBg = await page.locator('.gd-app').evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(darkBg).toBe('rgb(0, 0, 0)');
@@ -549,7 +549,7 @@ test('step 11: dark theme is true black, light theme unchanged', async ({ page }
   // Black-on-black must stay clean for assistive tech too.
   const darkAxe = await new AxeBuilder({ page }).analyze();
   expect(darkAxe.violations).toEqual([]);
-  await page.getByRole('button', { name: 'Switch to light theme' }).click();
+  await page.getByRole('button', { name: 'Light theme par jayein' }).click();
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'light');
   const lightBg = await page.locator('.gd-app').evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(lightBg).not.toBe('rgb(0, 0, 0)');
@@ -593,8 +593,8 @@ test('step 11: empty states are enriched — checklists, helplines, previews', a
   await expect(page.getByText('Report Fraud se bolkar ya likhkar batayein')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Pehle Situation Guide padhein' })).toBeVisible();
   await page.goto('/#/');
-  await expect(page.getByText('Why it matters?')).toBeVisible();
-  await expect(page.getByText('Call 1930 (Now)')).toBeVisible();
+  await expect(page.getByText('Ye kyun zaroori hai?')).toBeVisible();
+  await expect(page.getByText('1930 par call karein (Abhi)')).toBeVisible();
 });
 
 test('step 12: type scale is normal — root 16px, headings capped', async ({ page }) => {
@@ -616,4 +616,98 @@ test('step 12: type scale is normal — root 16px, headings capped', async ({ pa
   await page.goto('/#/');
   expect(await px('.gd-view-head h1')).toBeLessThanOrEqual(32);
   expect(await px('.db-hero-title')).toBeLessThanOrEqual(32);
+});
+
+// Step 12: the 12 E2E bugs + smaller fonts.
+test('step 12: home body copy changes across en/hi/hg', async ({ page }) => {
+  await page.goto('/#/');
+  const select = page.locator('.gd-lang select');
+  await select.selectOption('en');
+  await expect(page.getByText('Why it matters?')).toBeVisible();
+  await expect(page.getByText('Call 1930 (Now)')).toBeVisible();
+  await expect(page.getByText('Every incident has its own ID, type, amount and date')).toBeVisible();
+  await select.selectOption('hi');
+  await expect(page.getByText('यह क्यों ज़रूरी है?')).toBeVisible();
+  await expect(page.getByText('1930 पर कॉल करें (अभी)')).toBeVisible();
+  await expect(page.getByText('हर घटना की अपनी ID, प्रकार, राशि और तारीख़ होती है')).toBeVisible();
+  await select.selectOption('hg');
+  await expect(page.getByText('Ye kyun zaroori hai?')).toBeVisible();
+  await expect(page.getByText('1930 par call karein (Abhi)')).toBeVisible();
+  await expect(page.getByText('Har incident ka apna ID, type, rashi aur date hoti hai')).toBeVisible();
+});
+
+test('step 12: coach Done toasts and logs visibly', async ({ page }) => {
+  await seedDemo(page);
+  await page.goto('/#/coach');
+  await page.getByRole('button', { name: "Call ke baad 'Done' dabaiye" }).click();
+  await expect(page.getByText('Call tap log ho gaya')).toBeVisible();
+  await expect(page.getByText(/✓ Logged — Call tap hua/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ack number bharein (Ack Bridge)' })).toBeVisible();
+});
+
+test('step 12: tamper test runs on a copy — real chain stays clean', async ({ page }) => {
+  await seedDemo(page);
+  await page.goto('/#/vault');
+  await page.getByLabel('Text').fill('Test SMS: OTP 123456 bhejo');
+  await page.getByRole('button', { name: 'Vault me save karein' }).click();
+  await expect(page.getByText('Saboot save ho gaya')).toBeVisible();
+  await page.getByRole('button', { name: /Tamper test \(demo\)/ }).click();
+  await expect(page.getByText(/Tamper test \(sirf copy par\)/)).toBeVisible();
+  await expect(page.getByText(/Asli entries surakshit hain/)).toBeVisible();
+  await page.getByRole('button', { name: 'Asli chain verify karein' }).click();
+  await expect(page.getByText(/Chain sahi hai — 1 entries/)).toBeVisible();
+});
+
+test('step 12: exactly one h1 per page', async ({ page }) => {
+  const routes = ['/', '/report', '/incidents', '/actions', '/coach', '/portal', '/bank', '/vault', '/shield', '/care', '/proof', '/guide', '/settings'];
+  for (const r of routes) {
+    await page.goto(`/#${r}`);
+    await expect(page.locator('h1')).toHaveCount(1);
+  }
+  await seedDemo(page);
+  for (const r of ['/coach', '/vault', '/bank']) {
+    await page.goto(`/#${r}`);
+    await expect(page.locator('h1')).toHaveCount(1);
+  }
+});
+
+test('step 12: judge mode is searchable, routable, and linked from home', async ({ page }) => {
+  await page.goto('/#/');
+  await page.getByRole('button', { name: /dhoondhein/ }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Section dhoondhein').fill('judge');
+  await dialog.getByRole('button', { name: /Judge Mode/ }).click();
+  await expect(page.getByRole('heading', { name: 'Judge Mode' }).first()).toBeVisible({ timeout: 8000 });
+  await page.goto('/#/judge');
+  await expect(page.getByRole('heading', { name: 'Judge Mode' }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Seeded scenario chalao (₹20,000 UPI)' }).click();
+  await expect(page.getByText('₹20,000').first()).toBeVisible({ timeout: 8000 });
+  await page.goto('/#/');
+  await page.getByRole('link', { name: 'Judge Mode' }).click();
+  await expect(page.getByRole('heading', { name: 'Judge Mode' }).first()).toBeVisible();
+});
+
+test('step 12: shield OTP note shows on the safe example without inflating the score', async ({ page }) => {
+  await page.goto('/#/shield');
+  await page.getByRole('button', { name: 'Safe example' }).click();
+  await expect(page.getByText('Theek lagta hai (score 0)')).toBeVisible();
+  await expect(page.getByText('OTP dikh raha hai — kisi se share mat karein.')).toBeVisible();
+});
+
+test('step 12: light-mode cards are solid enough to read on the photo', async ({ page }) => {
+  await page.goto('/#/');
+  await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'light');
+  const bg = await page.locator('.db-card').first().evaluate((el) => getComputedStyle(el).backgroundColor);
+  const alpha = parseFloat(bg.split(',')[3] ?? '1');
+  expect(alpha).toBeGreaterThanOrEqual(0.8);
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations).toEqual([]);
+});
+
+test('step 12: golden-hour text agrees with the portal deadline when it is over', async ({ page }) => {
+  await seedDemo(page);
+  await page.goto('/#/');
+  // Seeded demo is ~30h old: portal (24h) is over while 1930 (48h) is not.
+  await expect(page.getByText(/Portal ki 24 ghante ki window beet gayi/)).toBeVisible();
+  await expect(page.getByText(/1930 \(48h\) abhi bhi khula hai/)).toBeVisible();
 });
