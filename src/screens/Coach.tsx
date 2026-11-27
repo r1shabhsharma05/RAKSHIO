@@ -3,6 +3,8 @@ import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { formatINR, fraudTypeLabel } from './shared';
 import { useToast } from '../components/Toast';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
 // confirmed facts + a checklist. "Done" logs that the button was tapped —
@@ -20,6 +22,7 @@ export function CoachScreen({
   onOpenAck: () => void;
   onBack: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [done, setDone] = useState(false);
   const [checks, setChecks] = useState<Record<string, boolean>>({});
   const showToast = useToast();
@@ -35,25 +38,24 @@ export function CoachScreen({
   const script = scriptParts.join(' ');
 
   const checklist: { id: string; label: string }[] = [
-    { id: 'amount', label: `Rashi: ${stored.amount != null ? formatINR(stored.amount) : 'Pata nahi'}` },
-    { id: 'time', label: `Samay: ${stored.fraudAtDisplay ?? 'Pata nahi'}` },
-    { id: 'bank', label: `Bank: ${stored.bank ?? 'Pata nahi'}` },
-    { id: 'utr', label: `UTR: ${stored.utr ?? 'Nahi mila'}` },
-    { id: 'type', label: `Fraud type: ${fraudTypeLabel(stored.fraudType)}` },
+    { id: 'amount', label: t(lang, 'coachCheckAmount', { v: stored.amount != null ? formatINR(stored.amount) : t(lang, 'unknown') }) },
+    { id: 'time', label: t(lang, 'coachCheckTime', { v: stored.fraudAtDisplay ?? t(lang, 'unknown') }) },
+    { id: 'bank', label: t(lang, 'coachCheckBank', { v: stored.bank ?? t(lang, 'unknown') }) },
+    { id: 'utr', label: t(lang, 'coachCheckUtr', { v: stored.utr ?? t(lang, 'unknown') }) },
+    { id: 'type', label: t(lang, 'coachCheckType', { v: fraudTypeLabel(stored.fraudType, lang) }) },
   ];
 
   return (
     <>
-      <h2>1930 Call Coach</h2>
-      <p>Call karne se pehle script ek baar padh lijiye — 30 second ki baat hai.</p>
+      <p>{t(lang, 'coachIntro')}</p>
 
       <section className="rk-card">
-        <h2>Call script</h2>
+        <h2>{t(lang, 'coachScriptTitle')}</h2>
         <p className="script-box">{script}</p>
       </section>
 
       <section className="rk-card">
-        <h2>Checklist — call par ye sab batayein</h2>
+        <h2>{t(lang, 'coachChecklistTitle')}</h2>
         <ul className="checklist">
           {checklist.map((c) => (
             <li key={c.id}>
@@ -69,20 +71,20 @@ export function CoachScreen({
         </ul>
       </section>
 
-      <Button label="1930 par call karein" variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCallTap} />
+      <Button label={t(lang, 'coachCallBtn')} variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCallTap} />
 
       {!done ? (
-        <Button label="Call ke baad 'Done' dabaiye" variant="secondary" size="lg" width="100%" onClick={() => { onDone(); setDone(true); showToast('Call tap log ho gaya — agla kadam: ack number bharein'); }} />
+        <Button label={t(lang, 'coachDoneBtn')} variant="secondary" size="lg" width="100%" onClick={() => { onDone(); setDone(true); showToast(t(lang, 'coachDoneToast')); }} />
       ) : (
         <>
           <p className="step2-note" role="status">
-            ✓ Logged — Call tap hua. Ye sirf itna batata hai ki button daba. Call poori hui ya complaint file hui, ye RAKSHIO nahi jaanta.
+            {t(lang, 'coachDoneNote')}
           </p>
-          <Button label="Ack number bharein (Ack Bridge)" variant="secondary" size="lg" width="100%" onClick={onOpenAck} />
+          <Button label={t(lang, 'coachAckBtn')} variant="secondary" size="lg" width="100%" onClick={onOpenAck} />
         </>
       )}
 
-      <p>Line busy ho to 2 minute baad dobara try karein. Call ke baad 24 ghante me portal complaint poori karein: <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a></p>
+      <p>{t(lang, 'coachBusyNote')} <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a></p>
       <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />
     </>
   );

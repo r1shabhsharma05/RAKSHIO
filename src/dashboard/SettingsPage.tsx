@@ -54,7 +54,6 @@ export function SettingsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div>
-        <h2 className="db-page-title">{t(lang, 'settingsTitle')}</h2>
         <p className="db-page-sub">{t(lang, 'settingsSub')}</p>
       </div>
 
@@ -164,7 +163,7 @@ export function SettingsPage() {
       {active && (
         <section className="db-card" aria-label="Follow-up Guardian">
           <h2>{t(lang, 'guardianTitle')}</h2>
-          <p className="db-muted">Active incident: {active.amount != null ? `₹${active.amount.toLocaleString('en-IN')}` : t(lang, 'unknown')} — {t(lang, 'settingsGuardianNoteB')}</p>
+          <p className="db-muted">{t(lang, 'settingsActiveIncident')} {active.amount != null ? `₹${active.amount.toLocaleString('en-IN')}` : t(lang, 'unknown')} — {t(lang, 'settingsGuardianNoteB')}</p>
           <FollowUpList incident={active} />
         </section>
       )}

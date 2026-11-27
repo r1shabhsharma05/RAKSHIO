@@ -10,13 +10,10 @@ import { ShieldScreen } from '../screens/Shield';
 import { TriageScreen } from '../screens/Triage';
 import { BankKitScreen } from '../screens/BankKit';
 import { AckBridgeScreen } from '../screens/AckBridge';
-import { ChunkFallback, useChunk } from '../components/chunkRecovery';
+import { ChunkFallback, loadCareChunk, loadProofChunk, loadVaultChunk, useChunk } from '../components/chunkRecovery';
 
 // Every tool screen mounts inside the dashboard's dark flow scope (.db-flow)
 // so the tested screens render dark without being restyled.
-const loadVault = () => import('../screens/Vault').then((m) => ({ default: m.VaultScreen }));
-const loadProof = () => import('../screens/Proof').then((m) => ({ default: m.ProofScreen }));
-const loadCare = () => import('../screens/Care').then((m) => ({ default: m.CareScreen }));
 
 // Gated tools, no incident: every empty state is SECTION-SPECIFIC — the
 // tool's name, what it does, why it needs an incident, and a preview of
@@ -43,8 +40,7 @@ export function NeedsIncident({
   const lang = useDashboard((s) => s.settings.language);
   return (
     <div className="db-flow">
-      <div className="db-card">
-        <h2 className="db-page-title">{title}</h2>
+      <div className="db-card" aria-label={title}>
         <p className="db-muted">{what}</p>
         <p className="db-muted">{preview}</p>
         {extra}
@@ -211,7 +207,7 @@ export function VaultPage() {
   const { active, backToIncident } = useToolNav();
   const lang = useDashboard((s) => s.settings.language);
   const caregiver = useDashboard((s) => s.settings.caregiver);
-  const { Page: VaultScreen, failed } = useChunk(loadVault);
+  const { Page: VaultScreen, failed } = useChunk(loadVaultChunk);
   if (!active) {
     return (
       <NeedsIncident
@@ -267,7 +263,7 @@ export function TriagePage() {
 export function CarePage() {
   const { active, backToIncident } = useToolNav();
   const lang = useDashboard((s) => s.settings.language);
-  const { Page: CareScreen, failed } = useChunk(loadCare);
+  const { Page: CareScreen, failed } = useChunk(loadCareChunk);
   if (!active) {
     return (
       <NeedsIncident
@@ -289,7 +285,7 @@ export function CarePage() {
 export function ProofPage() {
   const { active, backToIncident } = useToolNav();
   const lang = useDashboard((s) => s.settings.language);
-  const { Page: ProofScreen, failed } = useChunk(loadProof);
+  const { Page: ProofScreen, failed } = useChunk(loadProofChunk);
   if (!active) {
     return (
       <NeedsIncident

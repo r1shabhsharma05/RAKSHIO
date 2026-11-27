@@ -2,9 +2,14 @@ import type { StoredIncident } from '../../state/store';
 
 // Bank Alert Kit: helpline numbers verified 2026-11-27 against Google Pay's
 // bank directory and 2026 helpline listings (multiple sources agree).
+// HDFC re-verified 2026-11-28 (Step 16, E2E #3 bug 10): 1800 1600 /
+// 1800 2600 are HDFC Bank's ONLY published customer-care numbers —
+// https://www.hdfc.bank.in/contact-us/customer-care ("Phone numbers
+// mentioned here are the only Customer Care numbers of HDFC Bank").
+// The E2E suspicion that they were wrong was incorrect; numbers unchanged.
 // Banks not listed here get no number — the UI tells the user to take it
 // from the bank's own website or card, never from a search result.
-// Last checked: 2026-11-27. Numbers change; verify before calling.
+// Last checked: 2026-11-28. Numbers change; verify before calling.
 export interface BankInfo {
   name: string;
   numbers: string[];

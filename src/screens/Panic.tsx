@@ -49,7 +49,7 @@ function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => 
     <section className="calm-card" aria-live="polite">
       <h2>Aap safe hain</h2>
       <p>Abhi kisi ko OTP ya paisa mat dijiye. Saans lijiye — hum ek-ek kadam karenge.</p>
-      <p className="note" aria-live="off">{secondsLeft} second me ye card band ho jayega.</p>
+      <p className="note" aria-live="off">{`${secondsLeft} second me ye card band ho jayega.`}</p>
       <div className="chip-row">
         <button type="button" className="rk-primary-btn" onClick={onDismiss}>
           Aage badhein

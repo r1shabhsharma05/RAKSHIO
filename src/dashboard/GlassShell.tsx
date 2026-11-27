@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import {
+  BookOpen,
   ChevronRight,
   FileCheck,
   Globe,
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 import { dashboardStyles } from '../components/ui/glassy-dashboard';
 import { useDashboard } from '../state/dashboardStore';
+import { loadCareChunk, loadIncidentsChunk, loadProofChunk, loadVaultChunk } from '../components/chunkRecovery';
 import { t, speechLangFor, type Lang } from '../i18n';
 
 // Glass shell (Step 10): the 21st.dev GlassyDashboard chrome — top pill bar,
@@ -67,6 +69,10 @@ const NAV = [
   { to: '/shield', key: 'navShield', icon: ShieldCheck, end: false },
   { to: '/care', key: 'navCare', icon: Users, end: false },
   { to: '/proof', key: 'navProof', icon: Shield, end: false },
+  // Step 16 (bug 5): the Situation Guide is a reference section, not a
+  // 13th dashboard tool — the 12 tool sections stay 12, but the guide now
+  // has a dock icon so it is reachable without knowing the URL.
+  { to: '/guide', key: 'navGuide', icon: BookOpen, end: false },
   { to: '/settings', key: 'navSettings', icon: Wallet, end: false },
 ] as const;
 
@@ -79,9 +85,25 @@ const BOTTOM_SHORT: Record<string, string> = {
   '/settings': 'navSettingsShort',
 };
 // Routes with no dock entry still need a page title.
-const EXTRA_TITLES: Record<string, string> = { '/guide': 'guideTitle', '/judge': 'navJudge' };
-// Search covers the 12 dock sections PLUS Judge Mode — Judge has no dock
-// item (12 stay 12) but must be findable from the palette.
+const EXTRA_TITLES: Record<string, string> = { '/judge': 'navJudge' };
+// Step 16 (bug 7): hovering or keyboard-focusing a dock link warms that
+// route's lazy chunk before the click, so the navigation feels instant.
+// The idle prefetch in App covers the same chunks; this is the fast path.
+const PRELOAD: Record<string, () => Promise<unknown>> = {
+  '/incidents': () => loadIncidentsChunk(),
+  '/vault': () => loadVaultChunk(),
+  '/care': () => loadCareChunk(),
+  '/proof': () => loadProofChunk(),
+};
+function preloadRoute(to: string) {
+  void PRELOAD[to]?.().catch(() => undefined);
+}
+// item (the dock stays 12 tools + Guide) but must be findable from the palette.
+// Step 16 (bug 5): aliases so "situations" (plural) also finds the Guide.
+const SEARCH_ALIASES: Record<string, string[]> = {
+  '/guide': ['situations', 'scam guide', 'fraud guide'],
+  '/judge': ['demo', 'seeded'],
+};
 const SEARCHABLE = [
   ...NAV,
   { to: '/judge', key: 'navJudge', icon: Scale, end: false },
@@ -94,9 +116,10 @@ function SearchDialog({ close }: { close: () => void }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const results = SEARCHABLE.filter(({ key }) =>
-    terms.every((term) => t(lang, key).toLowerCase().includes(term)),
-  );
+  const results = SEARCHABLE.filter(({ key, to }) => {
+    const hay = [t(lang, key), ...(SEARCH_ALIASES[to] ?? [])].join(' ').toLowerCase();
+    return terms.every((term) => hay.includes(term));
+  });
 
   useEffect(() => {
     const dialog = ref.current;
@@ -327,6 +350,8 @@ export function GlassShell() {
                 to={to}
                 end={end}
                 aria-label={t(lang, key)}
+                onMouseEnter={() => preloadRoute(to)}
+                onFocus={() => preloadRoute(to)}
                 aria-current={location.pathname === to || (to !== '/' && location.pathname.startsWith(`${to}/`)) ? 'page' : undefined}
               >
                 <Icon aria-hidden="true" />

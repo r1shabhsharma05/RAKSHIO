@@ -6,11 +6,14 @@ import { loadAck } from '../engines/ack/ack';
 import { buildProofPdf, buildProofZip, downloadBlob, rootHashQrDataUrl } from '../engines/proof/proofpack';
 import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Bilingual Proof Pack: PDF (Latin-script Hinglish — pdf-lib standard fonts
 // have no Devanagari glyphs), ZIP (PDF + evidence.json + root hash), and a
 // QR of the root hash for quick verification.
 export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [evidence, setEvidence] = useState<EvidenceRecord[]>([]);
   const [root, setRoot] = useState<string | null>(null);
   const [qr, setQr] = useState('');
@@ -32,7 +35,7 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
       const bytes = await buildProofPdf(stored, evidence, root, ack?.ackNumber ?? null);
       // TS 7 types Uint8Array as ArrayBufferLike; BlobPart wants ArrayBufferView<ArrayBuffer>.
       downloadBlob(new Blob([bytes as BlobPart], { type: 'application/pdf' }), 'RAKSHIO-proof.pdf');
-      showToast('PDF download ho gaya');
+      showToast(t(lang, 'proofPdfToast'));
     } finally {
       setBusy(false);
     }
@@ -44,7 +47,7 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
       const bytes = await buildProofPdf(stored, evidence, root, ack?.ackNumber ?? null);
       const zip = await buildProofZip(bytes, evidence, root);
       downloadBlob(zip, 'RAKSHIO-proof-pack.zip');
-      showToast('ZIP download ho gaya');
+      showToast(t(lang, 'proofZipToast'));
     } finally {
       setBusy(false);
     }
@@ -52,29 +55,28 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
 
   return (
     <>
-      <h2>Proof Pack</h2>
-      <p>Bank ya police ko dene ke liye ek record: incident summary, evidence list with hashes, aur root hash.</p>
+      <p>{t(lang, 'proofIntro')}</p>
 
       <section className="rk-card">
-        <div className="field-row"><span className="label">Evidence entries</span><span className="value">{evidence.length}</span></div>
-        <div className="field-row"><span className="label">Root hash</span><span className="value ev-hash">{root ? `${root.slice(0, 16)}…` : 'Koi evidence nahi'}</span></div>
-        <div className="field-row"><span className="label">1930 Ack</span><span className="value">{ack?.ackNumber ?? 'Nahi mila'}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'proofEvidenceLabel')}</span><span className="value">{evidence.length}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'proofRootLabel')}</span><span className="value ev-hash">{root ? `${root.slice(0, 16)}…` : t(lang, 'proofNoEvidence')}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'proofAckLabel')}</span><span className="value">{ack?.ackNumber ?? t(lang, 'proofNoAck')}</span></div>
       </section>
 
       {evidence.length === 0 && (
-        <p className="note">Abhi koi saboot nahi hai — PDF khaali aayega. Pehle Evidence Vault me SMS ya note save karein, phir wapas aakar Proof Pack banayein.</p>
+        <p className="note">{t(lang, 'proofEmptyNote')}</p>
       )}
 
       {qr && (
         <section className="rk-card">
-          <h2>Root hash QR</h2>
+          <h2>{t(lang, 'proofQrTitle')}</h2>
           <img src={qr} alt="Root hash QR code" className="qr-img-sm" />
         </section>
       )}
 
-      <button type="button" className="rk-primary-btn" disabled={busy} onClick={makePdf}>{busy ? 'Ban raha hai…' : 'PDF download karein'}</button>
-      <Button label={busy ? 'Ban raha hai…' : 'ZIP download karein (PDF + evidence + root hash)'} variant="secondary" size="lg" width="100%" isDisabled={busy} onClick={makeZip} />
-      <p className="note">PDF Latin-script Hinglish me hai — Devanagari font offline embed nahi ho sakta, isliye Roman letters use kiye gaye hain.</p>
+      <button type="button" className="rk-primary-btn" disabled={busy} onClick={makePdf}>{busy ? t(lang, 'proofBusy') : t(lang, 'proofPdfBtn')}</button>
+      <Button label={busy ? t(lang, 'proofBusy') : t(lang, 'proofZipBtn')} variant="secondary" size="lg" width="100%" isDisabled={busy} onClick={makeZip} />
+      <p className="note">{t(lang, 'proofPdfNote')}</p>
       <BackButton onBack={onBack} />
     </>
   );

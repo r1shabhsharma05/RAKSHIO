@@ -5,7 +5,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
-import { deadlineStatuses, formatDuration, orderActions } from '../engines/orchestrator/clock';
+import { deadlineStatuses, formatDurationLang, orderActions } from '../engines/orchestrator/clock';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 gsap.registerPlugin(useGSAP);
 
@@ -22,6 +24,7 @@ export function ActionsScreen({
   onTool: (s: Screen) => void;
   onBack: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [now, setNow] = useState(() => new Date());
   const cardsRef = useRef<HTMLDivElement>(null);
 
@@ -42,54 +45,54 @@ export function ActionsScreen({
 
   const fraudAt = stored.fraudAt ? new Date(stored.fraudAt) : new Date(stored.createdAt);
   const statuses = deadlineStatuses(fraudAt, now);
-  const actions = orderActions(fraudAt, now, stored.credentialShared);
+  const actions = orderActions(fraudAt, now, stored.credentialShared, lang);
 
   return (
     <>
-      <h2>Golden Hour Clock</h2>
+      <h2>{t(lang, 'clockTitle')}</h2>
       <div className="clock-row" role="timer" aria-live="off">
         {statuses.map((s) => (
           <div key={s.id} className={`deadline-chip ${s.state}`}>
-            <div className="time">{s.state === 'overdue' ? 'Samay khatm' : formatDuration(s.remainingMs)}</div>
-            <div className="name">{s.label}</div>
-            <div className="window">{s.windowLabel} window</div>
+            <div className="time">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDurationLang(lang, s.remainingMs)}</div>
+            <div className="name">{s.labelKey ? t(lang, s.labelKey) : s.label}</div>
+            <div className="window">{t(lang, 'actionsWindow', { window: s.windowLabel })}</div>
           </div>
         ))}
       </div>
 
-      <h2>Aage ke kadam — pehle sabse zaroori</h2>
+      <h2>{t(lang, 'actionsNextTitle')}</h2>
       <div ref={cardsRef} className="card-stack">
         {actions.map((a, i) => (
           <section className="rk-card action-card" key={a.id}>
             <div className="row-between">
               <h3>{i + 1}. {a.title}</h3>
-              {a.urgent && <span className="badge-wrap"><Badge label="Turant" variant="warning" /></span>}
+              {a.urgent && <span className="badge-wrap"><Badge label={t(lang, 'actionsUrgent')} variant="warning" /></span>}
             </div>
             <p className="why">{a.why}</p>
             {a.id === 'stop' && (
               <p>
-                1. Bank app kholein — card/UPI block karein. 2. UPI PIN badlein. 3. Kisi ko OTP mat dijiye.
+                {t(lang, 'actionsStopDetail')}
               </p>
             )}
             {a.id === 'call1930' && (
-              <Button label="1930 Call Coach kholein" variant="destructive" size="lg" width="100%" onClick={onOpenCoach} />
+              <Button label={t(lang, 'actionsOpenCoach')} variant="destructive" size="lg" width="100%" onClick={onOpenCoach} />
             )}
             {a.id === 'bank' && (
-              <Button label="Bank Alert Kit kholein" variant="secondary" size="lg" width="100%" onClick={() => onTool('bank')} />
+              <Button label={t(lang, 'actionsOpenBank')} variant="secondary" size="lg" width="100%" onClick={() => onTool('bank')} />
             )}
             {a.id === 'portal' && (
-              <Button label="Ack Bridge kholein" variant="secondary" size="lg" width="100%" onClick={() => onTool('ack')} />
+              <Button label={t(lang, 'actionsOpenAck')} variant="secondary" size="lg" width="100%" onClick={() => onTool('ack')} />
             )}
             {a.id === 'evidence' && (
-              <Button label="Evidence Vault kholein" variant="secondary" size="lg" width="100%" onClick={() => onTool('vault')} />
+              <Button label={t(lang, 'actionsOpenVault')} variant="secondary" size="lg" width="100%" onClick={() => onTool('vault')} />
             )}
             {a.id === 'family' && (
-              <Button label="Care Circle kholein" variant="secondary" size="lg" width="100%" onClick={() => onTool('care')} />
+              <Button label={t(lang, 'actionsOpenCare')} variant="secondary" size="lg" width="100%" onClick={() => onTool('care')} />
             )}
           </section>
         ))}
       </div>
-      <Button label="Incident card wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />
+      <Button label={t(lang, 'actionsBack')} variant="ghost" size="lg" width="100%" onClick={onBack} />
     </>
   );
 }

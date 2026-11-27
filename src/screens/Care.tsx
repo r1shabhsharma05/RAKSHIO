@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { StoredIncident } from '../state/store';
 import { BackButton, formatINR } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Care Circle: consent first, then a minimal SOS card. The family number is
 // used only to build the WhatsApp link — it is never stored. The offline QR
 // card works without internet: show the phone screen, or print it.
 export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [consent, setConsent] = useState(false);
   const [number, setNumber] = useState('');
   const [qr, setQr] = useState('');
@@ -29,36 +32,34 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
 
   return (
     <>
-      <h2>Care Circle — Parivar ko batayein</h2>
-
       <label className="caregiver-toggle">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-        <span>Main chahta/chahti hoon ki RAKSHIO mere parivar ko ye SOS card dikhaye. (Sirf ye card share hoga — poora incident nahi.)</span>
+        <span>{t(lang, 'careConsent')}</span>
       </label>
 
       {consent && (
         <>
           <section className="rk-card">
-            <h2>SOS card preview</h2>
+            <h2>{t(lang, 'careSosTitle')}</h2>
             <p className="script-box">{sosText}</p>
-            <label htmlFor="care-number" className="rk-label">Parivar ka WhatsApp number</label>
+            <label htmlFor="care-number" className="rk-label">{t(lang, 'careNumberLabel')}</label>
             <input
               id="care-number"
               className="rk-input"
               type="tel"
               value={number}
               onChange={(e) => setNumber(e.target.value)}
-              placeholder="Jaise: 98765 43210"
+              placeholder={t(lang, 'careNumberPlaceholder')}
             />
-            <p className="note">Ye number save nahi hota — sirf link banane ke liye use hota hai.</p>
+            <p className="note">{t(lang, 'careNumberNote')}</p>
             {waLink && (
-              <a className="rk-primary-btn" href={waLink}>WhatsApp par SOS bhejein</a>
+              <a className="rk-primary-btn" href={waLink}>{t(lang, 'careSendBtn')}</a>
             )}
           </section>
 
           <section className="rk-card">
-            <h2>Offline QR SOS card</h2>
-            <p>Internet na ho to ye QR dikhayein — scan karne par SOS text mil jayega.</p>
+            <h2>{t(lang, 'careQrTitle')}</h2>
+            <p>{t(lang, 'careQrNote')}</p>
             {qr && <img src={qr} alt="SOS card QR code" className="qr-img" />}
           </section>
         </>

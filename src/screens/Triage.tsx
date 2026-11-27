@@ -1,11 +1,14 @@
 import type { StoredIncident } from '../state/store';
 import { triageRoute } from '../engines/triage/router';
 import { BackButton } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Smart Triage Router: paisa gaya hai ya sirf koshish hui hai —
 // us hisaab se rasta. Lost money -> 1930/bank/portal. Attempted fraud,
 // no loss -> Chakshu (30 din ke andar).
 export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
+  const lang = useDashboard((s) => s.settings.language);
   const r = triageRoute({
     amount: stored.amount,
     credentialShared: stored.credentialShared,
@@ -27,10 +30,10 @@ export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBac
       </section>
       <p className="note">
         {r.path === 'lost-money'
-          ? 'Paisa gaya hai isliye 1930 sabse pehle — fund freeze ka chance pehle ghante me sabse zyada hota hai.'
+          ? t(lang, 'triageNoteLost')
           : r.path === 'attempted-fraud'
-            ? 'Paisa nahi gaya, isliye Chakshu sahi jagah hai — koshish ki report 30 din ke andar karein.'
-            : 'Abhi saaf nahi hai ki paisa gaya ya nahi — 1930 par salah lena sabse safe kadam hai.'}
+            ? t(lang, 'triageNoteAttempt')
+            : t(lang, 'triageNoteUnclear')}
       </p>
       <BackButton onBack={onBack} />
     </>

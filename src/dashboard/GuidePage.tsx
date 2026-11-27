@@ -155,7 +155,6 @@ export function GuidePage() {
     <div className="db-flow-wide">
       <GoldenStrip />
       <div className="db-card">
-        <h2 className="db-page-title">{t(lang, 'guideTitle')}</h2>
         <p className="db-muted">{t(lang, 'guideSub')}</p>
         <div className="db-search">
           <input

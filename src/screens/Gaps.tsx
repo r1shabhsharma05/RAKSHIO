@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { VoiceInput } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
-export type GapField = 'amount' | 'fraudAt' | 'method';
+export type GapField = 'amount' | 'fraudAt' | 'method' | 'bank';
 
-const QUESTIONS: Record<GapField, { q: string; hint: string }> = {
-  amount: { q: 'Kitne rupaye gaye?', hint: 'Jaise: bees hazaar, ya 20000' },
-  fraudAt: { q: 'Paise kab gaye?', hint: 'Jaise: kal subah das baje, ya aaj dopahar' },
-  method: { q: 'Paise kaise gaye?', hint: 'Jaise: UPI se, card se, net banking se' },
+// Step 16 (bug 2): the questions follow the selected language.
+const QUESTION_KEYS: Record<GapField, { q: 'gapQAmount' | 'gapQFraudAt' | 'gapQMethod' | 'gapQBank'; hint: 'gapHintAmount' | 'gapHintFraudAt' | 'gapHintMethod' | 'gapHintBank' }> = {
+  amount: { q: 'gapQAmount', hint: 'gapHintAmount' },
+  fraudAt: { q: 'gapQFraudAt', hint: 'gapHintFraudAt' },
+  method: { q: 'gapQMethod', hint: 'gapHintMethod' },
+  bank: { q: 'gapQBank', hint: 'gapHintBank' },
 };
 
 // One missing field at a time, never a form. "Pata nahi" is always allowed —
@@ -23,6 +27,7 @@ export function GapsScreen({
   onSkip: (field: GapField) => void;
   onDone: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const field = gaps[index];
@@ -30,14 +35,14 @@ export function GapsScreen({
   if (!field) {
     return (
       <>
-        <h2>Bas, itna hi.</h2>
-        <p>Ab hum jo samjhe hain, woh aapko suna kar confirm karenge.</p>
-        <Button label="Confirm karein" variant="secondary" size="lg" width="100%" onClick={onDone} />
+        <h2>{t(lang, 'gapDoneTitle')}</h2>
+        <p>{t(lang, 'gapDoneBody')}</p>
+        <Button label={t(lang, 'gapDoneBtn')} variant="secondary" size="lg" width="100%" onClick={onDone} />
       </>
     );
   }
 
-  const { q, hint } = QUESTIONS[field];
+  const keys = QUESTION_KEYS[field];
   function next() {
     setAnswer('');
     setIndex((i) => i + 1);
@@ -45,19 +50,19 @@ export function GapsScreen({
 
   return (
     <>
-      <p className="note">Sawaal {index + 1} / {gaps.length}</p>
-      <h2>{q}</h2>
-      <VoiceInput value={answer} onChange={setAnswer} placeholder={hint} label="Jawaab" />
+      <p className="note">{t(lang, 'gapQuestionOf', { i: index + 1, n: gaps.length })}</p>
+      <h2>{t(lang, keys.q)}</h2>
+      <VoiceInput value={answer} onChange={setAnswer} placeholder={t(lang, keys.hint)} label={t(lang, 'gapAnswerLabel')} />
       <button
         type="button"
         className="rk-primary-btn"
         disabled={answer.trim().length < 1}
         onClick={() => { onAnswer(field, answer.trim()); next(); }}
       >
-        Aage badhein
+        {t(lang, 'gapNextBtn')}
       </button>
       <Button
-        label="Pata nahi"
+        label={t(lang, 'confirmUnknown')}
         variant="secondary"
         size="lg"
         width="100%"

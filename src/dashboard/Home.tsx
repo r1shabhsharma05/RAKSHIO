@@ -24,14 +24,14 @@ import { ShieldLogo } from './GlassShell';
 import { GoldenHourRing } from './GoldenHour';
 import { ProgressTracker } from './Progress';
 import { FollowUpList } from './FollowUp';
-import { deadlineStatuses, formatDuration, orderActions } from '../engines/orchestrator/clock';
+import { deadlineStatuses, formatDurationLang, orderActions } from '../engines/orchestrator/clock';
 // Vault (Dexie) and Proof Pack (pdf-lib) stay out of the first-load bundle:
 // Home pulls them in on demand with dynamic imports, same as the lazy screens.
 import type { EvidenceRecord } from '../engines/evidence/vault';
 import { loadAck } from '../engines/ack/ack';
 import { loadBankRef } from '../engines/banks/banks';
 import { formatINR, fraudTypeLabel } from '../screens/shared';
-import { STATUS_LABELS } from '../state/incidents';
+import { STATUS_KEY } from '../state/incidents';
 import { useToast } from '../components/Toast';
 import type { StoredIncident } from '../state/store';
 
@@ -136,7 +136,7 @@ export function HomePage() {
   const fraudAt = incident ? (incident.fraudAt ? new Date(incident.fraudAt) : new Date(incident.createdAt)) : null;
   const statuses = fraudAt ? deadlineStatuses(fraudAt, now) : [];
   const nextDeadline = statuses.filter((s) => s.remainingMs > 0).sort((a, b) => a.remainingMs - b.remainingMs)[0];
-  const actions = fraudAt && incident ? orderActions(fraudAt, now, incident.credentialShared) : [];
+  const actions = fraudAt && incident ? orderActions(fraudAt, now, incident.credentialShared, lang) : [];
   const ack = incident ? loadAck() : null;
   const hasAck = !!ack && incident ? ack.incidentId === incident.id : false;
   const hasBankRef = incident ? loadBankRef(incident.id).trim().length > 0 : false;
@@ -238,8 +238,8 @@ export function HomePage() {
             <div className="db-chip-row" role="timer" aria-live="off">
               {statuses.map((s) => (
                 <div key={s.id} className={`db-chip ${s.state}`}>
-                  <div className="t">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDuration(s.remainingMs)}</div>
-                  <div className="n">{s.label}</div>
+                  <div className="t">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDurationLang(lang, s.remainingMs)}</div>
+                  <div className="n">{s.labelKey ? t(lang, s.labelKey) : s.label}</div>
                   <div className="w">{s.windowLabel} {t(lang, 'chipWindow')}</div>
                 </div>
               ))}
@@ -279,7 +279,7 @@ export function HomePage() {
         {incident ? (
           <div className="db-rows">
             <div className="db-row"><span className="k">ID</span><span className="v">{shortId(incident.id)}</span></div>
-            <div className="db-row"><span className="k">{t(lang, 'incidentRowType')}</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'incidentRowType')}</span><span className="v">{fraudTypeLabel(incident.fraudType, lang)}</span></div>
             <div className="db-row"><span className="k">{t(lang, 'incidentRowAmount')}</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : t(lang, 'unknown')}</span></div>
             <div className="db-row">
               <span className="k">{t(lang, 'incidentRowReported')}</span>
@@ -373,13 +373,13 @@ export function HomePage() {
         <h2>{t(lang, 'snapshot')}</h2>
         {incident ? (
           <div className="db-rows">
-            <div className="db-row"><span className="k">{t(lang, 'snapshotFraudType')}</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotFraudType')}</span><span className="v">{fraudTypeLabel(incident.fraudType, lang)}</span></div>
             <div className="db-row"><span className="k">{t(lang, 'snapshotAmount')}</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : t(lang, 'unknown')}</span></div>
             <div className="db-row"><span className="k">{t(lang, 'snapshotPlatform')}</span><span className="v">{incident.bank ?? t(lang, 'unknown')}</span></div>
-            <div className="db-row"><span className="k">{t(lang, 'snapshotStatus')}</span><span className="v">{STATUS_LABELS[incident.status ?? 'in-progress']}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotStatus')}</span><span className="v">{t(lang, STATUS_KEY[incident.status ?? 'in-progress'])}</span></div>
             <div className="db-row">
               <span className="k">{t(lang, 'nextDeadline')}</span>
-              <span className="v">{nextDeadline ? `${nextDeadline.label} ${t(lang, 'deadlineIn')} ${formatDuration(nextDeadline.remainingMs)}` : t(lang, 'allDeadlinesOver')}</span>
+              <span className="v">{nextDeadline ? `${nextDeadline.labelKey ? t(lang, nextDeadline.labelKey) : nextDeadline.label} ${t(lang, 'deadlineIn')} ${formatDurationLang(lang, nextDeadline.remainingMs)}` : t(lang, 'allDeadlinesOver')}</span>
             </div>
           </div>
         ) : (

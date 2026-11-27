@@ -5,6 +5,8 @@ import type { StoredIncident } from '../state/store';
 import { addEvidence, listEvidence, tamperTestCopy, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
 import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Evidence Vault: capture screenshots/SMS/notes, hash-chained in IndexedDB.
 // Verify turns the chain green — or red, naming the tampered record.
@@ -12,6 +14,7 @@ import { useToast } from '../components/Toast';
 // what Verify would say if a record were changed, without touching the
 // real entries — the real chain always stays intact.
 export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncident; caregiver: boolean; onBack: () => void }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [rows, setRows] = useState<EvidenceRecord[]>([]);
   const [kind, setKind] = useState<'screenshot' | 'sms' | 'note' | 'file'>('sms');
   const [label, setLabel] = useState('');
@@ -36,7 +39,7 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
     setLabel('');
     setVerify(null);
     await refresh();
-    showToast('Saboot save ho gaya');
+    showToast(t(lang, 'vaultSavedToast'));
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -73,61 +76,60 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
 
   return (
     <>
-      <h2>Evidence Vault</h2>
-      <p>Screenshot, SMS ya note save karein. Har entry ka SHA-256 hash banta hai — koi entry badle to chain toot jati hai.</p>
+      <p>{t(lang, 'vaultIntro')}</p>
 
       <section className="rk-card">
-        <h2>Naya saboot jodein</h2>
-        <label htmlFor="ev-kind" className="rk-label">Kis type ka saboot?</label>
+        <h2>{t(lang, 'vaultAddTitle')}</h2>
+        <label htmlFor="ev-kind" className="rk-label">{t(lang, 'vaultKindLabel')}</label>
         <select id="ev-kind" className="rk-input" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
-          <option value="sms">SMS / Message</option>
-          <option value="screenshot">Screenshot (text)</option>
-          <option value="note">Note</option>
-          <option value="file">File / Photo</option>
+          <option value="sms">{t(lang, 'vaultKindSms')}</option>
+          <option value="screenshot">{t(lang, 'vaultKindScreenshot')}</option>
+          <option value="note">{t(lang, 'vaultKindNote')}</option>
+          <option value="file">{t(lang, 'vaultKindFile')}</option>
         </select>
-        <label htmlFor="ev-label" className="rk-label">Label</label>
-        <input id="ev-label" className="rk-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Jaise: Fraud SMS, Bank statement" />
+        <label htmlFor="ev-label" className="rk-label">{t(lang, 'vaultLabelLabel')}</label>
+        <input id="ev-label" className="rk-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={t(lang, 'vaultLabelPlaceholder')} />
         {kind === 'file' ? (
-          <input type="file" accept="image/*" onChange={onFile} aria-label="Photo ya file chunein" />
+          <input type="file" accept="image/*" onChange={onFile} aria-label={t(lang, 'vaultFileLabel')} />
         ) : (
           <>
-            <label htmlFor="ev-text" className="rk-label">Text</label>
-            <textarea id="ev-text" className="rk-input" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="SMS ya note yahan likhein ya paste karein" />
+            <label htmlFor="ev-text" className="rk-label">{t(lang, 'vaultTextLabel')}</label>
+            <textarea id="ev-text" className="rk-input" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder={t(lang, 'vaultTextPlaceholder')} />
           </>
         )}
-        <p className="note">OTP/PIN aur card/Aadhaar number save karne se pehle chhupa diye jayenge.</p>
-        <button type="button" className="rk-primary-btn" disabled={kind !== 'file' && text.trim().length < 1} onClick={add}>Vault me save karein</button>
+        <p className="note">{t(lang, 'vaultRedactNote')}</p>
+        <button type="button" className="rk-primary-btn" disabled={kind !== 'file' && text.trim().length < 1} onClick={add}>{t(lang, 'vaultSaveBtn')}</button>
       </section>
 
       <section className="rk-card">
-        <h2>Saved evidence ({rows.length})</h2>
-        {rows.length === 0 && <p className="note">Abhi koi saboot nahi hai. Upar SMS ya note likh kar “Vault me save karein” dabaiye — har entry ka hash banta hai.</p>}
+        <h2>{t(lang, 'vaultSavedTitle', { n: rows.length })}</h2>
+        {rows.length === 0 && <p className="note">{t(lang, 'vaultEmptyNote')}</p>}
         {rows.map((r) => (
           <div key={r.id} className="field-row">
-            <span className="label">[{r.kind}] {r.label}{r.byCaregiver ? ' (caregiver)' : ''}<br /><span className="ev-text">{r.text.slice(0, 120)}</span></span>
+            <span className="label">[{r.kind}] {r.label}{r.byCaregiver ? t(lang, 'vaultCaregiverTag') : ''}<br /><span className="ev-text">{r.text.slice(0, 120)}</span></span>
             <span className="value ev-hash">{r.hash.slice(0, 12)}…</span>
           </div>
         ))}
-        <Button label={verifying ? 'Check ho raha hai…' : 'Chain verify karein'} variant="secondary" size="lg" width="100%" isDisabled={verifying} onClick={onVerify} />
+        <Button label={verifying ? t(lang, 'vaultVerifying') : t(lang, 'vaultVerifyBtn')} variant="secondary" size="lg" width="100%" isDisabled={verifying} onClick={onVerify} />
         {verify && (
           <p role="status" className={verify.ok ? 'status-ok' : 'status-bad'}>
             {verify.ok
-              ? `✓ Chain sahi hai — ${verify.count} entries, koi badlaav nahi.`
-              : `✗ Chain TOOTI — record #${verify.brokenAt} badla gaya hai. (${verify.count} entries)`}
+              ? t(lang, 'vaultChainOk', { n: verify.count })
+              : t(lang, 'vaultChainBroken', { n: verify.brokenAt ?? 0, count: verify.count })}
           </p>
         )}
         {rows.length > 0 && (
-          <Button label="Tamper test (demo) — copy par chain tod kar dekhein" variant="ghost" size="lg" width="100%" onClick={onTamperTest} />
+          <Button label={t(lang, 'vaultTamperBtn')} variant="ghost" size="lg" width="100%" onClick={onTamperTest} />
         )}
         {tamperDemo && (
           <p role="status" className="status-bad">
             {tamperDemo.ok
-              ? 'Tamper test (copy par): chain saaf nikli — test me koi badlaav nahi dikha.'
-              : `Tamper test (sirf copy par): Chain TOOTI — record #${tamperDemo.brokenAt} badla gaya hai. Asli entries surakshit hain — ye test copy par chala, asli Vault me kuch nahi badla.`}
+              ? t(lang, 'vaultTamperOk')
+              : t(lang, 'vaultTamperBroken', { n: tamperDemo.brokenAt ?? 0 })}
           </p>
         )}
         {tamperDemo && (
-          <Button label="Asli chain verify karein" variant="secondary" size="lg" width="100%" onClick={onVerify} />
+          <Button label={t(lang, 'vaultVerifyRealBtn')} variant="secondary" size="lg" width="100%" onClick={onVerify} />
         )}
       </section>
       {rows.length > 0 && <p><Badge label="Hash-chained • SHA-256" variant="success" /></p>}

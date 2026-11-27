@@ -3,12 +3,14 @@ import { Button } from '@astryxdesign/core/Button';
 import type { ExtractedIncident } from '../engines/understanding/extract';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
 import { formatINR, VoiceInput } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 export type ConfirmState = 'pending' | 'yes' | 'unknown';
-export type GapField = 'amount' | 'fraudAt' | 'method';
+export type GapField = 'amount' | 'fraudAt' | 'method' | 'bank';
 
-// The confirmation gate: the incident card stays LOCKED until amount, time
-// and method are each confirmed or explicitly marked "pata nahi". The
+// The confirmation gate: the incident card stays LOCKED until amount, time,
+// method and bank are each confirmed or explicitly marked "pata nahi". The
 // summary is shown in large text; "Summary suniye" reads it aloud only
 // on tap — TTS never starts on its own (Step 10: the auto-readback
 // startled users the same way the calm card did).
@@ -29,6 +31,7 @@ export function ConfirmScreen({
   onReopen: (field: GapField) => void;
   onDone: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [correcting, setCorrecting] = useState<GapField | null>(null);
   const [correction, setCorrection] = useState('');
   const [speaking, setSpeaking] = useState(false);
@@ -48,68 +51,70 @@ export function ConfirmScreen({
   const allResolved = (Object.values(confirmState) as ConfirmState[]).every((s) => s !== 'pending');
 
   function display(field: GapField): string {
-    if (field === 'amount') return incident.amount.value != null ? formatINR(incident.amount.value) : 'Pata nahi';
-    if (field === 'fraudAt') return incident.fraudAtDisplay.value ?? 'Pata nahi';
-    return incident.method.value ?? 'Pata nahi';
+    if (field === 'amount') return incident.amount.value != null ? formatINR(incident.amount.value) : t(lang, 'unknown');
+    if (field === 'fraudAt') return incident.fraudAtDisplay.value ?? t(lang, 'unknown');
+    if (field === 'bank') return incident.bank.value ?? t(lang, 'unknown');
+    return incident.method.value ?? t(lang, 'unknown');
   }
 
   const labels: Record<GapField, string> = {
-    amount: 'Rashi',
-    fraudAt: 'Kab hua',
-    method: 'Kaise gaye',
+    amount: t(lang, 'confirmLabelAmount'),
+    fraudAt: t(lang, 'confirmLabelWhen'),
+    method: t(lang, 'confirmLabelMethod'),
+    bank: t(lang, 'confirmLabelBank'),
   };
 
   return (
     <>
-      <h2>Kya ye sahi hai?</h2>
-      <p>Sunn kar ya padh kar batayein — jo galat ho, use sahi karenge.</p>
+      <h2>{t(lang, 'confirmTitle')}</h2>
+      <p>{t(lang, 'confirmIntro')}</p>
       <button
         type="button"
         className="rk-primary-btn"
         onClick={toggleSpeak}
         aria-pressed={speaking}
       >
-        {speaking ? 'Bolna band karein' : 'Summary suniye'}
+        {speaking ? t(lang, 'confirmStopSpeak') : t(lang, 'confirmSpeak')}
       </button>
 
       {(Object.keys(labels) as GapField[]).map((field) => (
         <section className="rk-card" key={field}>
           <div className="field-row">
             <span className="label">{labels[field]}</span>
-            <span className={display(field) === 'Pata nahi' ? 'value unknown' : 'value'}>{display(field)}</span>
+            <span className={display(field) === t(lang, 'unknown') ? 'value unknown' : 'value'}>{display(field)}</span>
           </div>
           {confirmState[field] === 'pending' && correcting !== field && (
             <div className="field-col">
-              <button type="button" className="rk-primary-btn" onClick={() => onResolve(field, 'yes')}>Haan, sahi hai</button>
-              <Button label="Galat hai" variant="secondary" size="lg" width="100%" onClick={() => { setCorrecting(field); setCorrection(''); }} />
-              <Button label="Pata nahi" variant="ghost" size="lg" width="100%" onClick={() => onResolve(field, 'unknown')} />
+              <button type="button" className="rk-primary-btn" onClick={() => onResolve(field, 'yes')}>{t(lang, 'confirmYes')}</button>
+              <Button label={t(lang, 'confirmWrong')} variant="secondary" size="lg" width="100%" onClick={() => { setCorrecting(field); setCorrection(''); }} />
+              <Button label={t(lang, 'confirmUnknown')} variant="ghost" size="lg" width="100%" onClick={() => onResolve(field, 'unknown')} />
             </div>
           )}
           {correcting === field && (
             <div className="field-col">
-              <VoiceInput value={correction} onChange={setCorrection} placeholder="Sahi jaankari boliye ya likhiye" label="Sahi karein" />
+              <VoiceInput value={correction} onChange={setCorrection} placeholder={t(lang, 'confirmCorrectPlaceholder')} label={t(lang, 'confirmCorrectLabel')} />
               <button
                 type="button"
                 className="rk-primary-btn"
                 disabled={correction.trim().length < 1}
                 onClick={() => { onCorrect(field, correction.trim()); setCorrecting(null); }}
               >
-                Sahi karein
+                {t(lang, 'confirmCorrectLabel')}
               </button>
-              <Button label="Radd karein" variant="ghost" size="lg" width="100%" onClick={() => setCorrecting(null)} />
+              <Button label={t(lang, 'confirmCancel')} variant="ghost" size="lg" width="100%" onClick={() => setCorrecting(null)} />
             </div>
           )}
           {confirmState[field] !== 'pending' && correcting !== field && (
             <div className="row-between">
-              <span>{confirmState[field] === 'yes' ? '✓ Sahi hai' : 'Pata nahi — aage badhenge'}</span>
-              <Button label="Badlein" variant="ghost" size="lg" onClick={() => onReopen(field)} />
+              <span>{confirmState[field] === 'yes' ? t(lang, 'confirmResolvedYes') : t(lang, 'confirmResolvedUnknown')}</span>
+              <Button label={t(lang, 'confirmChange')} variant="ghost" size="lg" onClick={() => onReopen(field)} />
             </div>
           )}
         </section>
       ))}
 
-      <button type="button" className="rk-primary-btn" disabled={!allResolved} onClick={onDone}>Ye sahi hai — aage badhein</button>
-      {!allResolved && <p className="note">Teeno sawaal ka jawaab dijiye — phir aage badh sakte hain.</p>}
+      <button type="button" className="rk-primary-btn" disabled={!allResolved} onClick={onDone}>{t(lang, 'confirmDoneBtn')}</button>
+      {!allResolved && <p className="note">{t(lang, 'confirmAllNeeded')}</p>}
     </>
   );
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
-import { INCIDENT_STATUSES, STATUS_LABELS, type IncidentStatus } from '../state/incidents';
+import { INCIDENT_STATUSES, STATUS_KEY, type IncidentStatus } from '../state/incidents';
 import { formatINR, fraudTypeLabel } from '../screens/shared';
 
 // Real data only: search/filter over saved incidents, totals from the same
@@ -46,26 +46,25 @@ export function IncidentsPage() {
   const byType = useMemo(() => {
     const map = new Map<string, number>();
     for (const i of incidents) {
-      const k = fraudTypeLabel(i.fraudType);
+      const k = fraudTypeLabel(i.fraudType, lang);
       map.set(k, (map.get(k) ?? 0) + (i.amount ?? 0));
     }
     return [...map.entries()].map(([name, amount]) => ({ name, amount }));
-  }, [incidents]);
+  }, [incidents, lang]);
 
   const byStatus = useMemo(
     () =>
       INCIDENT_STATUSES.map((s) => ({
         key: s,
-        name: STATUS_LABELS[s],
+        name: t(lang, STATUS_KEY[s]),
         value: incidents.filter((i) => (i.status ?? 'in-progress') === s).length,
       })).filter((d) => d.value > 0),
-    [incidents],
+    [incidents, lang],
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div>
-        <h2 className="db-page-title">{t(lang, 'navIncidents')}</h2>
         <p className="db-page-sub">{t(lang, 'incidentsSub')}</p>
       </div>
 
@@ -147,7 +146,7 @@ export function IncidentsPage() {
             className={`db-filter${status === s ? ' active' : ''}`}
             onClick={() => setStatus(s)}
           >
-            {STATUS_LABELS[s]} ({incidents.filter((i) => (i.status ?? 'in-progress') === s).length})
+            {t(lang, STATUS_KEY[s])} ({incidents.filter((i) => (i.status ?? 'in-progress') === s).length})
           </button>
         ))}
       </div>
@@ -174,9 +173,9 @@ export function IncidentsPage() {
           {filtered.map((i) => (
             <Link key={i.id} to={`/incidents/${i.id}`} className="db-incident-card db-span-4">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                <strong>{fraudTypeLabel(i.fraudType)}</strong>
+                <strong>{fraudTypeLabel(i.fraudType, lang)}</strong>
                 <span className={`db-badge ${i.status === 'closed' ? 'gray' : i.status === 'reported' ? 'blue' : 'amber'}`}>
-                  {STATUS_LABELS[i.status ?? 'in-progress']}
+                  {t(lang, STATUS_KEY[i.status ?? 'in-progress'])}
                 </span>
               </div>
               <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{i.amount != null ? formatINR(i.amount) : t(lang, 'unknown')}</span>

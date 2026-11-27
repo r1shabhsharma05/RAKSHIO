@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { StoredIncident } from '../state/store';
 import { deadlineStatuses } from '../engines/orchestrator/clock';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Golden Hour = the first 60 minutes after the fraud. The ring shows how
 // much of that hour is left, ticking every second. Past the hour it says
@@ -17,6 +19,7 @@ function formatHMS(ms: number): string {
 }
 
 export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000);
@@ -32,21 +35,22 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
   // the portal 24h window has already expired, saying "deadlines abhi bhi
   // khuli hain" contradicts the "Samay khatm" chip. Say which windows are
   // open and what to do next — never invent a new deadline.
+  // Step 16 (bug 2): this body copy follows the selected language.
   const statuses = deadlineStatuses(start, now);
   const portal = statuses.find((s) => s.id === 'portal');
   const helpline = statuses.find((s) => s.id === '1930');
   const overText =
     portal?.state === 'overdue' && helpline?.state === 'overdue'
-      ? 'Pehla ghanta beet gaya. Portal (24h) aur 1930 (48h) — dono windows beet gayin. Phir bhi 1930 par call karein aur bank ko suchit karein; der se report karna, na karne se behtar hai.'
+      ? t(lang, 'clockOverBodyBoth')
       : portal?.state === 'overdue'
-        ? 'Pehla ghanta beet gaya. Portal ki 24 ghante ki window beet gayi — phir bhi cybercrime.gov.in par complaint darj karein. 1930 (48h) abhi bhi khula hai — abhi call karein.'
-        : 'Pehla ghanta beet gaya. 1930 (48h) aur portal (24h) ki deadlines abhi bhi khuli hain — abhi call karein.';
+        ? t(lang, 'clockOverBodyPortal')
+        : t(lang, 'clockOverBodyOpen');
   const r = 62;
   const circ = 2 * Math.PI * r;
 
   return (
     <div className="db-clock-wrap">
-      <div className="db-ring" role="timer" aria-live="off" aria-label={over ? 'Golden Hour khatm' : `Golden Hour me bacha samay ${formatHMS(remainingMs)}`}>
+      <div className="db-ring" role="timer" aria-live="off" aria-label={over ? t(lang, 'clockAriaOver') : t(lang, 'clockAriaLeft', { time: formatHMS(remainingMs) })}>
         <svg width="144" height="144" viewBox="0 0 144 144" aria-hidden="true">
           <circle cx="72" cy="72" r={r} fill="none" stroke="#262626" strokeWidth="10" />
           <circle
@@ -65,10 +69,10 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
       </div>
       <div className="db-clock-side">
         <strong style={{ fontSize: '1rem' }}>
-          {over ? 'Golden Hour khatm — phir bhi kadam baaki hain' : 'Left in Golden Hour (First 60 minutes)'}
+          {over ? t(lang, 'clockOverTitle') : t(lang, 'clockLeftTitle')}
         </strong>
         <p className="db-muted">
-          {over ? overText : 'Fraud ke pehle ghante me block aur freeze ka chance sabse zyada hota hai.'}
+          {over ? overText : t(lang, 'clockLeftBody')}
         </p>
       </div>
     </div>

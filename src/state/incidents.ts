@@ -21,13 +21,15 @@ export const INCIDENT_STATUSES: IncidentStatus[] = [
   'closed',
 ];
 
-export const STATUS_LABELS: Record<IncidentStatus, string> = {
-  reported: 'Reported',
-  'in-progress': 'In Progress',
-  'awaiting-portal': 'Awaiting Portal',
-  'bank-notified': 'Bank Notified',
-  'evidence-saved': 'Evidence Saved',
-  closed: 'Closed',
+// Step 16 (bug 2): status text follows the selected language — render
+// sites call t(lang, STATUS_KEY[s]) instead of this map.
+export const STATUS_KEY: Record<IncidentStatus, 'statusReported' | 'statusInProgress' | 'statusAwaitingPortal' | 'statusBankNotified' | 'statusEvidenceSaved' | 'statusClosed'> = {
+  reported: 'statusReported',
+  'in-progress': 'statusInProgress',
+  'awaiting-portal': 'statusAwaitingPortal',
+  'bank-notified': 'statusBankNotified',
+  'evidence-saved': 'statusEvidenceSaved',
+  closed: 'statusClosed',
 };
 
 const LIST_KEY = 'rakshio.incidents.v1';

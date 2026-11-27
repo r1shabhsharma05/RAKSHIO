@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
+import { t, type Lang } from '../i18n';
 import { createListener, recognitionSupported } from '../voice/VoiceAdapter';
 
 // Every Step 2 screen ends with this — a stuck user in a panic app is a bug.
@@ -11,33 +12,36 @@ export function formatINR(n: number): string {
   return `₹${n.toLocaleString('en-IN')}`;
 }
 
-// Engine strings are for code, not for victims. Human-readable Hindi labels.
-const FRAUD_TYPE_LABELS: Record<string, string> = {
-  'otp-impersonation': 'OTP dhokha (customer care)',
-  'digital-arrest': 'Digital arrest dhamki',
-  'remote-access': 'Screen share dhokha',
-  'qr-scam': 'QR scam',
-  'investment-scam': 'Investment dhokha',
-  'job-scam': 'Naukri dhokha',
-  'phishing-link': 'Fake link / SMS',
-  'unauthorised-debit': 'Bina permission debit',
+// Step 16 (bug 2): the label follows the selected language (default 'hg'
+// = the old Hinglish text, so old callers don't change behaviour).
+const FRAUD_TYPE_KEYS: Record<string, 'ftOtp' | 'ftDigitalArrest' | 'ftRemoteAccess' | 'ftQr' | 'ftInvestment' | 'ftJob' | 'ftPhishing' | 'ftDebit'> = {
+  'otp-impersonation': 'ftOtp',
+  'digital-arrest': 'ftDigitalArrest',
+  'remote-access': 'ftRemoteAccess',
+  'qr-scam': 'ftQr',
+  'investment-scam': 'ftInvestment',
+  'job-scam': 'ftJob',
+  'phishing-link': 'ftPhishing',
+  'unauthorised-debit': 'ftDebit',
 };
 
-export function fraudTypeLabel(t: string | null): string {
-  if (!t) return 'Pata nahi';
-  return FRAUD_TYPE_LABELS[t] ?? t;
+export function fraudTypeLabel(type: string | null, lang: Lang = 'hg'): string {
+  if (!type) return t(lang, 'confirmUnknown');
+  const key = FRAUD_TYPE_KEYS[type];
+  return key ? t(lang, key) : type;
 }
 
-const METHOD_LABELS: Record<string, string> = {
-  UPI: 'UPI',
-  card: 'Card',
-  netbanking: 'Net banking',
-  wallet: 'Wallet',
+const METHOD_KEYS: Record<string, 'methodUpi' | 'methodCard' | 'methodNetbanking' | 'methodWallet'> = {
+  UPI: 'methodUpi',
+  card: 'methodCard',
+  netbanking: 'methodNetbanking',
+  wallet: 'methodWallet',
 };
 
-export function methodLabel(m: string | null): string {
-  if (!m) return 'Pata nahi';
-  return METHOD_LABELS[m] ?? m;
+export function methodLabel(m: string | null, lang: Lang = 'hg'): string {
+  if (!m) return t(lang, 'confirmUnknown');
+  const key = METHOD_KEYS[m];
+  return key ? t(lang, key) : m;
 }
 
 // Copy with a fallback: the async clipboard API is missing in older

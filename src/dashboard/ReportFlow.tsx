@@ -14,14 +14,17 @@ import { GapsScreen, type GapField } from '../screens/Gaps';
 import { ConfirmScreen, type ConfirmState } from '../screens/Confirm';
 import { JudgeScreen } from '../screens/Judge';
 import { formatINR, ScreenSkeleton } from '../screens/shared';
+import { t } from '../i18n';
 
 gsap.registerPlugin(useGSAP);
 
-function computeGaps(inc: ExtractedIncident): GapField[] {
+// Exported for the Step 16 unit test: the confirm gate must ask Bank.
+export function computeGaps(inc: ExtractedIncident): GapField[] {
   const gaps: GapField[] = [];
   if (!inc.amount.value || inc.amount.confidence < 0.7) gaps.push('amount');
   if (!inc.fraudAt.value || inc.fraudAt.confidence < 0.7) gaps.push('fraudAt');
   if (!inc.method.value || inc.method.confidence < 0.7) gaps.push('method');
+  if (!inc.bank.value || inc.bank.confidence < 0.7) gaps.push('bank');
   return gaps;
 }
 
@@ -30,10 +33,11 @@ function summaryText(inc: ExtractedIncident): string {
   parts.push(inc.amount.value != null ? `Rashi ${formatINR(inc.amount.value)}.` : 'Rashi pata nahi.');
   parts.push(inc.fraudAtDisplay.value ? `Samay ${inc.fraudAtDisplay.value}.` : 'Samay pata nahi.');
   parts.push(inc.method.value ? `Tareeka ${inc.method.value}.` : 'Tareeka pata nahi.');
+  parts.push(inc.bank.value ? `Bank ${inc.bank.value}.` : 'Bank pata nahi.');
   return parts.join(' ');
 }
 
-const EMPTY_CONFIRM: Record<GapField, ConfirmState> = { amount: 'pending', fraudAt: 'pending', method: 'pending' };
+const EMPTY_CONFIRM: Record<GapField, ConfirmState> = { amount: 'pending', fraudAt: 'pending', method: 'pending', bank: 'pending' };
 
 // The victim's first touch, unchanged from Steps 1–5 — only the shell
 // around it is new. /report always starts a fresh report at Panic.
@@ -108,6 +112,7 @@ export function ReportFlow() {
         fraudAt: g.fraudAt.value ? g.fraudAt : prev.fraudAt,
         fraudAtDisplay: g.fraudAtDisplay.value ? g.fraudAtDisplay : prev.fraudAtDisplay,
       };
+      if (field === 'bank') return { ...prev, bank: g.bank.value ? g.bank : prev.bank };
       return { ...prev, method: g.method.value ? g.method : prev.method };
     });
   }
@@ -131,6 +136,7 @@ export function ReportFlow() {
       amount: confirmState.amount === 'yes',
       fraudAt: confirmState.fraudAt === 'yes',
       method: confirmState.method === 'yes',
+      bank: confirmState.bank === 'yes',
     };
     s.status = 'reported';
     addIncident(s);
@@ -180,7 +186,7 @@ export function ReportFlow() {
           />
         )}
         {screen === 'extracting' && (
-          <ScreenSkeleton label="Samajh raha hoon…" hint="Aapki baat se rashi, samay aur tareeka nikaal raha hoon. Kuch second lagega." />
+          <ScreenSkeleton label={t(settings.language, 'reportExtracting')} hint={t(settings.language, 'reportExtractingHint')} />
         )}
         {screen === 'gaps' && (
           <GapsScreen
@@ -201,7 +207,7 @@ export function ReportFlow() {
             onDone={handleConfirmDone}
           />
         )}
-        {screen === 'judge' && <JudgeScreen onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
+        {screen === 'judge' && <JudgeScreen showTitle onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
       </div>
       {screen !== 'panic' && (
         <button type="button" className="demo-link" onClick={resetAll}>Naya report shuru karein</button>

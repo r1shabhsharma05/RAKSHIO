@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
-import { INCIDENT_STATUSES, STATUS_LABELS } from '../state/incidents';
+import { INCIDENT_STATUSES, STATUS_KEY } from '../state/incidents';
 import { IncidentScreen } from '../screens/Incident';
 import { screenToPath } from './routes';
 import { FollowUpList } from './FollowUp';
@@ -58,10 +58,10 @@ export function IncidentDetailPage() {
       </div>
 
       <section className="db-card" aria-label="Status and follow-ups">
-        <h2>Status</h2>
+        <h2>{t(lang, 'detailStatusTitle')}</h2>
         <div className="db-setting-row">
           <div>
-            <strong>{STATUS_LABELS[incident.status ?? 'in-progress']}</strong>
+            <strong>{t(lang, STATUS_KEY[incident.status ?? 'in-progress'])}</strong>
             <p className="db-muted">{t(lang, 'detailStatusNote')}</p>
           </div>
           <select
@@ -71,7 +71,7 @@ export function IncidentDetailPage() {
             onChange={(e) => updateIncident(incident.id, { status: e.target.value as (typeof INCIDENT_STATUSES)[number] })}
           >
             {INCIDENT_STATUSES.map((s) => (
-              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              <option key={s} value={s}>{t(lang, STATUS_KEY[s])}</option>
             ))}
           </select>
         </div>
