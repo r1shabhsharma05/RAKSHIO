@@ -177,7 +177,7 @@ export function IncidentsPage() {
                   {STATUS_LABELS[i.status ?? 'in-progress']}
                 </span>
               </div>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{i.amount != null ? formatINR(i.amount) : 'Pata nahi'}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{i.amount != null ? formatINR(i.amount) : 'Pata nahi'}</span>
               <span className="db-muted">{i.bank ?? 'Bank pata nahi'} · {new Date(i.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
               <span className="db-muted" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.875rem' }}>#{i.id.replace(/^rk-/, 'RK-').toUpperCase()}</span>
             </Link>

@@ -50,7 +50,7 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
         <span className="ring-num">{over ? '00:00:00' : formatHMS(remainingMs)}</span>
       </div>
       <div className="db-clock-side">
-        <strong style={{ fontSize: '1.125rem' }}>
+        <strong style={{ fontSize: '1rem' }}>
           {over ? 'Golden Hour khatm — phir bhi kadam baaki hain' : 'Left in Golden Hour (First 60 minutes)'}
         </strong>
         <p className="db-muted">

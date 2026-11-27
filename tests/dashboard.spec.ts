@@ -596,3 +596,24 @@ test('step 11: empty states are enriched — checklists, helplines, previews', a
   await expect(page.getByText('Why it matters?')).toBeVisible();
   await expect(page.getByText('Call 1930 (Now)')).toBeVisible();
 });
+
+test('step 12: type scale is normal — root 16px, headings capped', async ({ page }) => {
+  // User call 27 Nov 21:52 IST: the text looked far too big. Root was 18px,
+  // view-head h1 rendered 48px and the hero 45px at 1440. Pin the normal scale.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/#/');
+  const px = async (sel: string) =>
+    page.locator(sel).first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+  expect(await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))).toBe(16);
+  expect(await px('.gd-view-head h1')).toBeLessThanOrEqual(32);
+  expect(await px('.db-hero-title')).toBeLessThanOrEqual(32);
+  expect(await px('.db-hero-sub')).toBeLessThanOrEqual(16);
+  expect(await px('.db-card h2')).toBeLessThanOrEqual(16);
+  // Touch targets stay reachable: primary buttons keep 48px height.
+  const btnH = await page.locator('.db-btn').first().evaluate((e) => e.getBoundingClientRect().height);
+  expect(btnH).toBeGreaterThanOrEqual(44);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#/');
+  expect(await px('.gd-view-head h1')).toBeLessThanOrEqual(32);
+  expect(await px('.db-hero-title')).toBeLessThanOrEqual(32);
+});

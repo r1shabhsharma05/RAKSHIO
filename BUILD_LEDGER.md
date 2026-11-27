@@ -748,3 +748,49 @@ deploy needs his word.
   name; a duplicate would break strict mode).
 - The golden strip stacks vertically inside `.db-flow` (detail view)
   and at ≤767px — three narrow columns wrap labels mid-phrase.
+
+## Step 12: complete (2026-11-27) — normal type scale (user call: font far too big)
+
+User call 27 Nov 21:52 IST: "project ka font or text bda dikh rha bhut jada".
+Audit first (measured computed sizes, before): root 18px, body 18px,
+view-head h1 48.24px, hero title 45px, hero sub 20.25px, card h2 22.5px,
+card h3 20.25px, page title 22.5px (31.5px on Settings, which uses h1),
+muted 18px, step strong 19.1px. At 390px: view-head 29px, hero 36px.
+Root cause: `:root` was `font-size: 1.125rem` (the old Calm 18px minimum),
+which inflated every rem size by 12.5%; on top of that the Glassy
+view-head clamp maxed at 49px and the hero was 2.5rem.
+Fix (systematic, not one-off): `:root` → `1rem` (16px base — the user's
+call overrides the old Calm 18px minimum); h1 1.75→1.375rem, h2
+1.375→1.25rem, h3 1.125→1rem; hero 2.5→2rem, hero sub 1.125→1rem; card h2
+1.25→1rem, h3 1.125→0.9375rem; page title 1.75→1.375rem, page sub
+1.0625→1rem; `.db-btn` 1.0625→1rem; stat `.n` 1.75→1.5rem; chip `.t`
+1.125→1rem; ring-num 1.5→1.25rem; step/golden/common strong 1.0625→1rem;
+mic label, transcript, inputs, primary button, checklist, script box
+1.125→1rem; deadline-chip time 1.25→1.125rem; toast close 1.125→1rem;
+Glassy clamps: view-head 29/3.35vw/49 → 24/2.2vw/32, metric value
+22/2.35vw/35 → 19/1.7vw/27, summary 20/2vw/31 → 18/1.5vw/24,
+balance number 28/3.85vw/57 → 22/2.2vw/34, device total 23→20px,
+dialog h2 24→20px; inline GoldenHour strong 1.125→1rem, IncidentsPage
+amount 1.5→1.25rem. After (measured, 1440): root/body 16px, view-head
+31.68px, hero 32px, hero sub 16px, card h2 16px, card h3 15px, page title
+22px (Settings), muted 16px, step strong 16px. At 390px: view-head 24px,
+hero 32px. Touch targets kept: buttons min-height 3rem = 48px, pinned by
+the new test (≥44px). Left alone deliberately: Glassy 9–14px meta/labels
+(already small), `.db-chip .w` 11px caption, the line-236 clamp padding
+(spacing, not text), mobile hero media query 2rem = 32px (matches the
+hero target). No layout, colour, content, route, or feature changed.
+Evidence: build green (2.67s); vitest 33/33; Playwright dashboard 33/33
+(2.1m, incl. the new Step 12 type-scale test pinning root 16px and
+headings ≤32px at 1440 + 390); axe 0 in-suite. Screenshots read
+(`tests/shots-local/step12-after-*.png`): home 1440 light + dark, guide
+1440 dark, vault + settings 1440 dark, home 390 dark. Before-shots kept
+as `step12-before-*.png`. Secret scan clean. NOT deployed — live still
+serves v6 (Steps 10+11); deploy needs his word.
+
+## Rulings (Step 12)
+
+- Type scale is pinned by test now (root 16px, hero/view-head ≤32px at
+  1440 and 390). Any future display size above 32px needs the user's word.
+- The old Calm 18px minimum is dead: `:root` is 1rem. Do not reintroduce
+  an 18px root "for accessibility" — the user explicitly called the text
+  too big, and 16px body with 48px targets is the accessible floor here.

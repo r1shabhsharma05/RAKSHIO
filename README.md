@@ -227,6 +227,11 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Every empty page, filled.** All 7 gated tools now show a "Kya yaad rakhein" checklist; Bank's empty state previews verified helplines (SBI, HDFC, ICICI, Axis — tel: links). Home's no-incident widgets teach the flow (clock "why", incident-card preview, 5-step Action Plan preview, Vault/Progress/Follow-up explainers). Incidents empty adds how-to-start steps + a Situation Guide link.
 - Evidence: build green, vitest **33/33**, Playwright dashboard **32/32**, axe 0 on home + incidents + guide (light) and dark home; dark/light home, guide list + detail, bank + actions empty states, mobile 390 screenshots read. NOT deployed — live still serves Step 8.
 
+## Step 12 — normal type scale (27 Nov)
+
+- **Fonts are normal size now.** User call: text looked far too big. Measured before: root 18px (old Calm minimum), page headings 48px, hero 45px, body 18px. Now: base 16px, hero 32px, page headings ≤32px, card titles 15–16px, body 16px, buttons 16px — touch targets still 48px tall. Glassy display clamps pulled down too (view-head max 49px → 32px, balance number max 57px → 34px). No layout, colour, content, route, or feature changed; pinned by a new test (root 16px, headings ≤32px at 1440 + 390).
+- Evidence: build green, vitest **33/33**, Playwright dashboard **33/33**, axe 0 in-suite; before/after screenshots read (home, guide, vault, settings at 1440 light + dark, home 390 dark). NOT deployed — live still serves v6.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

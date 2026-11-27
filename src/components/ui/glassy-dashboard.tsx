@@ -240,7 +240,7 @@ const dashboardStyles = `
   margin-block-end: 19px;
 }
 .gd-view-head h1 {
-  font-size: clamp(29px, 3.35vw, 49px);
+  font-size: clamp(24px, 2.2vw, 32px);
   font-weight: 760;
   line-height: 1.03;
   letter-spacing: -.062em;
@@ -314,8 +314,8 @@ const dashboardStyles = `
 }
 .gd-metric-icon svg, .gd-list-icon svg { width: 14px; height: 14px; }
 .gd-metric[data-tone="teal"] .gd-metric-icon { background: rgb(235 255 247 / 16%); }
-.gd-metric-value { display: block; font-size: clamp(22px, 2.35vw, 35px); line-height: 1.05; margin-block: 3px 7px; letter-spacing: -.052em; font-weight: 815; }
-.gd-summary .gd-metric-value { font-size: clamp(20px, 2vw, 31px); }
+.gd-metric-value { display: block; font-size: clamp(19px, 1.7vw, 27px); line-height: 1.05; margin-block: 3px 7px; letter-spacing: -.052em; font-weight: 815; }
+.gd-summary .gd-metric-value { font-size: clamp(18px, 1.5vw, 24px); }
 .gd-metric-caption, .gd-balance-change { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--gd-muted); font-size: 10px; font-weight: 680; }
 .gd-delta {
   display: inline-flex; align-items: center; gap: 2px; color: var(--gd-teal); font-weight: 850;
@@ -327,7 +327,7 @@ const dashboardStyles = `
 
 .gd-balance .gd-panel-head { align-items: center; margin-block-end: 9px; }
 .gd-unit { border-radius: 6px; padding: 4px 6px; background: var(--gd-raised); font-size: 10px; font-weight: 810; }
-.gd-balance-number { font-size: clamp(28px, 3.85vw, 57px); font-weight: 820; letter-spacing: -.077em; line-height: 1.02; }
+.gd-balance-number { font-size: clamp(22px, 2.2vw, 34px); font-weight: 820; letter-spacing: -.077em; line-height: 1.02; }
 .gd-balance-change { margin-block-start: 7px; }
 .gd-balance-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-block: 13px 12px; }
 .gd-streams { display: flex; border-radius: 12px; background: var(--gd-inner); padding: 8px 2px; }
@@ -426,7 +426,7 @@ const dashboardStyles = `
 .gd-device-segment { stroke: var(--gd-series); transition: opacity .2s ease; }
 .gd-device-segment[data-muted="true"] { opacity: .29; }
 .gd-device-total { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
-.gd-device-total strong { font-size: 23px; line-height: 1.05; letter-spacing: -.05em; font-weight: 850; }
+.gd-device-total strong { font-size: 20px; line-height: 1.05; letter-spacing: -.05em; font-weight: 850; }
 .gd-device-total > span { font-size: 10px; margin-top: 5px; color: var(--gd-muted); }
 .gd-device-list { display: grid; gap: 2px; }
 .gd-device-list button {
@@ -502,7 +502,7 @@ const dashboardStyles = `
 .gd-dialog::backdrop { background: rgb(30 21 17 / 43%); backdrop-filter: blur(5px); }
 .gd-dialog-inner { padding: 18px; }
 .gd-dialog-inner > header { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 13px; }
-.gd-dialog-inner h2 { font-size: 24px; font-weight: 830; letter-spacing: -.045em; }
+.gd-dialog-inner h2 { font-size: 20px; font-weight: 830; letter-spacing: -.045em; }
 .gd-command-input { inline-size: 100%; padding-inline: 10px; margin-bottom: 8px; min-block-size: 44px; }
 .gd-command-input input { min-block-size: 42px; font-size: 14px; }
 .gd-quick-list { display: grid; gap: 5px; }
