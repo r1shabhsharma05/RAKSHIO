@@ -33,6 +33,19 @@ describe('extractIncident — required cases', () => {
     const { incident } = extractIncident('dedh lakh rupaye kat gaye', NOW);
     expect(incident.amount.value).toBe(150000);
   });
+
+  it('live bug: "kal shaam 7 baje bees hazaar" -> 20000, not 7', () => {
+    const { incident } = extractIncident('Mere SBI account se kal shaam 7 baje bees hazaar rupaye kat gaye', NOW);
+    expect(incident.amount.value).toBe(20000);
+    expect(incident.bank.value).toBe('SBI');
+    expect(incident.fraudAt.value?.getDate()).toBe(26);
+    expect(incident.fraudAt.value?.getHours()).toBe(19);
+  });
+
+  it('live bug: "7 baje" with money but no amount gives no amount', () => {
+    const { incident } = extractIncident('Mere SBI account se kal shaam 7 baje paise kat gaye', NOW);
+    expect(incident.amount.value).toBeNull();
+  });
 });
 
 describe('extractIncident — no-guess rules', () => {

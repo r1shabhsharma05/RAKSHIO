@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 import { INCIDENT_STATUSES, STATUS_LABELS, type IncidentStatus } from '../state/incidents';
 import { formatINR, fraudTypeLabel } from '../screens/shared';
 
@@ -18,6 +19,7 @@ const STATUS_COLORS: Record<IncidentStatus, string> = {
 
 export function IncidentsPage() {
   const incidents = useDashboard((s) => s.incidents);
+  const lang = useDashboard((s) => s.settings.language);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<IncidentStatus | 'all'>('all');
   const navigate = useNavigate();
@@ -63,23 +65,23 @@ export function IncidentsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div>
-        <h1 className="db-page-title">Incident Dashboard</h1>
-        <p className="db-page-sub">Sabhi incidents — search, filter, aur har ek ka detail.</p>
+        <h2 className="db-page-title">{t(lang, 'navIncidents')}</h2>
+        <p className="db-page-sub">{t(lang, 'incidentsSub')}</p>
       </div>
 
       <div className="db-stat-row">
-        <div className="db-stat"><div className="n">{incidents.length}</div><div className="l">Total incidents</div></div>
-        <div className="db-stat"><div className="n">{formatINR(totalAmount)}</div><div className="l">Total reported amount</div></div>
-        <div className="db-stat"><div className="n">{incidents.length - closedCount}</div><div className="l">Open</div></div>
-        <div className="db-stat"><div className="n">{closedCount}</div><div className="l">Closed</div></div>
+        <div className="db-stat"><div className="n">{incidents.length}</div><div className="l">{t(lang, 'incidentsTotal')}</div></div>
+        <div className="db-stat"><div className="n">{formatINR(totalAmount)}</div><div className="l">{t(lang, 'incidentsTotalAmount')}</div></div>
+        <div className="db-stat"><div className="n">{incidents.length - closedCount}</div><div className="l">{t(lang, 'incidentsOpen')}</div></div>
+        <div className="db-stat"><div className="n">{closedCount}</div><div className="l">{t(lang, 'incidentsClosed')}</div></div>
       </div>
 
       {incidents.length > 0 && (
         <div className="db-grid-home">
           <section className="db-card db-span-6" aria-label="Amount by fraud type">
-            <h2>Amount by fraud type</h2>
+            <h2>{t(lang, 'incidentsByType')}</h2>
             {byType.length === 0 ? (
-              <p className="db-muted">Koi amount record nahi.</p>
+              <p className="db-muted">{t(lang, 'incidentsNoAmount')}</p>
             ) : (
               <div style={{ width: '100%', height: 220 }}>
                 <ResponsiveContainer>
@@ -95,9 +97,9 @@ export function IncidentsPage() {
             )}
           </section>
           <section className="db-card db-span-6" aria-label="Incidents by status">
-            <h2>Incidents by status</h2>
+            <h2>{t(lang, 'incidentsByStatus')}</h2>
             {byStatus.length === 0 ? (
-              <p className="db-muted">Koi incident nahi.</p>
+              <p className="db-muted">{t(lang, 'incidentsNoIncident')}</p>
             ) : (
               // A pie with one slice is an empty card with a wedge in it.
               // A ranked list with thin bars reads at any count.
@@ -125,18 +127,18 @@ export function IncidentsPage() {
         <input
           className="db-input"
           type="search"
-          placeholder="Search"
-          aria-label="Incidents search karein"
+          placeholder={t(lang, 'incidentsSearch')}
+          aria-label={t(lang, 'incidentsSearchAria')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button type="button" className="db-btn db-btn-blue" onClick={() => navigate('/report')}>
-          Naya incident report karein
+          {t(lang, 'incidentsNewBtn')}
         </button>
       </div>
       <div className="db-filter-row" role="group" aria-label="Status filter">
         <button type="button" className={`db-filter${status === 'all' ? ' active' : ''}`} onClick={() => setStatus('all')}>
-          All ({incidents.length})
+          {t(lang, 'incidentsAll')} ({incidents.length})
         </button>
         {INCIDENT_STATUSES.map((s) => (
           <button
@@ -152,18 +154,18 @@ export function IncidentsPage() {
 
       {filtered.length === 0 ? (
         <div className="db-empty">
-          <p>{incidents.length === 0 ? 'Abhi koi incident nahi hai.' : 'Is filter me koi incident nahi mila.'}</p>
+          <p>{incidents.length === 0 ? t(lang, 'incidentsEmpty') : t(lang, 'incidentsEmptyFilter')}</p>
           {incidents.length === 0 && (
             <>
               <ul className="db-why" style={{ textAlign: 'left' }}>
-                <li>Report Fraud se bolkar ya likhkar batayein — rashi, date, UTR nikal kar incident card banta hai</li>
-                <li>Har incident ka status yahan dikhta hai — Reported se Closed tak</li>
-                <li>Bina mic ke dekhna ho to Judge Mode ya demo data se shuru karein</li>
+                <li>{t(lang, 'incidentsEmptyTip1')}</li>
+                <li>{t(lang, 'incidentsEmptyTip2')}</li>
+                <li>{t(lang, 'incidentsEmptyTip3')}</li>
               </ul>
               <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
-                Report Fraud shuru karein
+                {t(lang, 'startReport')}
               </button>
-              <Link to="/guide">Pehle Situation Guide padhein</Link>
+              <Link to="/guide">{t(lang, 'incidentsGuideLink')}</Link>
             </>
           )}
         </div>
@@ -177,8 +179,8 @@ export function IncidentsPage() {
                   {STATUS_LABELS[i.status ?? 'in-progress']}
                 </span>
               </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{i.amount != null ? formatINR(i.amount) : 'Pata nahi'}</span>
-              <span className="db-muted">{i.bank ?? 'Bank pata nahi'} · {new Date(i.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{i.amount != null ? formatINR(i.amount) : t(lang, 'unknown')}</span>
+              <span className="db-muted">{i.bank ?? t(lang, 'incidentsBankUnknown')} · {new Date(i.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
               <span className="db-muted" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.875rem' }}>#{i.id.replace(/^rk-/, 'RK-').toUpperCase()}</span>
             </Link>
           ))}

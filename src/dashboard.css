@@ -109,7 +109,7 @@
 .db-card h2 { font-size: 1rem; color: var(--db-text); display: flex; align-items: center; gap: 0.5rem; }
 .db-card h3 { font-size: 0.9375rem; color: var(--db-text); }
 .db-muted { color: var(--db-muted); font-size: 1rem; line-height: 1.5; }
-.db-hero-title { font-size: 2rem; line-height: 1.15; color: var(--db-text); font-weight: 700; }
+.db-hero-title { font-size: 1.75rem; line-height: 1.15; color: var(--db-text); font-weight: 700; }
 .db-hero-title .red { color: var(--db-red); }
 .db-hero-sub { font-size: 1rem; color: var(--db-muted); line-height: 1.5; max-width: 34rem; }
 
@@ -130,7 +130,7 @@
 .db-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   min-height: 3rem; border-radius: 0.75rem; padding: 0.625rem 1.25rem;
-  font-size: 1rem; font-weight: 700; cursor: pointer;
+  font-size: 0.9375rem; font-weight: 700; cursor: pointer;
   border: 1px solid transparent; text-decoration: none; color: var(--db-text);
   background: var(--db-elevated);
 }
@@ -252,6 +252,8 @@
 }
 .db-shield-alert strong { color: #fecaca; }
 .db-shield-alert p { color: #fca5a5; font-size: 0.9375rem; line-height: 1.45; }
+/* Step 12: the OTP info note — amber, so it reads as a warning, not a flag. */
+.db-shield-otpnote { color: var(--db-amber-soft); font-weight: 600; margin: 0; }
 
 .db-tracker { display: flex; align-items: flex-start; gap: 0; }
 .db-track-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.375rem; text-align: center; position: relative; }
@@ -292,7 +294,7 @@ select.db-input { appearance: auto; }
 .db-incident-card:hover { border-color: var(--db-primary-soft); }
 .db-stat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 .db-stat { background: var(--db-card); border: 1px solid var(--db-border); border-radius: var(--db-radius); padding: 1rem; }
-.db-stat .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.db-stat .n { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .db-stat .l { font-size: 0.9375rem; color: var(--db-muted); }
 
 /* Status share as a ranked list with thin bars — a pie with one slice is
@@ -331,7 +333,7 @@ select.db-input { appearance: auto; }
    Calm Mode defaults from index.css. */
 .db-flow {
   width: 100%;
-  max-width: 28rem;
+  max-width: 36rem;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -440,7 +442,7 @@ select.db-input { appearance: auto; }
   .db-span-4, .db-span-3 { grid-column: span 12; }
   .db-hero { flex-direction: column; align-items: flex-start; }
   .db-hero-art { display: none; }
-  .db-hero-title { font-size: 2rem; }
+  .db-hero-title { font-size: 1.75rem; }
   .db-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .db-tiles { grid-template-columns: 1fr; }
   .db-ring { width: 7rem; height: 7rem; }

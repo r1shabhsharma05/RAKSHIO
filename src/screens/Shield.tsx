@@ -29,7 +29,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
 
   return (
     <>
-      <h1>Second-Scam Shield</h1>
+      <h2>Second-Scam Shield</h2>
       <p>Koi "recovery agent", refund offer, ya ajeeb SMS aaya hai? Yahan paste karein — RAKSHIO batayega kya galat hai.</p>
       <label htmlFor="shield-text" className="rk-label">Message paste karein</label>
       <textarea id="shield-text" className="rk-input" rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Jaise: Aapka paisa wapas karwa dunga, pehle fee bhejo…" />
@@ -43,6 +43,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
       {verdict && (
         <section className={`rk-card ${verdictClass}`} aria-live="polite">
           <h2>{title} (score {verdict.score})</h2>
+          {verdict.otpNote && <p className="db-shield-otpnote">{verdict.otpNote}</p>}
           <p><strong>Sach:</strong> {verdict.truth}</p>
           {verdict.flags.length > 0 && (
             <>

@@ -42,28 +42,28 @@ export function SettingsPage() {
     a.click();
     a.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showToast('Export download ho gaya');
+    showToast(t(lang, 'settingsExportToast'));
   }
 
   async function wipe() {
     await wipeAll();
-    showToast('Sab kuch saaf ho gaya');
+    showToast(t(lang, 'settingsWipeToast'));
     window.location.assign('/#/');
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div>
-        <h1 className="db-page-title">{t(lang, 'settingsTitle')}</h1>
-        <p className="db-page-sub">Language, calm mode, speech, storage — sab kuch is device par hai.</p>
+        <h2 className="db-page-title">{t(lang, 'settingsTitle')}</h2>
+        <p className="db-page-sub">{t(lang, 'settingsSub')}</p>
       </div>
 
       <section className="db-card" aria-label="Language and modes">
-        <h2>Language aur mode</h2>
+        <h2>{t(lang, 'settingsLangTitle')}</h2>
         <div className="db-setting-row">
           <div>
-            <strong>Dashboard language</strong>
-            <p className="db-muted">Sidebar aur dashboard headings ki bhasha. Panic flow hamesha Hinglish me rehta hai.</p>
+            <strong>{t(lang, 'settingsLangLabel')}</strong>
+            <p className="db-muted">{t(lang, 'settingsLangHint')}</p>
           </div>
           <select
             className="db-input w-48 shrink-0"
@@ -83,40 +83,40 @@ export function SettingsPage() {
         </div>
         <div className="db-setting-row">
           <div>
-            <strong>Calm prompt (10 second)</strong>
-            <p className="db-muted">Panic screen par &ldquo;Aap safe hain&rdquo; wala slow message dikhe ya nahi.</p>
+            <strong>{t(lang, 'settingsCalmTitle')}</strong>
+            <p className="db-muted">{t(lang, 'settingsCalmHint')}</p>
           </div>
           <button
             type="button"
             className="db-toggle"
             role="switch"
             aria-checked={settings.calmPrompt}
-            aria-label="Calm prompt"
+            aria-label={t(lang, 'settingsCalmSwitch')}
             onClick={() => setSettings({ calmPrompt: !settings.calmPrompt })}
           />
         </div>
         <div className="db-setting-row">
           <div>
-            <strong>Caregiver mode</strong>
-            <p className="db-muted">Main kisi aur ki madad kar raha/rahi hoon — records par caregiver label lagta hai.</p>
+            <strong>{t(lang, 'settingsCaregiverTitle')}</strong>
+            <p className="db-muted">{t(lang, 'settingsCaregiverHint')}</p>
           </div>
           <button
             type="button"
             className="db-toggle"
             role="switch"
             aria-checked={settings.caregiver}
-            aria-label="Caregiver mode"
+            aria-label={t(lang, 'settingsCaregiverSwitch')}
             onClick={() => setSettings({ caregiver: !settings.caregiver })}
           />
         </div>
       </section>
 
       <section className="db-card" aria-label="Speech settings">
-        <h2>Speech</h2>
+        <h2>{t(lang, 'settingsSpeechTitle')}</h2>
         <div className="db-setting-row">
           <div>
-            <strong>Bolne / sunne ki bhasha</strong>
-            <p className="db-muted">Voice recognition aur TTS ki language.</p>
+            <strong>{t(lang, 'settingsSpeechLabel')}</strong>
+            <p className="db-muted">{t(lang, 'settingsSpeechHint')}</p>
           </div>
           <select
             className="db-input w-48 shrink-0"
@@ -130,8 +130,8 @@ export function SettingsPage() {
         </div>
         <div className="db-setting-row">
           <div>
-            <strong>TTS speed</strong>
-            <p className="db-muted">Calm prompt kitni dheere bole — {settings.ttsRate.toFixed(2)}×.</p>
+            <strong>{t(lang, 'settingsTtsTitle')}</strong>
+            <p className="db-muted">{t(lang, 'settingsTtsHint', { rate: settings.ttsRate.toFixed(2) })}</p>
           </div>
           <input
             type="range"
@@ -144,19 +144,19 @@ export function SettingsPage() {
             className="w-48 shrink-0"
           />
         </div>
-        <p className="db-muted">Note: browser speech recognition kabhi-kabhi external service use karta hai — RAKSHIO iska vaada nahi karta ki ye hamesha offline hai.</p>
+        <p className="db-muted">{t(lang, 'settingsSpeechNote')}</p>
       </section>
 
       <section className="db-card" aria-label="Storage">
-        <h2>Storage</h2>
+        <h2>{t(lang, 'settingsStorageTitle')}</h2>
         <div className="db-rows">
-          <div className="db-row"><span className="k">Local storage (is app ka)</span><span className="v">~{storageKb} KB</span></div>
-          <div className="db-row"><span className="k">Evidence Vault entries</span><span className="v">{evidenceCount}</span></div>
-          <div className="db-row"><span className="k">Incidents</span><span className="v">{incidents.length}</span></div>
+          <div className="db-row"><span className="k">{t(lang, 'settingsStorageLocal')}</span><span className="v">~{storageKb} KB</span></div>
+          <div className="db-row"><span className="k">{t(lang, 'settingsStorageVault')}</span><span className="v">{evidenceCount}</span></div>
+          <div className="db-row"><span className="k">{t(lang, 'settingsStorageIncidents')}</span><span className="v">{incidents.length}</span></div>
         </div>
         <div>
           <button type="button" className="db-btn db-btn-outline" onClick={exportAll}>
-            Sab kuch export karein (JSON)
+            {t(lang, 'settingsExportBtn')}
           </button>
         </div>
       </section>
@@ -164,15 +164,15 @@ export function SettingsPage() {
       {active && (
         <section className="db-card" aria-label="Follow-up Guardian">
           <h2>{t(lang, 'guardianTitle')}</h2>
-          <p className="db-muted">Active incident: {active.amount != null ? `₹${active.amount.toLocaleString('en-IN')}` : 'Pata nahi'} — reminders user-reported status par chalte hain.</p>
+          <p className="db-muted">Active incident: {active.amount != null ? `₹${active.amount.toLocaleString('en-IN')}` : t(lang, 'unknown')} — {t(lang, 'settingsGuardianNoteB')}</p>
           <FollowUpList incident={active} />
         </section>
       )}
 
       <section className="db-card" aria-label="Delete incidents">
-        <h2>Incidents delete karein</h2>
+        <h2>{t(lang, 'settingsDeleteTitle')}</h2>
         {incidents.length === 0 ? (
-          <p className="db-muted">Koi incident nahi hai.</p>
+          <p className="db-muted">{t(lang, 'settingsDeleteEmpty')}</p>
         ) : (
           <div className="db-rows">
             {incidents.map((i) => (
@@ -180,11 +180,11 @@ export function SettingsPage() {
                 <div>
                   <strong>#{i.id.replace(/^rk-/, 'RK-').toUpperCase()}</strong>
                   <p className="db-muted">
-                    {i.amount != null ? `₹${i.amount.toLocaleString('en-IN')}` : 'Pata nahi'} · {new Date(i.createdAt).toLocaleDateString('en-IN')}
+                    {i.amount != null ? `₹${i.amount.toLocaleString('en-IN')}` : t(lang, 'unknown')} · {new Date(i.createdAt).toLocaleDateString('en-IN')}
                   </p>
                 </div>
                 <button type="button" className="db-btn db-btn-sm db-btn-outline" onClick={() => deleteIncident(i.id)}>
-                  Delete karein
+                  {t(lang, 'settingsDeleteBtn')}
                 </button>
               </div>
             ))}
@@ -193,21 +193,21 @@ export function SettingsPage() {
       </section>
 
       <section className="db-card" aria-label="One-tap wipe">
-        <h2>One-tap wipe</h2>
-        <p className="db-muted">Sab kuch delete: incidents, settings, ack, follow-ups, Evidence Vault. Ye wapas nahi aata.</p>
+        <h2>{t(lang, 'settingsWipeTitle')}</h2>
+        <p className="db-muted">{t(lang, 'settingsWipeHint')}</p>
         {confirmWipe ? (
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button type="button" className="db-btn db-btn-red" onClick={wipe}>
-              Pakka — sab kuch saaf karein
+              {t(lang, 'settingsWipeConfirm')}
             </button>
             <button type="button" className="db-btn db-btn-outline" onClick={() => setConfirmWipe(false)}>
-              Rukiye
+              {t(lang, 'settingsWipeCancel')}
             </button>
           </div>
         ) : (
           <div>
             <button type="button" className="db-btn db-btn-red" onClick={() => setConfirmWipe(true)}>
-              Sab kuch saaf karein
+              {t(lang, 'settingsWipeBtn')}
             </button>
           </div>
         )}

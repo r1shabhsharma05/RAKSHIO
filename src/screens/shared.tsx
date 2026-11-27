@@ -82,7 +82,7 @@ export function MicIcon({ size = 64 }: { size?: number }) {
 export function ScreenSkeleton({ label, hint }: { label: string; hint?: string }) {
   return (
     <section className="rk-card" aria-live="polite" aria-busy="true">
-      <h1>{label}</h1>
+      <h2>{label}</h2>
       <div className="skeleton skeleton-bar" aria-hidden="true" />
       <div className="skeleton skeleton-bar" aria-hidden="true" />
       <div className="skeleton skeleton-bar skeleton-short" aria-hidden="true" />

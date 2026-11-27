@@ -6,7 +6,7 @@ import { BackButton } from './shared';
 export function JudgeScreen({ onStart, onBack }: { onStart: () => void; onBack: () => void }) {
   return (
     <>
-      <h1>Judge Mode</h1>
+      <h2>Judge Mode</h2>
       <p>Mic ki zaroorat nahi — ek button se seeded ₹20,000 UPI scenario chalta hai.</p>
       <Button label="Seeded scenario chalao (₹20,000 UPI)" variant="secondary" size="lg" width="100%" onClick={onStart} />
       <section className="rk-card">

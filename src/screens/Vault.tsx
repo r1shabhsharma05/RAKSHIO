@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { StoredIncident } from '../state/store';
-import { addEvidence, listEvidence, tamperRecord, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
+import { addEvidence, listEvidence, tamperTestCopy, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
 import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 
 // Evidence Vault: capture screenshots/SMS/notes, hash-chained in IndexedDB.
 // Verify turns the chain green — or red, naming the tampered record.
-// The Tamper Test button is a labelled demo: it edits a record without
-// re-hashing, so Verify must fail. That is the point of the test.
+// The Tamper Test button is a labelled demo that runs on a COPY: it shows
+// what Verify would say if a record were changed, without touching the
+// real entries — the real chain always stays intact.
 export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncident; caregiver: boolean; onBack: () => void }) {
   const [rows, setRows] = useState<EvidenceRecord[]>([]);
   const [kind, setKind] = useState<'screenshot' | 'sms' | 'note' | 'file'>('sms');
@@ -17,7 +18,7 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
   const [text, setText] = useState('');
   const [verify, setVerify] = useState<{ ok: boolean; brokenAt?: number; count: number } | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const [tampered, setTampered] = useState(false);
+  const [tamperDemo, setTamperDemo] = useState<{ ok: boolean; brokenAt?: number; count: number } | null>(null);
   const showToast = useToast();
 
   async function refresh() {
@@ -63,18 +64,16 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
     }
   }
 
+  // Runs on a COPY of the rows — the real entries are never mutated, so
+  // after the test the real chain still verifies clean.
   async function onTamperTest() {
-    const first = rows[0];
-    if (!first?.id) return;
-    await tamperRecord(first.id, 'BADLA HUA — tamper test');
-    setTampered(true);
-    setVerify(await verifyChain(stored.id));
-    await refresh();
+    if (rows.length === 0) return;
+    setTamperDemo(await tamperTestCopy(rows));
   }
 
   return (
     <>
-      <h1>Evidence Vault</h1>
+      <h2>Evidence Vault</h2>
       <p>Screenshot, SMS ya note save karein. Har entry ka SHA-256 hash banta hai — koi entry badle to chain toot jati hai.</p>
 
       <section className="rk-card">
@@ -118,9 +117,18 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
           </p>
         )}
         {rows.length > 0 && (
-          <Button label="Tamper test (demo) — pehli entry badal kar dekhein" variant="ghost" size="lg" width="100%" onClick={onTamperTest} />
+          <Button label="Tamper test (demo) — copy par chain tod kar dekhein" variant="ghost" size="lg" width="100%" onClick={onTamperTest} />
         )}
-        {tampered && <p className="note">Tamper test: pehli entry ko bina hash badle edit kiya gaya. Verify ab laal hona chahiye.</p>}
+        {tamperDemo && (
+          <p role="status" className="status-bad">
+            {tamperDemo.ok
+              ? 'Tamper test (copy par): chain saaf nikli — test me koi badlaav nahi dikha.'
+              : `Tamper test (sirf copy par): Chain TOOTI — record #${tamperDemo.brokenAt} badla gaya hai. Asli entries surakshit hain — ye test copy par chala, asli Vault me kuch nahi badla.`}
+          </p>
+        )}
+        {tamperDemo && (
+          <Button label="Asli chain verify karein" variant="secondary" size="lg" width="100%" onClick={onVerify} />
+        )}
       </section>
       {rows.length > 0 && <p><Badge label="Hash-chained • SHA-256" variant="success" /></p>}
       <BackButton onBack={onBack} />

@@ -142,7 +142,7 @@ export function ListenScreen({
 
   return (
     <>
-      <h1>{mode === 'voice' ? 'Sun raha hoon — boliye' : 'Likh kar batayein'}</h1>
+      <h2>{mode === 'voice' ? 'Sun raha hoon — boliye' : 'Likh kar batayein'}</h2>
       {mode === 'voice' ? (
         <>
           <p aria-live="polite">Samay: {mm}:{ss} — 2 minute tak bol sakte hain. Rokne ke liye neeche dabaiye.</p>

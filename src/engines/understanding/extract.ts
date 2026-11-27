@@ -96,50 +96,62 @@ function tokens(text: string): string[] {
   return text.split(/[^a-z0-9]+/).filter(Boolean);
 }
 
-// Parses a run of Hindi number words / digits, e.g. "bees hazaar" -> 20000,
+// Parses a run of Hindi number words / digits STARTING at words[0],
+// e.g. "bees hazaar" -> { value: 20000, consumed: 2 },
 // "dedh lakh" -> 150000, "ek lakh bees hazaar" -> 120000.
-function parseNumberWords(words: string[]): number | null {
+// Strict start: a run never skips ahead to a later number — the caller
+// walks each position, so a time ("7 baje") can never borrow the scale
+// of the next phrase ("bees hazaar").
+function parseNumberWords(words: string[]): { value: number; consumed: number } | null {
   let total = 0;
   let current = 0;
   let seen = false;
+  let consumed = 0;
   for (const w of words) {
-    if (w === 'dedh') { current = 1.5; seen = true; continue; }
-    if (w === 'aadha') { current = 0.5; seen = true; continue; }
-    if (w in ONES) { current += ONES[w]; seen = true; continue; }
+    if (w === 'dedh') { current = 1.5; seen = true; consumed++; continue; }
+    if (w === 'aadha') { current = 0.5; seen = true; consumed++; continue; }
+    if (w in ONES) { current += ONES[w]; seen = true; consumed++; continue; }
     if (w in SCALES) {
       const scale = SCALES[w];
       total += (current || 1) * scale;
       current = 0;
       seen = true;
+      consumed++;
       continue;
     }
-    if (/^\d+$/.test(w)) { current += Number(w); seen = true; continue; }
-    if (seen) break; // run ended
+    if (/^\d+$/.test(w)) { current += Number(w); seen = true; consumed++; continue; }
+    break; // run ended
   }
   total += current;
-  return seen ? total : null;
+  return seen ? { value: total, consumed } : null;
 }
 
 function parseAmount(_text: string, stripped: string): Field<number> {
   const moneyCue = /(rupaye|rupee|rs|paisa|kat gaye|debit|amount|paise)/.test(stripped);
   if (!moneyCue) return { value: null, confidence: 0 };
+  // Time expressions are never money: strip "7 baje" / "saat baje" before
+  // any digit or word scan, so a clock time can't be read as an amount.
+  // (Live bug: "kal shaam 7 baje bees hazaar" extracted ₹7 — the "7" from
+  // the time borrowed "hazaar" from the real amount via a lookahead window.)
+  const noTime = stripped.replace(/\b(?:\d{1,2}|[a-z]+)\s+baje\b/g, ' ');
   // Latin digits first ("20,000" / "20000"), UTR already stripped out.
-  const digitMatch = stripped.match(/\b(\d[\d ]{2,})\b/);
+  const digitMatch = noTime.match(/\b(\d[\d ]{2,})\b/);
   if (digitMatch) {
     const value = Number(digitMatch[1].replace(/\s/g, ''));
     if (value > 0 && value < 100000000) return { value, confidence: 0.95 };
   }
-  const words = tokens(stripped);
+  const words = tokens(noTime);
   for (let i = 0; i < words.length; i++) {
-    const value = parseNumberWords(words.slice(i));
-    if (value !== null && value > 0) {
-      // A bare "das" (10) with no scale is a time, not money; need a scale
-      // word or a money word right after the number run.
-      const run = words.slice(i, i + 4).join(' ');
-      if (/(sau|hazaar|hazar|lakh|crore)/.test(run) || /(rupaye|rupee|rs|paisa)/.test(words.slice(i, i + 5).join(' '))) {
-        return { value, confidence: 0.85 };
-      }
-    }
+    const run = parseNumberWords(words.slice(i));
+    if (!run || run.value <= 0) continue;
+    // The guard reads ONLY the run's own words plus the word right after
+    // it — never a window reaching into the next phrase. A bare number
+    // ("das") with no scale and no money word next to it is not money.
+    const runWords = words.slice(i, i + run.consumed);
+    const after = words[i + run.consumed];
+    const hasScale = runWords.some((w) => w in SCALES);
+    const moneyAfter = after !== undefined && /(rupaye|rupee|rs|paisa)/.test(after);
+    if (hasScale || moneyAfter) return { value: run.value, confidence: 0.85 };
   }
   return { value: null, confidence: 0 };
 }

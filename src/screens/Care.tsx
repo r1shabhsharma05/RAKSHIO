@@ -29,7 +29,7 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
 
   return (
     <>
-      <h1>Care Circle — Parivar ko batayein</h1>
+      <h2>Care Circle — Parivar ko batayein</h2>
 
       <label className="caregiver-toggle">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />

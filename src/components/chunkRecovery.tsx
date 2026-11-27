@@ -40,7 +40,7 @@ export function ChunkFallback({ label, failed }: { label: string; failed: boolea
   if (failed) {
     return (
       <div className="db-card" role="alert">
-        <h1 className="db-page-title">Naya version aaya hai</h1>
+        <h2 className="db-page-title">Naya version aaya hai</h2>
         <p className="db-muted">App ka naya version aa gaya — ye page load nahi ho raha. Reload dabayein.</p>
         <button type="button" className="db-btn db-btn-red" onClick={() => window.location.reload()}>
           Reload karein

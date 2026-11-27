@@ -52,7 +52,7 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
 
   return (
     <>
-      <h1>Proof Pack</h1>
+      <h2>Proof Pack</h2>
       <p>Bank ya police ko dene ke liye ek record: incident summary, evidence list with hashes, aur root hash.</p>
 
       <section className="rk-card">

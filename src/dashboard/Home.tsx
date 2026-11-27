@@ -43,19 +43,21 @@ function shortId(id: string): string {
 
 // Step 11: empty-state previews reuse the same copy as the live widgets,
 // so the no-incident Home teaches the flow instead of showing bare hints.
-const CLOCK_WHY = [
-  'Higher chance to block the transaction',
-  'Bank and UPI dispute works best now',
-  'Collect and secure all evidence',
-];
+// Step 12: clock/plan copy is dashboard chrome, so it is keyed (Bug 2) —
+// the same English lines in three locales would read as untranslated.
+function clockWhy(lang: 'en' | 'hi' | 'hg') {
+  return [t(lang, 'clockWhy1'), t(lang, 'clockWhy2'), t(lang, 'clockWhy3')];
+}
 
-const PLAN_PREVIEW = [
-  { id: 'call1930', title: 'Call 1930 (Now)', why: 'Report the fraud and get an acknowledgement number.' },
-  { id: 'portal', title: 'Complete Portal Complaint', why: 'On cybercrime.gov.in within 24 hours.' },
-  { id: 'bank', title: 'Notify Your Bank', why: 'Raise a fraud dispute and block if needed.' },
-  { id: 'evidence', title: 'Save Evidence', why: 'Screenshots, transaction ID, messages, etc.' },
-  { id: 'shield', title: 'Beware of Second Scams', why: 'Don\u2019t trust \u201crecovery agents\u201d or refund calls.' },
-];
+function planPreview(lang: 'en' | 'hi' | 'hg') {
+  return [
+    { id: 'call1930', title: t(lang, 'planCall1930Title'), why: t(lang, 'planCall1930Why') },
+    { id: 'portal', title: t(lang, 'planPortalTitle'), why: t(lang, 'planPortalWhy') },
+    { id: 'bank', title: t(lang, 'planBankTitle'), why: t(lang, 'planBankWhy') },
+    { id: 'evidence', title: t(lang, 'planEvidenceTitle'), why: t(lang, 'planEvidenceWhy') },
+    { id: 'shield', title: t(lang, 'planShieldTitle'), why: t(lang, 'planShieldWhy') },
+  ];
+}
 
 function Tile({
   icon,
@@ -143,11 +145,11 @@ export function HomePage() {
   // The screenshot's five steps, mapped onto the real ordered queue.
   const plan = incident
     ? [
-        { id: 'call1930', title: 'Call 1930 (Now)', why: 'Report the fraud and get an acknowledgement number.', done: !!incident.callTappedAt, to: '/coach', btn: 'Call 1930' },
-        { id: 'portal', title: 'Complete Portal Complaint', why: 'On cybercrime.gov.in within 24 hours.', done: hasAck, to: '/portal', btn: 'Open Portal' },
-        { id: 'bank', title: 'Notify Your Bank', why: 'Raise a fraud dispute and block if needed.', done: hasBankRef, to: '/bank', btn: 'Bank Kit' },
-        { id: 'evidence', title: 'Save Evidence', why: 'Screenshots, transaction ID, messages, etc.', done: hasEvidence, to: '/vault', btn: 'Add Evidence' },
-        { id: 'shield', title: 'Beware of Second Scams', why: 'Don\u2019t trust \u201crecovery agents\u201d or refund calls.', done: !!shieldLast, to: '/shield', btn: 'Check Guide' },
+        { id: 'call1930', title: t(lang, 'planCall1930Title'), why: t(lang, 'planCall1930Why'), done: !!incident.callTappedAt, to: '/coach', btn: t(lang, 'planBtnCall') },
+        { id: 'portal', title: t(lang, 'planPortalTitle'), why: t(lang, 'planPortalWhy'), done: hasAck, to: '/portal', btn: t(lang, 'planBtnPortal') },
+        { id: 'bank', title: t(lang, 'planBankTitle'), why: t(lang, 'planBankWhy'), done: hasBankRef, to: '/bank', btn: t(lang, 'planBtnBank') },
+        { id: 'evidence', title: t(lang, 'planEvidenceTitle'), why: t(lang, 'planEvidenceWhy'), done: hasEvidence, to: '/vault', btn: t(lang, 'planBtnEvidence') },
+        { id: 'shield', title: t(lang, 'planShieldTitle'), why: t(lang, 'planShieldWhy'), done: !!shieldLast, to: '/shield', btn: t(lang, 'planBtnShield') },
       ]
     : [];
 
@@ -156,7 +158,7 @@ export function HomePage() {
     const { verifyChain } = await import('../engines/evidence/vault');
     const r = await verifyChain(incident.id);
     setVerify(r);
-    showToast(r.ok ? `Chain sahi hai — ${r.count} entries` : `Chain TOOTI — record ${r.brokenAt} badla gaya`);
+    showToast(r.ok ? t(lang, 'toastChainOk', { n: r.count }) : t(lang, 'toastChainBroken', { n: r.brokenAt ?? 0 }));
   }
 
   async function exportProof() {
@@ -171,7 +173,7 @@ export function HomePage() {
     const a = loadAck();
     const bytes = await buildProofPdf(incident, ev, root, a?.ackNumber ?? null);
     downloadBlob(new Blob([bytes as BlobPart], { type: 'application/pdf' }), 'RAKSHIO-proof.pdf');
-    showToast('PDF download ho gaya');
+    showToast(t(lang, 'toastPdfDone'));
   }
 
   function logCallTap() {
@@ -185,9 +187,9 @@ export function HomePage() {
       <section className="db-card db-span-8" aria-label="Report fraud">
         <div className="db-hero">
           <div className="db-hero-text">
-            <h1 className="db-hero-title">
+            <h2 className="db-hero-title">
               {t(lang, 'heroTitleA')} <span className="red">{t(lang, 'heroTitleB')}</span>
-            </h1>
+            </h2>
             <p className="db-hero-sub">{t(lang, 'heroSub')}</p>
             <div className="db-btn-row">
               <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report?mode=voice')}>
@@ -205,13 +207,13 @@ export function HomePage() {
       </section>
 
       <div className="db-span-4 db-tiles" role="group" aria-label="Features">
-        <Tile icon={<Check size={16} />} title="Golden Hour Clock" sub="Track critical timelines" to="/actions" ok={!!incident} />
-        <Tile icon={<Check size={16} />} title="Official Actions" sub="1930, Portal, Bank, UPI" to="/actions" ok={!!incident} />
-        <Tile icon={<Check size={16} />} title="Evidence Chain" sub={hasEvidence ? `${evidence.length} items saved — tamper-evident` : 'No evidence saved yet'} to="/vault" ok={hasEvidence && verify?.ok === true} />
+        <Tile icon={<Check size={16} />} title={t(lang, 'tileClockTitle')} sub={t(lang, 'tileClockSub')} to="/actions" ok={!!incident} />
+        <Tile icon={<Check size={16} />} title={t(lang, 'tileActionsTitle')} sub={t(lang, 'tileActionsSub')} to="/actions" ok={!!incident} />
+        <Tile icon={<Check size={16} />} title={t(lang, 'tileEvidenceTitle')} sub={hasEvidence ? t(lang, 'tileEvidenceSavedSuffix', { n: evidence.length }) : t(lang, 'tileEvidenceEmpty')} to="/vault" ok={hasEvidence && verify?.ok === true} />
         <Tile
           icon={<Check size={16} />}
-          title="Second-Scam Shield"
-          sub={shieldLast ? `Last check: ${shieldLast.level}` : 'Stop recovery scams'}
+          title={t(lang, 'tileShieldTitle')}
+          sub={shieldLast ? `${t(lang, 'tileShieldLastPrefix')} ${t(lang, shieldLast.level === 'danger' ? 'shieldHigh' : shieldLast.level === 'suspicious' ? 'shieldSuspicious' : 'shieldSafe')}` : t(lang, 'tileShieldEmpty')}
           to="/shield"
           ok={shieldLast?.level === 'safe'}
         />
@@ -226,9 +228,9 @@ export function HomePage() {
           <>
             <GoldenHourRing incident={incident} />
             <div>
-              <strong>Why it matters?</strong>
+              <strong>{t(lang, 'whyMatters')}</strong>
               <ul className="db-why">
-                {CLOCK_WHY.map((w) => (
+                {clockWhy(lang).map((w) => (
                   <li key={w}>{w}</li>
                 ))}
               </ul>
@@ -236,25 +238,24 @@ export function HomePage() {
             <div className="db-chip-row" role="timer" aria-live="off">
               {statuses.map((s) => (
                 <div key={s.id} className={`db-chip ${s.state}`}>
-                  <div className="t">{s.state === 'overdue' ? 'Samay khatm' : formatDuration(s.remainingMs)}</div>
+                  <div className="t">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDuration(s.remainingMs)}</div>
                   <div className="n">{s.label}</div>
-                  <div className="w">{s.windowLabel} window</div>
+                  <div className="w">{s.windowLabel} {t(lang, 'chipWindow')}</div>
                 </div>
               ))}
             </div>
             {statuses.some((s) => s.state === 'overdue') && (
               <p className="db-muted" style={{ marginTop: '0.5rem' }}>
-                Har kaam ki apni window hai — portal (24h) 1930 (48h) se pehle khatm hota hai, isliye portal
-                “Samay khatm” dikha sakta hai jab 1930 me abhi samay bacha ho. Ye alag deadlines hain, koi galti nahi.
+{t(lang, 'overdueExplainer')}
               </p>
             )}
           </>
         ) : (
           <>
             <div>
-              <strong>Why it matters?</strong>
+              <strong>{t(lang, 'whyMatters')}</strong>
               <ul className="db-why">
-                {CLOCK_WHY.map((w) => (
+                {clockWhy(lang).map((w) => (
                   <li key={w}>{w}</li>
                 ))}
               </ul>
@@ -273,26 +274,26 @@ export function HomePage() {
       <section className="db-card db-span-4" aria-label="Current Incident">
         <h2>
           {t(lang, 'currentIncident')}{' '}
-          {incident && <span className={`db-badge ${incident.status === 'closed' ? 'gray' : 'green'}`}>{incident.status === 'closed' ? 'Closed' : 'Active'}</span>}
+          {incident && <span className={`db-badge ${incident.status === 'closed' ? 'gray' : 'green'}`}>{incident.status === 'closed' ? t(lang, 'badgeClosed') : t(lang, 'badgeActive')}</span>}
         </h2>
         {incident ? (
           <div className="db-rows">
             <div className="db-row"><span className="k">ID</span><span className="v">{shortId(incident.id)}</span></div>
-            <div className="db-row"><span className="k">Type</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
-            <div className="db-row"><span className="k">Amount</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : 'Pata nahi'}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'incidentRowType')}</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'incidentRowAmount')}</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : t(lang, 'unknown')}</span></div>
             <div className="db-row">
-              <span className="k">Reported</span>
+              <span className="k">{t(lang, 'incidentRowReported')}</span>
               <span className="v">{new Date(incident.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             <Link to={`/incidents/${incident.id}`} className="db-btn db-btn-outline" style={{ marginTop: '0.5rem' }}>
-              Incident detail dekhein <ArrowRight size={16} aria-hidden="true" />
+              {t(lang, 'incidentDetailBtn')} <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         ) : (
           <>
             <ul className="db-why">
-              <li>Har incident ka apna ID, type, rashi aur date hoti hai</li>
-              <li>Detail kholte hi timeline, evidence aur status dikhta hai</li>
+              <li>{t(lang, 'incidentEmpty1')}</li>
+              <li>{t(lang, 'incidentEmpty2')}</li>
             </ul>
             <div className="db-empty">
               <p>{t(lang, 'noIncidentHint')}</p>
@@ -309,13 +310,13 @@ export function HomePage() {
         <h2>{t(lang, 'quickActions')}</h2>
         <div className="db-quick">
           <a className="qa-green" href="tel:1930" onClick={logCallTap}>
-            <Phone size={22} aria-hidden="true" /> Call 1930 <small>Cyber Fraud Helpline</small>
+            <Phone size={22} aria-hidden="true" /> {t(lang, 'qaCall1930')} <small>{t(lang, 'qaCall1930Sub')}</small>
           </a>
           <Link className="qa-purple" to="/bank">
-            <Landmark size={22} aria-hidden="true" /> Bank Alert <small>Notify your bank</small>
+            <Landmark size={22} aria-hidden="true" /> {t(lang, 'qaBank')} <small>{t(lang, 'qaBankSub')}</small>
           </Link>
           <Link to="/care">
-            <Users size={22} aria-hidden="true" /> Care Circle <small>Inform family</small>
+            <Users size={22} aria-hidden="true" /> {t(lang, 'qaCare')} <small>{t(lang, 'qaCareSub')}</small>
           </Link>
         </div>
       </section>
@@ -328,7 +329,7 @@ export function HomePage() {
             {incident.credentialShared && (
               <p className="db-shield-alert" role="alert">
                 <MessageSquareWarning size={18} aria-hidden="true" />
-                <span><strong>Aapne OTP/PIN share kiya tha</strong> — turant card/UPI block karein.</span>
+                <span><strong>{t(lang, 'otpSharedTitle')}</strong> {t(lang, 'otpSharedBody')}</span>
               </p>
             )}
             <div className="db-steps">
@@ -345,12 +346,12 @@ export function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="db-muted">Queue order follows the clock — portal rises as its 24-hour window nears. ({actions.length} actions tracked)</p>
+            <p className="db-muted">{t(lang, 'queueNote', { n: actions.length })}</p>
           </>
         ) : (
           <>
             <div className="db-steps">
-              {PLAN_PREVIEW.map((p, i) => (
+              {planPreview(lang).map((p, i) => (
                 <div key={p.id} className="db-step">
                   <span className="num todo">{i + 1}</span>
                   <div className="body">
@@ -372,20 +373,20 @@ export function HomePage() {
         <h2>{t(lang, 'snapshot')}</h2>
         {incident ? (
           <div className="db-rows">
-            <div className="db-row"><span className="k">Fraud Type</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
-            <div className="db-row"><span className="k">Amount</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : 'Pata nahi'}</span></div>
-            <div className="db-row"><span className="k">Platform</span><span className="v">{incident.bank ?? 'Pata nahi'}</span></div>
-            <div className="db-row"><span className="k">Status</span><span className="v">{STATUS_LABELS[incident.status ?? 'in-progress']}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotFraudType')}</span><span className="v">{fraudTypeLabel(incident.fraudType)}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotAmount')}</span><span className="v">{incident.amount != null ? formatINR(incident.amount) : t(lang, 'unknown')}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotPlatform')}</span><span className="v">{incident.bank ?? t(lang, 'unknown')}</span></div>
+            <div className="db-row"><span className="k">{t(lang, 'snapshotStatus')}</span><span className="v">{STATUS_LABELS[incident.status ?? 'in-progress']}</span></div>
             <div className="db-row">
-              <span className="k">Next Deadline</span>
-              <span className="v">{nextDeadline ? `${nextDeadline.label} in ${formatDuration(nextDeadline.remainingMs)}` : 'Sabhi deadlines beet gayi'}</span>
+              <span className="k">{t(lang, 'nextDeadline')}</span>
+              <span className="v">{nextDeadline ? `${nextDeadline.label} ${t(lang, 'deadlineIn')} ${formatDuration(nextDeadline.remainingMs)}` : t(lang, 'allDeadlinesOver')}</span>
             </div>
           </div>
         ) : (
           <>
             <ul className="db-why">
-              <li>Fraud type, rashi, bank aur status — ek jhaank me</li>
-              <li>Agli deadline kab hai, woh bhi</li>
+              <li>{t(lang, 'snapshotEmpty1')}</li>
+              <li>{t(lang, 'snapshotEmpty2')}</li>
             </ul>
             <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
           </>
@@ -395,12 +396,12 @@ export function HomePage() {
       {/* Evidence Vault widget */}
       <section className="db-card db-span-4" aria-label="Evidence Vault">
         <h2>
-          {t(lang, 'vault')} {hasEvidence && <span className="db-badge green">{evidence.length} items saved</span>}
+          {t(lang, 'vault')} {hasEvidence && <span className="db-badge green">{t(lang, 'vaultItemsSaved', { n: evidence.length })}</span>}
         </h2>
         {incident ? (
           <>
             {evidence.length === 0 ? (
-              <p className="db-muted">Abhi koi saboot nahi — Vault me SMS, note ya screenshot save karein.</p>
+              <p className="db-muted">{t(lang, 'vaultEmpty')}</p>
             ) : (
               evidence.slice(0, 3).map((e) => (
                 <div key={e.id} className="db-evidence-item">
@@ -415,19 +416,19 @@ export function HomePage() {
             )}
             {verify && (
               <p role="status" style={{ color: verify.ok ? 'var(--db-teal-soft)' : 'var(--db-red-soft)', fontWeight: 700 }}>
-                {verify.ok ? `Chain sahi hai — ${verify.count} entries` : 'Chain TOOTI hai — record badla gaya'}
+                {verify.ok ? t(lang, 'vaultChainOk', { n: verify.count }) : t(lang, 'vaultChainBroken')}
               </p>
             )}
             <button type="button" className="db-btn db-btn-outline" onClick={verifyNow} disabled={!hasEvidence}>
-              <ShieldCheck size={18} aria-hidden="true" /> Verify Chain Integrity
+              <ShieldCheck size={18} aria-hidden="true" /> {t(lang, 'verifyChainBtn')}
             </button>
-            <Link to="/vault" className="db-btn db-btn-ghost">Vault kholein <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link to="/vault" className="db-btn db-btn-ghost">{t(lang, 'vaultOpenBtn')} <ArrowRight size={16} aria-hidden="true" /></Link>
           </>
         ) : (
           <>
             <ul className="db-why">
-              <li>SMS, screenshot, receipt, UTR — jo bhi hua, uska saboot</li>
-              <li>Har file ka SHA-256 hash banta hai — badlaav pakda jata hai</li>
+              <li>{t(lang, 'vaultEmpty1')}</li>
+              <li>{t(lang, 'vaultEmpty2')}</li>
             </ul>
             <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
           </>
@@ -441,7 +442,7 @@ export function HomePage() {
           <ProgressTracker incident={incident} evidenceCount={evidence.length} />
         ) : (
           <>
-            <p className="db-muted">1930 call, portal, bank, evidence, shield — 5 me se kitne poore hue, yahan dikhega.</p>
+            <p className="db-muted">{t(lang, 'progressEmpty')}</p>
             <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
           </>
         )}
@@ -454,41 +455,41 @@ export function HomePage() {
           <div className="db-shield-alert" role={shieldLast.level === 'danger' ? 'alert' : 'status'}>
             <MessageSquareWarning size={18} aria-hidden="true" />
             <span>
-              <strong>{shieldLast.level === 'danger' ? 'High Risk – Likely Scam' : shieldLast.level === 'suspicious' ? 'Shak — savdhaan rahein' : 'Theek lagta hai'}</strong>
-              <p>Last check: score {shieldLast.score}. {shieldLast.level === 'danger' ? 'Do NOT pay or share any details.' : ''}</p>
+              <strong>{shieldLast.level === 'danger' ? t(lang, 'shieldHigh') : shieldLast.level === 'suspicious' ? t(lang, 'shieldSuspicious') : t(lang, 'shieldSafe')}</strong>
+              <p>{t(lang, 'shieldLastCheck', { n: shieldLast.score })}{shieldLast.level === 'danger' ? ` ${t(lang, 'shieldLastCheckDanger')}` : ''}</p>
             </span>
           </div>
         ) : (
-          <p className="db-muted">Koi &ldquo;recovery agent&rdquo;, refund offer, ya ajeeb SMS aaya hai? Yahan check karein.</p>
+          <p className="db-muted">{t(lang, 'shieldEmpty')}</p>
         )}
         <button type="button" className="db-btn db-btn-outline" onClick={() => navigate('/shield')}>
-          <Search size={18} aria-hidden="true" /> Check a Message / Number
+          <Search size={18} aria-hidden="true" /> {t(lang, 'shieldCheckBtn')}
         </button>
         <Link to="/guide" className="db-btn db-btn-ghost">
-          Situation Guide — har situation me kya karein <ArrowRight size={16} aria-hidden="true" />
+          {t(lang, 'shieldGuideLink')} <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </section>
 
       {/* Care Circle */}
       <section className="db-card db-span-4" aria-label="Care Circle">
         <h2>{t(lang, 'care')}</h2>
-        <p className="db-muted">Keep your trusted contacts informed with a safe, minimal incident card.</p>
+        <p className="db-muted">{t(lang, 'careDesc')}</p>
         <button type="button" className="db-btn db-btn-green" onClick={() => navigate('/care')}>
-          Share on WhatsApp
+          {t(lang, 'careWhatsApp')}
         </button>
         <button type="button" className="db-btn db-btn-purple" onClick={() => navigate('/care')}>
-          <QrCode size={18} aria-hidden="true" /> Share QR (Offline)
+          <QrCode size={18} aria-hidden="true" /> {t(lang, 'careQr')}
         </button>
       </section>
 
       {/* Proof Pack */}
       <section className="db-card db-span-4" aria-label="Proof Pack and Verify">
         <h2>{t(lang, 'proof')}</h2>
-        <p className="db-muted">Export a sealed, verifiable package of your incident and evidence.</p>
+        <p className="db-muted">{t(lang, 'proofDesc')}</p>
         <button type="button" className="db-btn db-btn-blue" onClick={exportProof}>
-          <Download size={18} aria-hidden="true" /> Export Proof Pack (PDF)
+          <Download size={18} aria-hidden="true" /> {t(lang, 'proofExportBtn')}
         </button>
-        <Link to="/proof" className="db-btn db-btn-ghost">Proof Pack page <ArrowRight size={16} aria-hidden="true" /></Link>
+        <Link to="/proof" className="db-btn db-btn-ghost">{t(lang, 'proofPageLink')} <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       {/* Follow-up Guardian */}
@@ -498,7 +499,7 @@ export function HomePage() {
           <FollowUpList incident={incident} compact />
         ) : (
           <>
-            <p className="db-muted">1 ghante, 24 ghante, 3 din aur 7 din baad ke reminders — har ek ka status yahan dikhega.</p>
+            <p className="db-muted">{t(lang, 'followupEmpty')}</p>
             <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
           </>
         )}
@@ -507,7 +508,7 @@ export function HomePage() {
       {/* Support note for the demo aid */}
       <section className="db-card db-span-12" aria-label="Demo">
         <p className="db-muted">
-          <Banknote size={16} aria-hidden="true" /> Demo: Report Fraud se &ldquo;Demo data bharo&rdquo; — seeded ₹20,000 UPI scenario, bina mic ke. Judge Mode bhi wahi se milta hai.
+          <Banknote size={16} aria-hidden="true" /> {t(lang, 'demoNoteA')} <Link to="/judge">{t(lang, 'navJudge')}</Link> {t(lang, 'demoNoteB')}
         </p>
       </section>
     </div>

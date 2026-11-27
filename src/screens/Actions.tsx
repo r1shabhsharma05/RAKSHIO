@@ -46,7 +46,7 @@ export function ActionsScreen({
 
   return (
     <>
-      <h1>Golden Hour Clock</h1>
+      <h2>Golden Hour Clock</h2>
       <div className="clock-row" role="timer" aria-live="off">
         {statuses.map((s) => (
           <div key={s.id} className={`deadline-chip ${s.state}`}>

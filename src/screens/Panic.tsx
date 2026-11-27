@@ -101,7 +101,7 @@ export function PanicScreen({
       {calmVisible && <CalmPrompt ttsRate={ttsRate} onDismiss={() => setCalmVisible(false)} />}
 
       <section className="rk-card mic-wrap">
-        <h1>Boliye, kya hua?</h1>
+        <h2>Boliye, kya hua?</h2>
         {caregiver && (
           <p><Badge label="Caregiver mode ON — aap kisi aur ki madad kar rahe hain" variant="success" /></p>
         )}

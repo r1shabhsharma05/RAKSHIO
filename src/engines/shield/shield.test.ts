@@ -78,4 +78,12 @@ describe('Second-Scam Shield 2.0 — 50-message test set', () => {
     expect(v.truth.length).toBeGreaterThan(10);
     expect(v.advice.length).toBeGreaterThan(10);
   });
+
+  it('a plain OTP notification scores 0 but shows the OTP info note', () => {
+    const v = analyzeShield('Your OTP is 482913. Do not share it with anyone.');
+    expect(v.level).toBe('safe');
+    expect(v.score).toBe(0);
+    expect(v.otpNote).toBe('OTP dikh raha hai — kisi se share mat karein.');
+    expect(analyzeShield('Koi message bina OTP ke').otpNote).toBeUndefined();
+  });
 });

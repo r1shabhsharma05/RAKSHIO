@@ -61,7 +61,7 @@ export function ConfirmScreen({
 
   return (
     <>
-      <h1>Kya ye sahi hai?</h1>
+      <h2>Kya ye sahi hai?</h2>
       <p>Sunn kar ya padh kar batayein — jo galat ho, use sahi karenge.</p>
       <button
         type="button"

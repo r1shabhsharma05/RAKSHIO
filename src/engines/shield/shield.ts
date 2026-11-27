@@ -14,6 +14,10 @@ export interface ShieldVerdict {
   flags: ShieldFlag[];
   truth: string;
   advice: string;
+  // An OTP in the text is NOT itself a scam — a plain OTP notification
+  // with no share-request scores 0 — but the user should see the rule
+  // noticed it, so the check reads as working, not blind.
+  otpNote?: string;
 }
 
 interface Rule {
@@ -126,5 +130,10 @@ export function analyzeShield(text: string): ShieldVerdict {
     level === 'safe'
       ? 'Phir bhi: OTP/PIN kisi ko mat dijiye, aur anjaan link par click mat karein.'
       : 'Kya karein: message ko delete karein, number ko block karein, aur 1930 par report karein. Koi paisa mat bhejein, koi OTP mat dijiye.';
-  return { score, level, flags, truth, advice };
+  // An OTP mention with digits is an info note only — it never adds to
+  // the score, because a plain OTP notification is legitimate.
+  const otpNote = /\botp\b/i.test(text) && /\d{4,6}/.test(text)
+    ? 'OTP dikh raha hai — kisi se share mat karein.'
+    : undefined;
+  return { score, level, flags, truth, advice, otpNote };
 }

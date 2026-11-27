@@ -67,6 +67,23 @@ export async function tamperRecord(id: number, text: string): Promise<void> {
   await db.evidence.update(id, { text });
 }
 
+// Tamper test on a COPY: clones the rows in memory, corrupts the clone,
+// and reports what verification WOULD say — the real Dexie rows are never
+// touched, so the real chain always stays intact (master prompt rule).
+export async function tamperTestCopy(rows: EvidenceRecord[]): Promise<{ ok: boolean; brokenAt?: number; count: number } | null> {
+  if (rows.length === 0) return null;
+  const copy = rows.map((r) => ({ ...r }));
+  copy[0] = { ...copy[0], text: 'BADLA HUA — tamper test' };
+  let prev = '';
+  for (const r of copy) {
+    const { id, hash, ...rest } = r;
+    const recomputed = await sha256Hex(canonical(rest));
+    if (recomputed !== hash || r.prevHash !== prev) return { ok: false, brokenAt: id, count: copy.length };
+    prev = hash;
+  }
+  return { ok: true, count: copy.length };
+}
+
 // OTP/PIN digits are masked by the extractor; card and Aadhaar numbers are
 // masked here (keep last 4). Masking happens before storage, never after.
 export function redactText(text: string): { text: string; redacted: boolean } {

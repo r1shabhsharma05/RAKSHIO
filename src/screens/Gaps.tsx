@@ -30,7 +30,7 @@ export function GapsScreen({
   if (!field) {
     return (
       <>
-        <h1>Bas, itna hi.</h1>
+        <h2>Bas, itna hi.</h2>
         <p>Ab hum jo samjhe hain, woh aapko suna kar confirm karenge.</p>
         <Button label="Confirm karein" variant="secondary" size="lg" width="100%" onClick={onDone} />
       </>
@@ -46,7 +46,7 @@ export function GapsScreen({
   return (
     <>
       <p className="note">Sawaal {index + 1} / {gaps.length}</p>
-      <h1>{q}</h1>
+      <h2>{q}</h2>
       <VoiceInput value={answer} onChange={setAnswer} placeholder={hint} label="Jawaab" />
       <button
         type="button"

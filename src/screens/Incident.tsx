@@ -44,7 +44,7 @@ export function IncidentScreen({
 
   return (
     <>
-      <h1>Aapka incident card</h1>
+      <h2>Aapka incident card</h2>
       {stored.caregiverMode && <Badge label="Caregiver ne bhara hai" variant="success" />}
       <section className="rk-card">
         <div className="field-row"><span className="label">Rashi</span><span className="value">{stored.amount != null ? formatINR(stored.amount) : 'Pata nahi'}</span></div>

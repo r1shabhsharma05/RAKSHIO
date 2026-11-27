@@ -44,7 +44,7 @@ export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: Stored
 
   return (
     <>
-      <h1>Ack Bridge — 1930 ke baad</h1>
+      <h2>Ack Bridge — 1930 ke baad</h2>
       <p>1930 call par jo acknowledgement number mila, use yahan bharein. Portal complaint 24 ghante me poori karni hoti hai.</p>
 
       <section className="rk-card">

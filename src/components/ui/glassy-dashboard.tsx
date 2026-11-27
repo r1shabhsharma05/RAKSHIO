@@ -38,12 +38,12 @@ const dashboardStyles = `
   --gd-edge-light: rgb(255 254 247 / 84%);
   --gd-edge-shade: rgb(57 40 28 / 19%);
   --gd-gloss: rgb(255 251 242 / 45%);
-  --gd-frame: rgb(247 234 219 / 23%);
-  --gd-rail: rgb(241 222 206 / 48%);
-  --gd-card: rgb(250 242 232 / 46%);
-  --gd-card-light: rgb(255 251 245 / 34%);
-  --gd-raised: rgb(255 249 243 / 81%);
-  --gd-inner: rgb(255 250 245 / 37%);
+  --gd-frame: rgb(247 234 219 / 82%);
+  --gd-rail: rgb(241 222 206 / 80%);
+  --gd-card: rgb(250 242 232 / 88%);
+  --gd-card-light: rgb(255 251 245 / 80%);
+  --gd-raised: rgb(255 249 243 / 92%);
+  --gd-inner: rgb(255 250 245 / 78%);
   --gd-surface: #f6ece2;
   --gd-track: rgb(81 49 32 / 14%);
   --gd-primary: #261e1b;
@@ -233,14 +233,17 @@ const dashboardStyles = `
   scrollbar-width: thin;
   scrollbar-color: var(--gd-line) transparent;
   border-radius: inherit;
-  padding: clamp(19px, 2.15vw, 35px) clamp(25px, 3.2vw, 49px) 41px;
+  padding: clamp(19px, 2.15vw, 35px) clamp(25px, 3.2vw, 49px) 96px;
 }
+/* Step 12: the scroll area's bottom padding must clear the fixed bottom
+   dock (~52px + its -24px overhang) — at 1366×633 content was hiding
+   under it. The 96px keeps the last line reachable at every height. */
 .gd-view-head {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 22px;
   margin-block-end: 19px;
 }
 .gd-view-head h1 {
-  font-size: clamp(24px, 2.2vw, 32px);
+  font-size: clamp(22px, 2vw, 28px);
   font-weight: 760;
   line-height: 1.03;
   letter-spacing: -.062em;
@@ -537,7 +540,7 @@ const dashboardStyles = `
   .gd-top-actions { grid-area: 1 / 2; }
   .gd-top-actions .gd-icon-button { width: 41px; min-inline-size: 41px; min-block-size: 41px; }
   .gd-stage { border-radius: 23px; }
-  .gd-stage-scroll { block-size: auto; padding: 15px 13px 17px; overflow: visible; }
+  .gd-stage-scroll { block-size: auto; padding: 15px 13px 88px; overflow: visible; }
   .gd-view-head { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 14px; }
   .gd-view-head p { font-size: 12px; margin-top: 6px; }
   .gd-view-actions { justify-content: flex-start; }

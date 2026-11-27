@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { formatINR, fraudTypeLabel } from './shared';
+import { useToast } from '../components/Toast';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
 // confirmed facts + a checklist. "Done" logs that the button was tapped —
@@ -21,6 +22,7 @@ export function CoachScreen({
 }) {
   const [done, setDone] = useState(false);
   const [checks, setChecks] = useState<Record<string, boolean>>({});
+  const showToast = useToast();
 
   const scriptParts: string[] = ['Namaste, main RAKSHIO app se bol raha hoon.'];
   if (stored.amount != null) scriptParts.push(`Mere account se ${formatINR(stored.amount)} kat gaye.`);
@@ -42,7 +44,7 @@ export function CoachScreen({
 
   return (
     <>
-      <h1>1930 Call Coach</h1>
+      <h2>1930 Call Coach</h2>
       <p>Call karne se pehle script ek baar padh lijiye — 30 second ki baat hai.</p>
 
       <section className="rk-card">
@@ -70,11 +72,11 @@ export function CoachScreen({
       <Button label="1930 par call karein" variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCallTap} />
 
       {!done ? (
-        <Button label="Call ke baad 'Done' dabaiye" variant="secondary" size="lg" width="100%" onClick={() => { onDone(); setDone(true); }} />
+        <Button label="Call ke baad 'Done' dabaiye" variant="secondary" size="lg" width="100%" onClick={() => { onDone(); setDone(true); showToast('Call tap log ho gaya — agla kadam: ack number bharein'); }} />
       ) : (
         <>
           <p className="step2-note" role="status">
-            Call tap hua — ye sirf itna batata hai ki button daba. Call poori hui ya complaint file hui, ye RAKSHIO nahi jaanta.
+            ✓ Logged — Call tap hua. Ye sirf itna batata hai ki button daba. Call poori hui ya complaint file hui, ye RAKSHIO nahi jaanta.
           </p>
           <Button label="Ack number bharein (Ack Bridge)" variant="secondary" size="lg" width="100%" onClick={onOpenAck} />
         </>

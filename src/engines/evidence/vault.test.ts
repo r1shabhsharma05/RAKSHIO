@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import 'fake-indexeddb/auto';
-import { addEvidence, db, listEvidence, rootHash, tamperRecord, verifyChain } from './vault';
+import { addEvidence, db, listEvidence, rootHash, tamperRecord, tamperTestCopy, verifyChain } from './vault';
 
 describe('Evidence Vault — hash chain', () => {
   it('chains hashes and verifies clean', async () => {
@@ -35,6 +35,25 @@ describe('Evidence Vault — hash chain', () => {
     const v = await verifyChain('test-2');
     expect(v.ok).toBe(false);
     expect(v.brokenAt).toBe(a.id);
+  });
+
+  it('tamper test on a copy breaks the copy but leaves the real chain clean', async () => {
+    await db.evidence.clear();
+    await addEvidence({
+      incidentId: 'test-4', kind: 'sms', label: 'SMS',
+      text: 'Pehla', capturedAt: new Date().toISOString(), byCaregiver: false,
+    });
+    await addEvidence({
+      incidentId: 'test-4', kind: 'note', label: 'Note',
+      text: 'Dusra', capturedAt: new Date().toISOString(), byCaregiver: false,
+    });
+    const rows = await listEvidence('test-4');
+    const demo = await tamperTestCopy(rows);
+    expect(demo?.ok).toBe(false);
+    expect(demo?.brokenAt).toBe(rows[0].id);
+    // The real rows were never touched: the real chain still verifies.
+    expect((await verifyChain('test-4')).ok).toBe(true);
+    expect((await listEvidence('test-4'))[0].text).toBe('Pehla');
   });
 
   it('masks OTP digits and card numbers before storage', async () => {

@@ -33,7 +33,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
 
   return (
     <>
-      <h1>Bank Alert Kit</h1>
+      <h2>Bank Alert Kit</h2>
       <p>Bank ko suchit karein — dispute darj hoga, aur reference number milega.</p>
 
       <section className="rk-card">

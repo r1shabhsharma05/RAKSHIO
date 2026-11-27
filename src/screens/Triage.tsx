@@ -14,7 +14,7 @@ export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBac
 
   return (
     <>
-      <h1>{r.title}</h1>
+      <h2>{r.title}</h2>
       <section className="rk-card">
         {r.steps.map((s, i) => (
           <div key={i} className="field-row">
