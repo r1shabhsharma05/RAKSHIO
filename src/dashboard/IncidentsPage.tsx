@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDashboard } from '../state/dashboardStore';
 import { INCIDENT_STATUSES, STATUS_LABELS, type IncidentStatus } from '../state/incidents';
 import { formatINR, fraudTypeLabel } from '../screens/shared';
@@ -85,7 +85,7 @@ export function IncidentsPage() {
                 <ResponsiveContainer>
                   <BarChart data={byType} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                     <CartesianGrid stroke="#1e3a5f" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fill: '#aab8ca', fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={60} />
+                    <XAxis dataKey="name" tick={{ fill: '#aab8ca', fontSize: 12 }} interval={0} angle={0} textAnchor="middle" height={36} tickFormatter={(v: string) => v.split(' (')[0]} />
                     <YAxis tick={{ fill: '#aab8ca', fontSize: 12 }} tickFormatter={(v: number) => `₹${Math.round(v / 1000)}k`} />
                     <Tooltip formatter={(v) => formatINR(Number(v))} contentStyle={{ background: '#0d1b2e', border: '1px solid #1e3a5f', color: '#f8fafc' }} />
                     <Bar dataKey="amount" fill="#3159e8" radius={[6, 6, 0, 0]} />
@@ -99,18 +99,23 @@ export function IncidentsPage() {
             {byStatus.length === 0 ? (
               <p className="db-muted">Koi incident nahi.</p>
             ) : (
-              <div style={{ width: '100%', height: 220 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={byStatus} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                      {byStatus.map((d) => (
-                        <Cell key={d.key} fill={STATUS_COLORS[d.key]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: '#0d1b2e', border: '1px solid #1e3a5f', color: '#f8fafc' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              // A pie with one slice is an empty card with a wedge in it.
+              // A ranked list with thin bars reads at any count.
+              <ul className="db-status-list">
+                {byStatus.map((d) => {
+                  const max = Math.max(...byStatus.map((x) => x.value));
+                  return (
+                    <li key={d.key}>
+                      <span className="db-status-dot" style={{ background: STATUS_COLORS[d.key] }} aria-hidden="true" />
+                      <span className="db-status-name">{d.name}</span>
+                      <span className="db-status-bar" aria-hidden="true">
+                        <span style={{ width: `${(d.value / max) * 100}%`, background: STATUS_COLORS[d.key] }} />
+                      </span>
+                      <span className="db-status-count">{d.value}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </section>
         </div>
@@ -120,7 +125,7 @@ export function IncidentsPage() {
         <input
           className="db-input"
           type="search"
-          placeholder="Search — ID, bank, type, amount, UTR…"
+          placeholder="Search"
           aria-label="Incidents search karein"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

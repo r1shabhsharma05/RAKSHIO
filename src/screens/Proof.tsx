@@ -4,7 +4,7 @@ import type { StoredIncident } from '../state/store';
 import { listEvidence, rootHash, type EvidenceRecord } from '../engines/evidence/vault';
 import { loadAck } from '../engines/ack/ack';
 import { buildProofPdf, buildProofZip, downloadBlob, rootHashQrDataUrl } from '../engines/proof/proofpack';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 
 // Bilingual Proof Pack: PDF (Latin-script Hinglish — pdf-lib standard fonts
@@ -52,7 +52,6 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
 
   return (
     <>
-      <NoReportBanner />
       <h1>Proof Pack</h1>
       <p>Bank ya police ko dene ke liye ek record: incident summary, evidence list with hashes, aur root hash.</p>
 

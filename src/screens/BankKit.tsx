@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { BANKS, bankDraft, findBank, loadBankRef, saveBankRef } from '../engines/banks/banks';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 
 // Bank Alert Kit: helpline (verified numbers only), block steps, a pre-filled
@@ -33,7 +33,6 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
 
   return (
     <>
-      <NoReportBanner />
       <h1>Bank Alert Kit</h1>
       <p>Bank ko suchit karein — dispute darj hoga, aur reference number milega.</p>
 

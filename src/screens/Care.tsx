@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { StoredIncident } from '../state/store';
-import { BackButton, formatINR, NoReportBanner } from './shared';
+import { BackButton, formatINR } from './shared';
 
 // Care Circle: consent first, then a minimal SOS card. The family number is
 // used only to build the WhatsApp link — it is never stored. The offline QR
@@ -29,7 +29,6 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
 
   return (
     <>
-      <NoReportBanner />
       <h1>Care Circle — Parivar ko batayein</h1>
 
       <label className="caregiver-toggle">

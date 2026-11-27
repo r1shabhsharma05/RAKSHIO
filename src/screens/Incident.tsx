@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
-import { formatINR, fraudTypeLabel, methodLabel, NoReportBanner } from './shared';
+import { formatINR, fraudTypeLabel, methodLabel } from './shared';
 
 gsap.registerPlugin(useGSAP);
 
@@ -42,7 +42,6 @@ export function IncidentScreen({
 
   return (
     <>
-      <NoReportBanner />
       <h1>Aapka incident card</h1>
       {stored.caregiverMode && <Badge label="Caregiver ne bhara hai" variant="success" />}
       <section className="rk-card">

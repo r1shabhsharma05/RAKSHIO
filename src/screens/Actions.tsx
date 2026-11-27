@@ -6,7 +6,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
 import { deadlineStatuses, formatDuration, orderActions } from '../engines/orchestrator/clock';
-import { NoReportBanner } from './shared';
 
 gsap.registerPlugin(useGSAP);
 
@@ -47,7 +46,6 @@ export function ActionsScreen({
 
   return (
     <>
-      <NoReportBanner />
       <h1>Golden Hour Clock</h1>
       <div className="clock-row" role="timer" aria-live="off">
         {statuses.map((s) => (

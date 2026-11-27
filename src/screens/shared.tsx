@@ -7,15 +7,6 @@ export function BackButton({ onBack }: { onBack: () => void }) {
   return <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />;
 }
 
-// The one honest sentence, on every screen. Never hidden, never small.
-export function NoReportBanner() {
-  return (
-    <p className="no-report-banner" role="note">
-      RAKSHIO report file nahi karta. Aapko 1930 / bank ko khud contact karna hoga.
-    </p>
-  );
-}
-
 export function formatINR(n: number): string {
   return `₹${n.toLocaleString('en-IN')}`;
 }

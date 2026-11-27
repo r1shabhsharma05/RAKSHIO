@@ -231,6 +231,25 @@ test('route change resets scroll — banner fully visible after report flow', as
   expect(box!.y).toBeGreaterThan(68); // below the sticky 68px header
 });
 
+test('unslop step 7: honest banner appears exactly once per tool page', async ({ page }) => {
+  await seedDemo(page);
+  for (const route of ['/vault', '/shield', '/bank', '/report']) {
+    await page.goto(`/#${route}`);
+    await expect(page.getByText('RAKSHIO report file nahi karta')).toHaveCount(1);
+  }
+});
+
+test('unslop step 7: vault select is dark, incidents status is a list not a pie', async ({ page }) => {
+  await seedDemo(page);
+  await page.goto('/#/vault');
+  const select = page.locator('#ev-kind');
+  await expect(select).toBeVisible();
+  expect(await select.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe('rgb(255, 255, 255)');
+  await page.goto('/#/incidents');
+  await expect(page.getByLabel('Incidents by status').getByRole('list')).toBeVisible();
+  await expect(page.getByLabel('Incidents by status').getByText('Reported')).toBeVisible();
+});
+
 test('fix 1: back buttons work — Judge, Triage, and browser Back', async ({ page }) => {
   await page.goto('/#/report');
   await page.getByRole('button', { name: /Judge Mode/ }).click();

@@ -63,17 +63,6 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 
 
-/* Permanent banner: the one honest sentence, on every screen. */
-.no-report-banner {
-  background: var(--rk-warn-bg);
-  color: var(--rk-warn-fg);
-  border: 1px solid #f59e0b;
-  border-radius: var(--rk-radius);
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
 
 .calm-card, .rk-card {
   background: var(--rk-card);
@@ -148,7 +137,7 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 .transcript-box .interim { color: var(--rk-primary); }
 
-textarea.rk-input, input.rk-input {
+textarea.rk-input, input.rk-input, select.rk-input {
   width: 100%;
   border: 2px solid var(--rk-primary);
   border-radius: 0.75rem;

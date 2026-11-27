@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
-import { NoReportBanner, VoiceInput } from './shared';
+import { VoiceInput } from './shared';
 
 export type GapField = 'amount' | 'fraudAt' | 'method';
 
@@ -30,7 +30,6 @@ export function GapsScreen({
   if (!field) {
     return (
       <>
-        <NoReportBanner />
         <h1>Bas, itna hi.</h1>
         <p>Ab hum jo samjhe hain, woh aapko suna kar confirm karenge.</p>
         <Button label="Confirm karein" variant="secondary" size="lg" width="100%" onClick={onDone} />
@@ -46,7 +45,6 @@ export function GapsScreen({
 
   return (
     <>
-      <NoReportBanner />
       <p className="note">Sawaal {index + 1} / {gaps.length}</p>
       <h1>{q}</h1>
       <VoiceInput value={answer} onChange={setAnswer} placeholder={hint} label="Jawaab" />

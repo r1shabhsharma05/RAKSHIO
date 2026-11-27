@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { analyzeShield, type ShieldVerdict } from '../engines/shield/shield';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton } from './shared';
 
 const EXAMPLES: { label: string; text: string }[] = [
   { label: 'Danger example', text: 'Turant OTP batao, warna account band ho jayega' },
@@ -27,7 +27,6 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
 
   return (
     <>
-      <NoReportBanner />
       <h1>Second-Scam Shield</h1>
       <p>Koi "recovery agent", refund offer, ya ajeeb SMS aaya hai? Yahan paste karein — RAKSHIO batayega kya galat hai.</p>
       <label htmlFor="shield-text" className="rk-label">Message paste karein</label>

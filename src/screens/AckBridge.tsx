@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { loadAck, portalCopyDeck, portalDeadline, saveAck } from '../engines/ack/ack';
 import { formatDuration } from '../engines/orchestrator/clock';
-import { BackButton, NoReportBanner, copyText } from './shared';
+import { BackButton, copyText } from './shared';
 import { useToast } from '../components/Toast';
 
 // Ack Bridge: 1930 call ke baad mila acknowledgement number yahan bharein —
@@ -44,7 +44,6 @@ export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: Stored
 
   return (
     <>
-      <NoReportBanner />
       <h1>Ack Bridge — 1930 ke baad</h1>
       <p>1930 call par jo acknowledgement number mila, use yahan bharein. Portal complaint 24 ghante me poori karni hoti hai.</p>
 

@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
 import { DEMO_LABEL } from '../demo/seed';
-import { MicIcon, NoReportBanner } from './shared';
+import { MicIcon } from './shared';
 
 // Calm prompt, isolated: it owns the 1-second interval, so the ticking
 // re-renders only this small card — never the mic button or the rest of
@@ -80,7 +80,6 @@ export function PanicScreen({
 
   return (
     <>
-      <NoReportBanner />
       {calmVisible && <CalmPrompt ttsRate={ttsRate} onDismiss={() => setCalmVisible(false)} />}
 
       <section className="rk-card mic-wrap">

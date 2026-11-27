@@ -133,7 +133,7 @@ body { background: var(--db-bg); }
 .db-card h2 { font-size: 1.25rem; color: var(--db-text); display: flex; align-items: center; gap: 0.5rem; }
 .db-card h3 { font-size: 1.125rem; color: var(--db-text); }
 .db-muted { color: var(--db-muted); font-size: 1rem; line-height: 1.5; }
-.db-hero-title { font-size: 2.5rem; line-height: 1.15; color: var(--db-text); font-weight: 800; }
+.db-hero-title { font-size: 2.5rem; line-height: 1.15; color: var(--db-text); font-weight: 700; }
 .db-hero-title .red { color: var(--db-red); }
 .db-hero-sub { font-size: 1.125rem; color: var(--db-muted); line-height: 1.5; max-width: 34rem; }
 
@@ -311,8 +311,18 @@ select.db-input { appearance: auto; }
 .db-incident-card:hover { border-color: var(--db-primary-soft); }
 .db-stat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 .db-stat { background: var(--db-card); border: 1px solid var(--db-border); border-radius: var(--db-radius); padding: 1rem; }
-.db-stat .n { font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.db-stat .n { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .db-stat .l { font-size: 0.9375rem; color: var(--db-muted); }
+
+/* Status share as a ranked list with thin bars — a pie with one slice is
+   an empty card with a wedge in it. */
+.db-status-list { list-style: none; margin: 0; padding: 0.5rem 0 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.db-status-list li { display: flex; align-items: center; gap: 0.75rem; min-height: 2rem; }
+.db-status-dot { width: 0.625rem; height: 0.625rem; flex: none; border-radius: 50%; }
+.db-status-name { flex: none; font-size: 1rem; color: var(--db-text); }
+.db-status-bar { flex: 1; height: 0.375rem; border-radius: 999px; background: var(--db-elevated); overflow: hidden; }
+.db-status-bar span { display: block; height: 100%; border-radius: 999px; }
+.db-status-count { flex: none; font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--db-text); }
 
 .db-empty {
   border: 1px dashed var(--db-border); border-radius: var(--db-radius);
@@ -361,7 +371,6 @@ select.db-input { appearance: auto; }
 .db-flow .mic-btn { background: var(--db-primary); }
 .db-flow .mic-btn.listening { background: #b91c1c; }
 .db-flow .calm-card { background: #12243a; }
-.db-flow .no-report-banner { background: #451a03; color: #fde68a; }
 .db-flow .deadline-chip.overdue { background: #450a0a; }
 .db-flow .deadline-chip.soon { background: #451a03; }
 .db-flow .toast { background: #f8fafc; color: #06101f; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5); }

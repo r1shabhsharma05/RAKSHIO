@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { StoredIncident } from '../state/store';
 import { addEvidence, listEvidence, tamperRecord, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 
 // Evidence Vault: capture screenshots/SMS/notes, hash-chained in IndexedDB.
@@ -74,7 +74,6 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
 
   return (
     <>
-      <NoReportBanner />
       <h1>Evidence Vault</h1>
       <p>Screenshot, SMS ya note save karein. Har entry ka SHA-256 hash banta hai — koi entry badle to chain toot jati hai.</p>
 

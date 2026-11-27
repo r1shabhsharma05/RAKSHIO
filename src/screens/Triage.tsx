@@ -1,6 +1,6 @@
 import type { StoredIncident } from '../state/store';
 import { triageRoute } from '../engines/triage/router';
-import { BackButton, NoReportBanner } from './shared';
+import { BackButton } from './shared';
 
 // Smart Triage Router: paisa gaya hai ya sirf koshish hui hai —
 // us hisaab se rasta. Lost money -> 1930/bank/portal. Attempted fraud,
@@ -14,7 +14,6 @@ export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBac
 
   return (
     <>
-      <NoReportBanner />
       <h1>{r.title}</h1>
       <section className="rk-card">
         {r.steps.map((s, i) => (

@@ -196,6 +196,13 @@ without it the app silently offers Text Mode instead of a dead mic button.
   reload, shots, all-screens), axe 0 violations on home, incidents,
   Panic and Incident screens; mobile 390 no horizontal scroll.
 
+## Step 7 — unslop pass on the dashboard (27 Nov, Damir skill)
+
+- **Verdict: LIGHT SLOP** — direction from the existing brand (calm, exact, a little warm; night-desk incident file), palette and layout kept.
+- **Fixed:** honest banner showed twice on every tool page (once from the Shell, once from each flow screen; Gaps had it 3x) — now once, owned by the Shell; Vault's evidence-type select rendered as a white bar — now dark like every other input; Incidents pie was one tiny wedge in an empty card — now a ranked status list with thin bars, bar label un-rotated ("OTP dhokha"); wordy search placeholder → "Search"; hero + stat numbers 800 → 700.
+- **Kept deliberately:** green/purple Quick Action buttons (the approved photo's design), bold hero, ✓/✗ text status marks. No gradients, glows, pulse, shimmer, emoji, or exclamation marks anywhere.
+- Evidence: build green, vitest 26/26, Playwright **32/32** (dashboard 20/20 incl. 2 new unslop tests), axe 0; vault + incidents screenshots re-taken after the fix and read.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

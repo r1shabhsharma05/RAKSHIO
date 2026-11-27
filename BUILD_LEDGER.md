@@ -422,3 +422,44 @@ Secret scan clean; no .env files; no binaries pushed.
 - NOT redeployed. Live link still serves the Step 4 build (Step 5 dist
   `rakshio-dist-v3.zip` ready, redeploy is his call). This step is
   code-complete and pushed; deploy only on his word.
+
+## Step 7: complete (2026-11-27) — Damir unslop pass on the dashboard
+
+Direction (polish mode, from the existing brand — no new direction):
+Calm, exact, a little warm. World: a night-desk incident file — dark
+ink-blue surfaces, one blue accent, amber only for the honest warning.
+Moments: the Golden Hour Clock ring and the incident figures. Signature:
+the amber honest banner, once per page.
+
+Audit (signs.md, 6 screens shot at 1440 + code grep): LIGHT SLOP.
+- Duplicate honest banner: `NoReportBanner` rendered in 15 flow
+  screens AND the Shell `.db-banner` on every route — every tool page
+  showed it twice; Gaps rendered it twice itself (3x). Removed all
+  16 renders + the component + both dead CSS rules; Shell owns it now.
+- Vault select rendered as a white bar: `.rk-input` styled only
+  `textarea`/`input`, so `select` fell back to the UA white default.
+  Added `select.rk-input` to the rule.
+- Incidents pie was one tiny wedge in a big empty card (1 incident).
+  Replaced with a ranked status list + thin bars (share = list with
+  bars per the skill); bar x-label un-rotated (`angle={-20}` → 0) with
+  the parenthetical stripped (`OTP dhokha (customer care)` → `OTP dhokha`).
+- Search placeholder wordy (`Search — ID, bank, type, amount, UTR…`)
+  → `Search`.
+- Type: hero title + stat numbers at 800 → 700 (Step 5 cap).
+- Deliberately KEPT: green/purple Quick Action buttons (the approved
+  photo's design; WhatsApp green is a real brand color), bold hero,
+  ✓/✗ text status marks (not emoji). No gradients, glows, pulse,
+  shimmer, emoji, or exclamation marks found anywhere in src.
+- Verification detour: the full suite hung twice — port 4173 was held
+  by the Healthcare Hub preview (other chat) and 4174 by the portfolio
+  preview, so tests hit the wrong apps and timed out; the suite's own
+  4175 RAKSHIO preview was the live one. Ran the suite against 4175
+  via a temp config (deleted after). Lesson: when a Playwright run
+  hangs, check `ss -ltn` + the served `<title>` before re-running.
+
+Evidence: build green; vitest 26/26; Playwright **32/32** (dashboard
+20/20 incl. 2 new unslop tests — banner-once per tool page, dark
+select + status list; smoke 2/2, production incl. offline reload,
+shots, all-screens); axe 0 (dashboard spec); screenshots re-taken
+after the fix (vault + incidents) and read. NOT deployed — live link
+still serves the Step 4 build; deploy on his word.

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
-import { formatINR, fraudTypeLabel, NoReportBanner } from './shared';
+import { formatINR, fraudTypeLabel } from './shared';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
 // confirmed facts + a checklist. "Done" logs that the button was tapped —
@@ -42,7 +42,6 @@ export function CoachScreen({
 
   return (
     <>
-      <NoReportBanner />
       <h1>1930 Call Coach</h1>
       <p>Call karne se pehle script ek baar padh lijiye — 30 second ki baat hai.</p>
 

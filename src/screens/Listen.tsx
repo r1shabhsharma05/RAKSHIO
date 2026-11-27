@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { createListener } from '../voice/VoiceAdapter';
-import { MicIcon, NoReportBanner } from './shared';
+import { MicIcon } from './shared';
 
 // 1–2 minutes of free speech, no interruption. The listener restarts itself
 // on silence (VoiceAdapter); the user stops it when done.
@@ -55,7 +55,6 @@ export function ListenScreen({
 
   return (
     <>
-      <NoReportBanner />
       <h1>{mode === 'voice' ? 'Sun raha hoon — boliye' : 'Likh kar batayein'}</h1>
       {mode === 'voice' ? (
         <>

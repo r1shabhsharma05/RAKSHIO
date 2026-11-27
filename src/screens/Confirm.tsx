@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { ExtractedIncident } from '../engines/understanding/extract';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
-import { formatINR, NoReportBanner, VoiceInput } from './shared';
+import { formatINR, VoiceInput } from './shared';
 
 export type ConfirmState = 'pending' | 'yes' | 'unknown';
 export type GapField = 'amount' | 'fraudAt' | 'method';
@@ -55,7 +55,6 @@ export function ConfirmScreen({
 
   return (
     <>
-      <NoReportBanner />
       <h1>Kya ye sahi hai?</h1>
       <p>Sunn kar ya padh kar batayein — jo galat ho, use sahi karenge.</p>
 
