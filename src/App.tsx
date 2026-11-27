@@ -8,7 +8,7 @@ import { IncidentDetailPage } from './dashboard/IncidentDetail';
 import { SettingsPage } from './dashboard/SettingsPage';
 import { GuidePage } from './dashboard/GuidePage';
 import { JudgePage } from './dashboard/JudgePage';
-import { ChunkFallback, useChunk } from './components/chunkRecovery';
+import { ChunkFallback, loadIncidentsChunk, prefetchLazyChunks, useChunk } from './components/chunkRecovery';
 import {
   ActionsPage,
   BankPage,
@@ -26,10 +26,8 @@ import {
 // IncidentsPage (Recharts) loads on demand: charts never block first
 // paint. A failed chunk load hard-reloads once (ChunkFallback), never a
 // silent blank.
-const loadIncidents = () => import('./dashboard/IncidentsPage').then((m) => ({ default: m.IncidentsPage }));
-
 function IncidentsRoute() {
-  const { Page, failed } = useChunk(loadIncidents);
+  const { Page, failed } = useChunk(loadIncidentsChunk);
   if (!Page) return <ChunkFallback label="Incident Dashboard khul raha hai…" failed={failed} />;
   return <Page />;
 }
@@ -50,6 +48,20 @@ export default function App() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Step 16 (bug 7): warm the lazy chunks when the browser is idle, so the
+  // first navigation to Incidents/Vault/Care/Proof doesn't pay a chunk
+  // fetch. Measured locally before this: incidents 515ms / proof 401ms /
+  // care 208ms / vault 155ms cold. No fake loading states — the skeleton
+  // still shows if a chunk genuinely isn't ready yet.
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(() => prefetchLazyChunks(), { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(() => prefetchLazyChunks(), 2000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   return (
     <HashRouter>

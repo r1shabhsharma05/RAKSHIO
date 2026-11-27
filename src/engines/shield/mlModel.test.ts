@@ -8,7 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as tf from '@tensorflow/tfjs';
-import { decodeWeightData, type ShieldModelJson } from './mlModel';
+import { decodeWeightData, modelWarning, vocabCoverage, type ShieldModelJson } from './mlModel';
 import { vectorize } from '../../../ml/tokenizer.mjs';
 import { loadSplit } from '../../../ml/dataset.mjs';
 
@@ -47,7 +47,10 @@ describe('shield ML model', () => {
     }
   });
 
-  it('held-out test accuracy matches the reported number (±0.02)', async () => {
+  // Step 16: scoring 1,615 held-out rows takes ~3s alone but over 5s when
+  // 9 vitest workers share this VM — the 15s timeout is the measured cost,
+  // not a loosened assertion (the ±0.02 band is unchanged).
+  it('held-out test accuracy matches the reported number (±0.02)', { timeout: 15000 }, async () => {
     const model = await loadModel();
     const { test } = loadSplit(`${ROOT}/ml/data`);
     let correct = 0;
@@ -82,5 +85,35 @@ describe('shield ML model', () => {
     // headline must not hide a weak SMS side.
     expect(smsCorrect / smsN).toBeGreaterThanOrEqual(metrics.bySource.sms.accuracy - 0.05);
     expect(smsCorrect / smsN).toBeLessThanOrEqual(metrics.bySource.sms.accuracy + 0.05);
+  });
+});
+
+// Step 16 (bug 1): the exact E2E #3 danger sentence — rules say KHATRA,
+// the live model says ~3% scam ("safe"). The fix is a warning, never a
+// fudged score: the test pins that the warning fires on the REAL score.
+describe('step 16: model disagreement warning', () => {
+  const DANGER = 'Turant OTP batao, warna account band ho jayega';
+
+  it('warns "disagree" on the exact danger sentence with the real model score', { timeout: 15000 }, async () => {
+    const model = await loadModel();
+    const x = tf.tensor2d([Array.from(vectorize(DANGER, modelJson.vocab))], [1, modelJson.vocab.length]);
+    const p = (await (model.predict(x) as tf.Tensor).data())[0];
+    x.dispose();
+    expect(p).toBeLessThan(0.5); // the model really does call this safe
+    expect(vocabCoverage(DANGER, modelJson.vocab)).toBeLessThan(0.5);
+    expect(modelWarning('danger', p, vocabCoverage(DANGER, modelJson.vocab))).toBe('disagree');
+  });
+
+  it('vocabCoverage is low for Hinglish danger text, high for plain English', () => {
+    expect(vocabCoverage(DANGER, modelJson.vocab)).toBeLessThan(0.5);
+    expect(vocabCoverage('Congratulations! You have won a free prize, call now to claim', modelJson.vocab)).toBeGreaterThan(0.5);
+  });
+
+  it('modelWarning: safe + high score disagrees, low coverage warns, agreement is silent', () => {
+    expect(modelWarning('safe', 0.9, 0.9)).toBe('disagree');
+    expect(modelWarning('danger', 0.9, 0.9)).toBeNull();
+    expect(modelWarning('suspicious', 0.2, 0.1)).toBe('low-coverage');
+    expect(modelWarning('danger', 0.9, 0.2)).toBe('low-coverage');
+    expect(modelWarning('danger', null, 0)).toBeNull();
   });
 });

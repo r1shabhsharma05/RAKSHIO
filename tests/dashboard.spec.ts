@@ -8,7 +8,7 @@ async function seedDemo(page: Page) {
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  for (let i = 0; i < 4; i++) await yes.nth(0).click(); // Step 16 (bug 9): Bank is the 4th confirm question.
   await page.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
 }
@@ -489,8 +489,11 @@ test('step 10: gated tools show section-specific empty states', async ({ page })
   ];
   for (const [route, heading, preview] of empty) {
     await page.goto(`/#${route}`);
-    // Scoped to the card: the shell's view-head h1 carries the same name.
-    await expect(page.locator('.db-card').getByRole('heading', { name: heading, exact: true })).toBeVisible({ timeout: 8000 });
+    // Step 16 (bug 8): the empty-state card no longer repeats the title
+    // as an h2 — the shell h1 carries it, and the card carries it as its
+    // aria-label. The preview text stays section-specific.
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible({ timeout: 8000 });
+    await expect(page.locator(`.db-card[aria-label="${heading}"]`)).toBeVisible();
     await expect(page.getByText(preview, { exact: false })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Report Fraud shuru karein' })).toBeVisible();
   }
@@ -498,8 +501,9 @@ test('step 10: gated tools show section-specific empty states', async ({ page })
 
 test('step 10: situation guide list, detail, and shield truth-card link', async ({ page }) => {
   await page.goto('/#/guide');
-  // Scoped to the card: the shell's view-head h1 carries the same name.
-  await expect(page.locator('.db-card').getByRole('heading', { name: 'Situation Guide' })).toBeVisible();
+  // Step 16 (bug 8): the list no longer repeats the title as a card h2 —
+  // the shell h1 carries it.
+  await expect(page.getByRole('heading', { name: 'Situation Guide' })).toBeVisible();
   await page.getByRole('link', { name: 'OTP dhokha (customer care)' }).click();
   await expect(page.getByRole('heading', { name: 'OTP dhokha (customer care)' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pehle 5 minute' })).toBeVisible();
@@ -699,6 +703,9 @@ test('step 12: judge mode is searchable, routable, and linked from home', async 
   await page.goto('/#/judge');
   await expect(page.getByRole('heading', { name: 'Judge Mode' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Seeded scenario chalao (₹20,000 UPI)' }).click();
+  // Step 16 (bug 13): seeding asks first — the confirm step, then it seeds.
+  await expect(page.getByText('Isse active incident badal jayega')).toBeVisible();
+  await page.getByRole('button', { name: 'Seeded scenario chalao (₹20,000 UPI)' }).last().click();
   await expect(page.getByText('₹20,000').first()).toBeVisible({ timeout: 8000 });
   await page.goto('/#/');
   await page.getByRole('link', { name: 'Judge Mode' }).click();

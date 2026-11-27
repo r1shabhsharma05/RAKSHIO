@@ -1137,3 +1137,142 @@ verdict, model score + new disclosure). Secret scan clean. NOT deployed
   the same seeded split; no further re-rolls to chase 99%.
 - The 32 situations are still NOT training classes. Coverage claims
   use the keyword-proxy table in `ml/README.md` only.
+
+## Step 16: complete (2026-11-28) — all 13 live E2E #3 bugs fixed
+
+Source: `tests/live-e2e-report-v7.md` (live v7, 28 Nov 00:44–00:55 IST).
+One line per bug:
+
+1. **Model false negative (CRITICAL).** `vocabCoverage()` + `modelWarning()`
+   (`src/engines/shield/mlModel.ts`, pure, unit-tested): when rules say
+   danger and the model scores <0.5 (or vice versa) a red `role="alert"`
+   warning shows — "Model aur rules alag bol rahe hain — rules ko mano.
+   Model English SMS/email par train hua tha…" — and when coverage <0.5
+   an amber low-coverage note shows. The score stays visible, never
+   fudged, never hidden; rules stay the verdict. Pinned with the exact
+   sentence "Turant OTP batao, warna account band ho jayega" (real model
+   ~3% scam, coverage <0.5) in vitest + Playwright.
+2. **English incomplete.** ~190 new i18n keys × EN/HI/HG; clock chips,
+   incident card, snapshot, and the Coach/Bank/Portal/Vault/Shield/Care/
+   Proof/Actions/Triage/Confirm/Gaps/Judge chrome are keyed
+   (`formatDurationLang`, `fraudTypeLabel`/`methodLabel` with lang,
+   `STATUS_KEY`, `labelKey` on deadlines). Engine-generated content stays
+   Hinglish by design (1930 script, bank draft, portal deck, SOS text,
+   guide content, rule truth/advice). Playwright switches to en and
+   asserts the clock, the incident card, and Coach + Bank bodies.
+3. **Top-bar overlap at 1366px.** Measured: with caregiver ON the actions
+   row (~460px) overflowed its `1fr` cell (~421px) leftwards under the
+   search pill. Grid is now `minmax(0, 1fr) minmax(200px, 340px) auto`
+   (right column sizes to content; brand shrinks instead); the two-row
+   top layout now also applies at ≤1060px. Bounding-box assertion with
+   caregiver ON at 1366px + 390px.
+4. **Bottom dock overlap.** Stage floor 605→360px so the fit formula
+   governs on short screens; footer padding-left 34px clears the side
+   dock rail; side dock capped with `max-block-size: calc(100% -
+   clamp(66px, 16vh, 153px) - 6px)` (wrap-relative) + internal scroll.
+   Root cause, measured not guessed: the remaining 6px of page scroll at
+   1366×633 was the SIDE dock (its viewport-based cap ignored its own
+   `top: clamp(66px, 16vh, 153px)` offset — bottom landed at 639px), not
+   the stage. Test pins document scrollHeight ≤ innerHeight at 1366×633
+   and the Shield card clearing the dock at end of scroll. Known
+   cosmetic, unchanged: mid-scroll the floating dock still passes over
+   stage content (pre-existing design); only end-of-scroll clearance is
+   guaranteed.
+5. **Guide orphaned.** 13th side-dock icon (BookOpen, after /proof) — the
+   12 tool sections stay 12; Guide is a reference section. `SEARCH_ALIASES`
+   added (`/guide`: situations, scam guide, fraud guide; `/judge`: demo,
+   seeded); search "guide" and "situations" both find it.
+6. **Dark not true black.** Photo `brightness(.30)` → `.12`, scrim
+   `rgb(0 0 0 / 62%)` → `/ 82%` (~2% of photo luminance left). Test pins
+   scrim alpha ≥0.8 and photo brightness ≤0.2 after toggling dark + axe 0.
+7. **Slow loads.** Cause measured: only the Incidents chunk (Recharts,
+   419KB) was lazy in App; Vault/Care/Proof chunks loaded only after
+   navigation (click → mount → import → network → render). Local cold
+   timings were already fast (incidents 515ms, vault 155ms, care 208ms,
+   proof 401ms) — the live 5–11s was the cold CDN + 1MB main-bundle parse
+   on the test device, not a code delay; the fix mitigates it. Shared
+   loaders in `src/components/chunkRecovery.tsx` (`prefetchLazyChunks()`)
+   + App warms all four on idle (requestIdleCallback, 3s timeout, 2s
+   fallback) + side-dock links preload on hover/focus. After prefetch:
+   incidents 325ms, vault 105ms, care 122ms, proof 96ms. No fake loading
+   states. Pre-existing note: the vault.ts dynamic import is ineffective
+   (also statically imported elsewhere) — not Step 16's to fix.
+8. **Duplicate H1+H2 titles.** Page-level h2s removed where they repeat
+   the shell H1 (Incidents, Settings, Guide list, NeedsIncident,
+   Coach/Bank/Vault/Care/Proof/Shield/Judge tops). Kept where the text
+   differs (AckBridge "Ack Bridge — 1930 ke baad", section h2s, report-flow
+   screens). JudgeScreen gets its title back only inside the report flow
+   (`showTitle` prop — there the shell H1 is "Fraud Report Karein"; on
+   #/judge the shell H1 already says it). The two Step 10 tests that
+   pinned the removed card h2s now assert the shell h1 + card aria-label
+   instead (same coverage, not deleted).
+9. **Confirm gate omits Bank.** `GapField` + Confirm + store now carry
+   `bank` as the 4th question ("Konsa bank hai?"); `computeGaps` adds it
+   when the bank is missing/low-confidence (exported for tests); the
+   summary adds a `Bank {name}.` line; "Teeno sawaal" → "Chaaro sawaal".
+   Unit-tested (bank in gaps iff unnamed; four-field coverage) + Playwright
+   (Bank + HDFC visible on the gate).
+10. **HDFC numbers.** VERIFIED live against HDFC Bank's official site
+    (https://www.hdfc.bank.in/contact-us/customer-care, 2026-11-28):
+    "Phone numbers mentioned here are the only Customer Care numbers of
+    HDFC Bank" — 1800 1600 / 1800 2600 are correct; the E2E suspicion was
+    wrong. Numbers unchanged; source URL + check date recorded in
+    `src/engines/banks/banks.ts`.
+11. **Follow-up Mark done needed two clicks.** Root cause was bug 4, not
+    the state update (`markFollowup` was already a correct new-object
+    set): the bottom dock covered the button at the bottom of Home. Fixed
+    by bug 4; the existing Playwright test (one click → next reminder)
+    passes.
+12. **"10second" → "10 second".** JSX whitespace collapsed after the
+    `{secondsLeft}` expression in Panic.tsx; now a template literal.
+13. **Judge seed silently replaces the active incident.** Two-step: first
+    click shows a `role="alert"` warning naming the current active
+    incident (id + amount, "old incident stays saved"); Confirm seeds,
+    Cancel dismisses. The active incident line is shown on the page.
+    Caregiver default: `DEFAULT_SETTINGS.caregiver` was already `false` —
+    the E2E "ON by default" was a persisted setting from E2E #2's toggle
+    test in the same device-browser profile (localStorage persists across
+    E2E runs), not a code default; unit test asserts fresh defaults OFF.
+
+Also fixed while in there: three copy regressions the suite caught — the
+Shield example buttons were renamed by keying ('Danger example' →
+'Khatra example'; restored to the original English labels in HG), the
+Coach Done button/note wording drifted from the pinned Step 12 text
+(restored verbatim), and the tamper-broken line said "safe hain" where the
+Step 12 test pins "surakshit hain" (restored). Lesson: keying must not
+rename pinned copy — see Rulings.
+
+Evidence: build green (7.32s); vitest **49/49** (12 files: +5 mlModel
+disagreement/coverage, +2 clock durations, +3 reportFlow bank gaps,
++incidents defaults); Playwright dashboard **43/43** + new
+`tests/step16.spec.ts` **8/8** = **51/51** (3.3m, incl. axe 0 in-suite
+and the dark-home axe check in the bug-6 test); screenshots read
+(`tests/shots-local/step16-home-1366-light.png`,
+`step16-home-1366-dark.png` — true black, top bar fits;
+`step16-shield-danger-1366-dark.png` — KHATRA + 3% score + red
+disagreement warning + disclosure, card clears the dock at end of scroll;
+`step16-guide-1366-dark.png` — 32 situations, "Poora guide padhein →"
+links clear of the dock; `step16-home-390-dark.png`). Secret scan clean.
+NOT deployed — live still serves v7; deploy needs his word.
+
+## Rulings (Step 16)
+
+- The model score is never fudged, hidden, or overridden. Disagreement
+  is shown as a warning; rules stay the verdict. If the model ever
+  disagrees again on a new sentence, the warning — not a retrain on
+  invented data — is the fix.
+- Keying copy into i18n must preserve pinned wording exactly. Three
+  regressions in this step (Shield example labels, Coach Done
+  button/note, tamper "surakshit hain") were all caught by the existing
+  suite — the suite is the contract; copy changes go through it.
+- Geometry bugs are measured, not re-derived. The 6px page overflow was
+  the side dock's bottom (639px), not the stage stack — two wrong
+  formula tweaks (165→175→165) before the probe found it. Probe first.
+- An unclickable button is not always a state bug: bug 11's two-click
+  follow-up was bug 4's dock covering the button.
+- "ON by default" reports must be checked against a fresh profile first:
+  the caregiver flag was persisted localStorage from an earlier E2E run,
+  not a code default.
+- The floating bottom dock still passes over stage content mid-scroll by
+  design. Only the page fit and the end-of-scroll clearance are
+  test-pinned; do not claim the dock never covers anything.

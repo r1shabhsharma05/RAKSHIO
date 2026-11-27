@@ -132,11 +132,13 @@ const dashboardStyles = `
   background: linear-gradient(116deg, rgb(73 48 37 / 35%), transparent 43%, rgb(162 101 63 / 24%) 76%, transparent 100%),
     linear-gradient(0deg, rgb(53 33 25 / 34%), transparent 58%);
 }
-/* Step 11: in dark mode the photo is dimmed to near-black and a flat
+/* Step 16 (bug 6): in dark mode the photo is dimmed to near-black and a flat
    black scrim sits over it, so the whole theme reads black, not blue.
-   No gradient — a flat overlay, so the photo is a faint texture only. */
-.gd-app[data-theme="dark"] .gd-background { filter: brightness(.30) saturate(.45); }
-.gd-app[data-theme="dark"]::before { background: rgb(0 0 0 / 62%); }
+   No gradient — a flat overlay, so the photo is a faint texture only.
+   The Step 11 values (30% brightness, 62% scrim) still let ~11% of the
+   warm photo through, which read as dark charcoal; 12% + 82% leaves ~2%. */
+.gd-app[data-theme="dark"] .gd-background { filter: brightness(.12) saturate(.45); }
+.gd-app[data-theme="dark"]::before { background: rgb(0 0 0 / 82%); }
 .gd-surround {
   inline-size: min(calc(100% - 100px), 1380px);
   margin-inline: auto;
@@ -152,7 +154,12 @@ const dashboardStyles = `
 }
 .gd-top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 400px) minmax(0, 1fr);
+  /* Step 16 (bug 3): the right column is auto, not 1fr — with caregiver
+     ON the actions (2 pills + lang + 2 buttons, ~460px) overflowed the
+     1fr cell leftwards and clipped under the search pill at 1366px.
+     auto sizes the column to its content; the brand column shrinks
+     instead, and the search pill keeps its 200–340px. */
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 340px) auto;
   align-items: center;
   gap: 12px;
   min-block-size: 60px;
@@ -227,7 +234,16 @@ const dashboardStyles = `
   -webkit-backdrop-filter: blur(var(--gd-panel-frost, 12px)) saturate(1.24);
 }
 .gd-stage-scroll {
-  block-size: max(605px, min(865px, calc(100svh - 165px)));
+  /* Step 16 (bug 4): the 605px floor made the stage taller than short
+     viewports (633px): the page itself scrolled, and the bottom dock —
+     absolute at the wrap's bottom edge — slid up over the stage content.
+     The floor is now 360px so the calc(100svh - 165px) fit governs on
+     short screens and the page never scrolls; the dock always sits at the
+     stage/footer boundary, and the 96px bottom padding keeps the last
+     content line above it. (The remaining 6px of page scroll at 1366x633
+     was the SIDE dock, not the stage — its height cap is fixed at
+     .gd-dock-side.) */
+  block-size: max(360px, min(865px, calc(100svh - 165px)));
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -466,7 +482,22 @@ const dashboardStyles = `
   position: absolute; z-index: 3;
   display: flex; align-items: center; gap: 3px; padding: 4px; border-radius: 999px;
 }
-.gd-dock-side { flex-direction: column; left: -24px; top: clamp(66px, 16vh, 153px); }
+.gd-dock-side {
+  flex-direction: column; left: -24px; top: clamp(66px, 16vh, 153px);
+  /* Step 16 (bug 4): 13 icons no longer fit a short stage — cap the rail
+     so it scrolls internally (scrollbar hidden) and no icon is ever
+     unreachable. The cap is measured against the WRAP's height minus the
+     rail's own top offset: with a viewport cap (100svh - 190px) the rail's
+     bottom landed at 639px on a 633px viewport — 6px of page scroll —
+     because top: clamp(66px, 16vh, 153px) pushes it down inside the wrap.
+     This way the rail's bottom always stops 6px above the wrap's bottom,
+     at every viewport height. The GSAP marker uses offsetTop, so it
+     scrolls along with the links. */
+  max-block-size: calc(100% - clamp(66px, 16vh, 153px) - 6px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.gd-dock-side::-webkit-scrollbar { display: none; }
 .gd-dock-bottom { left: 50%; bottom: -24px; translate: -50% 0; }
 .gd-dock a {
   z-index: 1; position: relative; display: flex; gap: 6px; justify-content: center; align-items: center;
@@ -489,7 +520,10 @@ const dashboardStyles = `
   border-radius: 7px; box-shadow: 0 3px 8px rgb(var(--gd-dark-shadow) / 17%);
 }
 .gd-dock-side a:is(:hover, :focus-visible) .gd-dock-tip { display: inline; }
-.gd-footer { padding: 33px 3px 1px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+/* Step 16 (bug 4): the footer starts under the side dock rail (x26–80),
+   so its first words were hidden behind it — 34px left padding clears it.
+   On mobile the side dock is hidden, so the 760px query resets this. */
+.gd-footer { padding: 33px 3px 1px 34px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .gd-footer > * {
   border-radius: 999px; padding: 5px 8px; color: var(--gd-ink); font-size: 10px; font-weight: 740;
   background: var(--gd-raised); min-block-size: 24px; display: flex; align-items: center; gap: 4px;
@@ -527,6 +561,13 @@ const dashboardStyles = `
 @media (max-width: 1060px) {
   .gd-surround { inline-size: calc(100% - 74px); }
   .gd-stage-scroll { padding-inline: 29px; }
+  /* Step 16 (bug 3): below 1060px the three-column top bar cannot hold
+     the caregiver pill + status pill + lang + 2 buttons next to the search
+     pill — use the two-row layout (search full-width on row 2) here instead
+     of only below 760px, so nothing can overlap at tablet widths either. */
+  .gd-top { grid-template-columns: minmax(0, 1fr) auto; padding: 7px 9px; gap: 6px 12px; border-radius: 21px; }
+  .gd-ask { grid-area: 2 / 1 / 3 / -1; min-block-size: 41px; }
+  .gd-top-actions { grid-area: 1 / 2; }
   .gd-command-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .gd-command-grid > .gd-command-chart { grid-column: 1; }
   .gd-command-side { grid-column: 2; }
@@ -553,7 +594,7 @@ const dashboardStyles = `
   .gd-dock-bottom a svg { width: 15px; height: 15px; }
   .gd-dock-bottom .gd-dock-text { display: none; }
   .gd-dock-bottom .gd-dock-short { display: inline; }
-  .gd-footer { padding-top: 9px; }
+  .gd-footer { padding-top: 9px; padding-left: 3px; }
   .gd-period button { min-block-size: 41px; }
   .gd-primary, .gd-secondary { min-block-size: 44px; }
 }

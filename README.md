@@ -254,6 +254,24 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Situations.** No real labeled multi-class fraud dataset exists, so the model stays binary scam/safe. Coverage is a keyword proxy over the 5,331 spam rows: covered (≥50) phishing-link, investment, loan-app, tech-support, lottery, romance, refund; thin (1–49) digital-arrest, UPI fraud, card-reward, visa, task, courier, gift-card, travel, customer-care, OTP, sextortion, OLX, electricity, matrimonial, scholarship, crypto, KYC, SIM-swap; none (0) QR scam, UPI collect, delivery-fee, rental, remote-access. Rules remain the primary defence there.
 - Evidence: build green (8.12s), vitest **39/39**, Playwright dashboard **43/43** + temporary step-15 Shield spec 1/1 with axe 0 on Shield; screenshot read (lottery message, KHATRA verdict, model score + new disclosure). NOT deployed — live still serves v6.
 
+## Step 16 — all 13 live E2E #3 bugs fixed (28 Nov)
+
+- **Model false negative (CRITICAL).** `vocabCoverage()` + `modelWarning()` in `mlModel.ts`: when rules say danger and the model scores <0.5 (or vice versa) a red warning shows — "Model aur rules alag bol rahe hain — rules ko mano. Model English SMS/email par train hua tha…" — plus an amber low-coverage note when most words are outside the model's English vocab. Score stays visible, never fudged or hidden; rules stay the verdict. Pinned with the exact sentence "Turant OTP batao, warna account band ho jayega" (real model ~3% scam) in vitest + Playwright.
+- **English incomplete.** ~190 new i18n keys × EN/HI/HG: clock, incident card, snapshot, and Coach/Bank/Portal/Vault/Shield/Care/Proof/Actions/Triage/Confirm/Gaps/Judge chrome now translate. Engine-generated content stays Hinglish by design (1930 script, bank draft, portal deck, SOS text, guide content, rule truth/advice). Playwright switches to en and asserts the clock, the incident card, and Coach + Bank bodies.
+- **Top-bar overlap at 1366px.** Measured: with caregiver ON the actions row (~460px) overflowed its `1fr` cell (~421px) under the search pill. Grid is now `minmax(0, 1fr) minmax(200px, 340px) auto`; two-row layout also at ≤1060px. Bounding-box assertion with caregiver ON at 1366px + 390px.
+- **Bottom dock overlap.** Stage floor 605→360px; footer padding-left 34px clears the side dock; side dock capped wrap-relative (`max-block-size: calc(100% - clamp(66px, 16vh, 153px) - 6px)`) with internal scroll. Root cause, measured: the last 6px of page scroll was the SIDE dock (bottom at 639px on a 633px viewport), not the stage. Test pins page fit at 1366×633 and the Shield card clearing the dock at end of scroll. Mid-scroll the floating dock still passes over content by design — only end-of-scroll clearance is guaranteed.
+- **Guide orphaned.** 13th side-dock icon (BookOpen, after /proof); the 12 tool sections stay 12. Search aliases added — "guide", "situations", "scam guide", "fraud guide" all find it.
+- **Dark true black.** Photo `brightness(.30)` → `.12`, scrim 62% → 82%. Test pins scrim alpha ≥0.8 and photo brightness ≤0.2 in dark mode + axe 0.
+- **Slow loads.** Only the Incidents chunk was lazy; Vault/Care/Proof chunks loaded only after navigation. Shared loaders + idle prefetch on App + hover/focus preload on dock links. Local cold timings after prefetch: incidents 325ms, vault 105ms, care 122ms, proof 96ms (was 515/155/208/401ms). The live 5–11s was cold CDN + 1MB bundle parse, mitigated not eliminated. No fake loading states.
+- **Duplicate titles.** Page-level h2s removed where they repeat the shell H1; kept where the text differs and on report-flow screens (Judge gets its heading back only inside the report flow, via a `showTitle` prop — on #/judge the shell H1 already says it). The two Step 10 tests that pinned the removed card h2s now assert the shell h1 + card aria-label.
+- **Confirm gate: Bank is the 4th question** ("Konsa bank hai?", summary adds a `Bank {name}.` line; "Teeno sawaal" → "Chaaro sawaal"). Unit + Playwright pinned.
+- **HDFC numbers verified, not changed.** Checked live on HDFC Bank's official site (hdfc.bank.in/contact-us/customer-care, 28 Nov 2026): 1800 1600 / 1800 2600 are HDFC's only published customer-care numbers — the E2E suspicion was wrong. Source + date recorded in `banks.ts`.
+- **Follow-up Mark done.** Root cause was bug 4 (the dock covered the button), not the state update; one click now advances, existing test passes.
+- **"10second" → "10 second"** (template literal in Panic.tsx).
+- **Judge seed warns first.** Two-step confirm naming the current active incident ("old incident stays saved"); active incident shown on the page. Caregiver default was already OFF — the E2E "ON by default" was a persisted setting from the earlier E2E run in the same browser profile, not a code default; unit test asserts fresh defaults OFF.
+- Also fixed: three copy regressions the suite caught while keying (Shield example labels, Coach Done wording, tamper "surakshit hain" — all restored verbatim).
+- Evidence: build green (7.32s), vitest **49/49**, Playwright dashboard **43/43** + new `tests/step16.spec.ts` **8/8** = **51/51** (3.3m, axe 0); screenshots read (dark home true black + top bar fits, Shield danger with the red disagreement warning and the card clearing the dock, Guide with 32 situations). Secret scan clean. NOT deployed — live still serves v7; deploy needs his word.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
@@ -271,7 +289,7 @@ src/
                     clock.ts (deadline states, action ordering)
   screens/        Panic, Listen, Gaps, Confirm, Incident, Actions, Coach
   dashboard/      GlassShell (Glassy design), Home, GuidePage, ToolPages,
-                  SettingsPage, ReportFlow — HashRouter, 12 routes + /guide
+                  SettingsPage, ReportFlow — HashRouter, 12 tool routes + /guide + /judge
   engines/guide/  guide.ts — deterministic situation guides (32 situations)
   theme/          rakshioTheme.ts — Astryx defineTheme on the Calm palette
   components/     Toast (confirmation toasts), ErrorBoundary (calm fallback)
