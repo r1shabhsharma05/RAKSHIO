@@ -9,7 +9,7 @@ import { useToast } from '../components/Toast';
 // Ack Bridge: 1930 call ke baad mila acknowledgement number yahan bharein —
 // 24 ghante ka portal countdown shuru hota hai, aur Portal Copy Deck
 // field-by-field copy deta hai, taaki portal form dobara yaad se na bharna pade.
-export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
+export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: StoredIncident; onBack: () => void; onAckSaved?: () => void }) {
   const [ackNumber, setAckNumber] = useState('');
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -61,6 +61,7 @@ export function AckBridgeScreen({ stored, onBack }: { stored: StoredIncident; on
             saveAck({ ackNumber: ackNumber.trim(), calledAt: at, incidentId: stored.id });
             setSavedAt(at);
             showToast('Ack number save ho gaya');
+            onAckSaved?.();
           }}
         >
           Save karein

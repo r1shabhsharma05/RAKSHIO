@@ -149,6 +149,50 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - Evidence: build green, vitest 26/26, Playwright 9/9, axe 0 violations;
   fresh screenshots confirm the halo is gone.
 
+## Step 6 — dashboard rebuild (27 Nov, master-prompt + live-E2E fixes)
+
+- **What:** the mobile-first panic app became the dark desktop dashboard
+  from the approved screenshot — fixed 224px sidebar, 68px header, 12
+  real routes (HashRouter, so browser Back works everywhere), Home with
+  all widgets fed by real saved data, multi-incident dashboard with
+  search/filter/statuses, Follow-up Guardian (1h/24h/3d/7d + .ics) and a
+  Settings page. The panic flow (Panic/Listen/Gaps/Confirm) is intact as
+  the Report Fraud experience; engines untouched.
+- **Stack kept:** React 19 + TypeScript + Vite (no downgrade to 18).
+  Added: Tailwind (utilities only, no preflight), React Router, Zustand,
+  Framer Motion, Recharts, Lucide. Hand-written service worker kept
+  (`rakshio-v1`); Astryx theme kept, adapted to the dark palette.
+- **Six live-E2E bugs fixed** (real-Chrome walk of the Step 4 live site,
+  each pinned by a Playwright test): (1) Triage + Judge had no back
+  button and browser Back exited the app — both have Wapas now, routes
+  are real; (2) Bank Kit draft kept saying HDFC after switching to SBI —
+  the draft now follows the selected bank, and the reference-number field
+  has an explicit Save button + confirmation; (3) Caregiver mode had no
+  visible effect — now a badge in Panic + header, "Caregiver ne bhara
+  hai" on the incident card, "(caregiver)" on vault rows; (4) Golden Hour
+  Clock confused with demo data — every deadline now shows its window
+  (1930 ≤48h, portal ≤24h, bank ≤3 working days) plus an explainer when
+  one is overdue; (5) timeline date was mixed-script ("27 नव॰, 03:55
+  pm") — now `en-IN` everywhere; the calm-prompt countdown moved out of
+  the button label into its own text, and the ticking lives in a child
+  component so the mic button never re-renders per second; (6) offline
+  PWA reload verified by the suite's offline test — service worker
+  serves the report screen with the network off.
+- **Two real bugs found by the suite itself:** a Zustand selector
+  (`s.followups[id] ?? {}`) returned a fresh object on every snapshot,
+  looping React to error #185 and crashing every page with follow-ups —
+  fixed with a module-level cached empty object. And axe caught Astryx's
+  layered `p`/`small` rules painting dark text on dark cards, plus
+  secondary buttons inheriting white text on their light-blue background
+  — fixed with un-layered overrides in the dark scopes.
+- **Cost:** first-load JS 655.74 kB → 983.20 kB (gzip 318.96 kB) — the
+  shell (router + zustand + framer-motion + lucide + Dexie); charts
+  (440 kB) and proof pack (517.51 kB) stay lazy and never block paint.
+- Evidence: build green, vitest 26/26, Playwright **28/28** (dashboard
+  17/17 incl. the 5 fix tests, smoke 2/2, production incl. offline
+  reload, shots, all-screens), axe 0 violations on home, incidents,
+  Panic and Incident screens; mobile 390 no horizontal scroll.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

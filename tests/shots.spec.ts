@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 
 test('screenshots for UI critique', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/#/report');
   await page.waitForTimeout(1200);
   await page.screenshot({ path: 'tests/shots-local/panic.png' });
   await page.getByRole('button', { name: /Demo data bharo/ }).click();

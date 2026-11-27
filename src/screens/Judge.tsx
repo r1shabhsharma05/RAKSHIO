@@ -1,9 +1,9 @@
 import { Button } from '@astryxdesign/core/Button';
-import { NoReportBanner } from './shared';
+import { BackButton, NoReportBanner } from './shared';
 
 // Judge Mode: the seeded ₹20,000 UPI scenario in one button, no mic needed.
 // For the demo: run it, then check each item below.
-export function JudgeScreen({ onStart }: { onStart: () => void }) {
+export function JudgeScreen({ onStart, onBack }: { onStart: () => void; onBack: () => void }) {
   return (
     <>
       <NoReportBanner />
@@ -22,6 +22,7 @@ export function JudgeScreen({ onStart }: { onStart: () => void }) {
         </ul>
       </section>
       <p className="note">Judge Mode sirf demo ke liye hai — asli incident Panic screen se shuru karein.</p>
+      <BackButton onBack={onBack} />
     </>
   );
 }

@@ -3,6 +3,9 @@
 export interface Deadline {
   id: string;
   label: string;
+  /** Official window length, shown next to every countdown so the
+   *  different windows (48h / 24h / 3 working days) are never confusing. */
+  windowLabel: string;
   hours: number;
   source: string;
   checked: string;
@@ -12,6 +15,7 @@ export const DEADLINES: Deadline[] = [
   {
     id: '1930',
     label: '1930 par report karein',
+    windowLabel: '≤48 hours',
     hours: 48,
     source: 'https://cyberpolice.nic.in/Download/CFCFRMS_FAQ.pdf',
     checked: '2026-11-27',
@@ -19,6 +23,7 @@ export const DEADLINES: Deadline[] = [
   {
     id: 'portal',
     label: 'cybercrime.gov.in par complaint poori karein',
+    windowLabel: '≤24 hours',
     hours: 24,
     source: 'https://cybercrime.gov.in/UploadMedia/instructions_citizenreportingcyberfrauds.pdf',
     checked: '2026-11-27',
@@ -26,6 +31,7 @@ export const DEADLINES: Deadline[] = [
   {
     id: 'bank',
     label: 'Bank ko suchit karein (zero liability: 3 working days)',
+    windowLabel: '≤3 working days',
     hours: 72,
     source: 'https://rbi.org.in/Scripts/NotificationUser.aspx?Id=11040',
     checked: '2026-11-27',

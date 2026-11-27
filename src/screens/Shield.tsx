@@ -11,12 +11,15 @@ const EXAMPLES: { label: string; text: string }[] = [
 
 // Second-Scam Shield 2.0: paste any message — recovery agent, refund offer,
 // fake bank SMS — and get a Truth Card: what is wrong, and what to do.
-export function ShieldScreen({ onBack }: { onBack: () => void }) {
+export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerdict?: (v: ShieldVerdict, text: string) => void }) {
   const [text, setText] = useState('');
   const [verdict, setVerdict] = useState<ShieldVerdict | null>(null);
 
   function analyze() {
-    if (text.trim()) setVerdict(analyzeShield(text.trim()));
+    if (!text.trim()) return;
+    const v = analyzeShield(text.trim());
+    setVerdict(v);
+    onVerdict?.(v, text.trim());
   }
 
   const title = verdict?.level === 'danger' ? 'KHATRA — mat karein' : verdict?.level === 'suspicious' ? 'SHAK — savdhaan rahein' : 'Theek lagta hai';
@@ -32,7 +35,7 @@ export function ShieldScreen({ onBack }: { onBack: () => void }) {
       <button type="button" className="rk-primary-btn" disabled={text.trim().length < 3} onClick={analyze}>Check karein</button>
       <div className="chip-row">
         {EXAMPLES.map((e) => (
-          <Button key={e.label} label={e.label} variant="secondary" size="lg" onClick={() => { setText(e.text); setVerdict(analyzeShield(e.text)); }} />
+          <Button key={e.label} label={e.label} variant="secondary" size="lg" onClick={() => { setText(e.text); const v = analyzeShield(e.text); setVerdict(v); onVerdict?.(v, e.text); }} />
         ))}
       </div>
 

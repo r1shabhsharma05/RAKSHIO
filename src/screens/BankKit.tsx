@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
 import { BANKS, bankDraft, findBank, loadBankRef, saveBankRef } from '../engines/banks/banks';
 import { BackButton, NoReportBanner } from './shared';
+import { useToast } from '../components/Toast';
 
 // Bank Alert Kit: helpline (verified numbers only), block steps, a pre-filled
 // draft the user reviews before sending anywhere, and a reference-number
@@ -12,7 +13,23 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
   const [selected, setSelected] = useState(initial?.name ?? BANKS[0].name);
   const [draft, setDraft] = useState(() => bankDraft(stored));
   const [ref, setRef] = useState(() => loadBankRef(stored.id));
+  const [refSaved, setRefSaved] = useState(false);
   const bank = BANKS.find((b) => b.name === selected) ?? BANKS[0];
+  const showToast = useToast();
+
+  // Switching bank re-fills the draft from the NEW bank (live bug: the draft
+  // kept saying HDFC after switching to SBI). The draft is a pre-fill — the
+  // user can still edit it by hand afterwards.
+  function changeBank(name: string) {
+    setSelected(name);
+    if (name !== '__other') setDraft(bankDraft(stored, name));
+  }
+
+  function saveRef() {
+    saveBankRef(stored.id, ref.trim());
+    setRefSaved(true);
+    showToast('Reference number save ho gaya');
+  }
 
   return (
     <>
@@ -22,7 +39,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
 
       <section className="rk-card">
         <label htmlFor="bank-select" className="rk-label">Bank chunein</label>
-        <select id="bank-select" className="rk-input" value={selected} onChange={(e) => setSelected(e.target.value)}>
+        <select id="bank-select" className="rk-input" value={selected} onChange={(e) => changeBank(e.target.value)}>
           {BANKS.map((b) => (
             <option key={b.name} value={b.name}>{b.name}</option>
           ))}
@@ -50,9 +67,13 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
           id="bank-ref"
           className="rk-input"
           value={ref}
-          onChange={(e) => { setRef(e.target.value); saveBankRef(stored.id, e.target.value); }}
+          onChange={(e) => { setRef(e.target.value); setRefSaved(false); }}
           placeholder="Jaise: SR123456789"
         />
+        <button type="button" className="rk-primary-btn" disabled={ref.trim().length < 1} onClick={saveRef}>
+          Reference number save karein
+        </button>
+        {refSaved && <p role="status" className="status-ok">✓ Reference number save ho gaya.</p>}
         <a href="https://www.npci.org.in/" target="_blank" rel="noopener noreferrer">NPCI — UPI help</a>
       </section>
       <BackButton onBack={onBack} />

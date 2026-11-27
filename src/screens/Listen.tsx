@@ -7,6 +7,7 @@ import { MicIcon, NoReportBanner } from './shared';
 // on silence (VoiceAdapter); the user stops it when done.
 export function ListenScreen({
   mode,
+  speechLang = 'hi-IN',
   finalText,
   interimText,
   onFinal,
@@ -16,6 +17,7 @@ export function ListenScreen({
   onBack,
 }: {
   mode: 'voice' | 'text';
+  speechLang?: 'hi-IN' | 'en-IN';
   finalText: string;
   interimText: string;
   onFinal: (t: string) => void;
@@ -33,7 +35,7 @@ export function ListenScreen({
 
   useEffect(() => {
     if (mode !== 'voice') return;
-    const l = createListener('hi-IN', {
+    const l = createListener(speechLang, {
       onFinal: (t) => { finalRef.current = t; onFinal(t); },
       onInterim,
       onError: (kind) => { if (kind === 'denied') setDenied(true); },

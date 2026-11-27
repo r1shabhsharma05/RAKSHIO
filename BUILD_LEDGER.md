@@ -286,3 +286,132 @@ period gone. Secret scan clean; no .env files; no binaries pushed.
 - The desktop-width empty margins are NOT slop here — the app is a
   phone-first panic tool by design. Widening it belongs to the desktop
   dashboard job, not this pass.
+
+## Step 6: complete (2026-11-27) — dashboard rebuild + live-E2E fixes
+
+Direction: the master prompt + the dashboard screenshot Rishabh sent
+("is trh ka frontend chaiye mujhe exact"), plus all 6 bugs from the
+27 Nov real-Chrome E2E walk of the Step 4 live site. No scope cut.
+
+What changed — shell only; engines (extraction, clock/deadlines, vault
+SHA-256 chain, shield rules, triage, banks, proof pack, ack) reused
+untouched, screens reused with small prop additions:
+- New: `src/dashboard/` — Shell (sidebar/header/bottom nav/drawer,
+  PageFade, flat two-tone ShieldLogo), Home (hero + 4 tiles + clock +
+  incident + quick actions + 5-step plan + snapshot + vault + shield +
+  progress + care + proof widgets), ReportFlow (panic flow extracted
+  from old App.tsx, `?mode=voice|text` deep links), ToolPages (9 tool
+  wrappers), IncidentsPage (search/filter/status chips, totals, Recharts
+  bar + pie, lazy), IncidentDetail (status picker + FollowUpList +
+  two-step delete), SettingsPage (language, toggles, storage, export,
+  per-incident delete, one-tap wipe), GoldenHour (SVG ring), Progress
+  (tracker from recorded facts only), FollowUp (F16: 1h/24h/3d/7d +
+  hand-built .ics), routes.ts; `src/state/incidents.ts` (multi-incident
+  list, statuses, settings, follow-ups, shield-last, one-time migration
+  from legacy single-incident key), `src/state/dashboardStore.ts`
+  (Zustand thin mirror over localStorage, no persist middleware),
+  `src/i18n.ts` (EN/HI dashboard chrome only); `src/dashboard.css`;
+  `tests/dashboard.spec.ts` (17 tests).
+- Modified: App.tsx (HashRouter + 14 routes), main.tsx, vite.config.ts
+  (tailwindcss plugin), index.css (Tailwind theme+utilities import, no
+  preflight; #root full width), index.html (theme-color #06101F),
+  store.ts (optional status), Panic/Listen/Shield/AckBridge (small prop
+  additions), Judge (back button), BankKit (draft + ref save), Incident
+  (en-IN date), Actions (window labels), banks.ts (`bankDraft(stored,
+  bankName?)`), deadlines.config.ts (`windowLabel`), smoke/production/
+  shots/all-screens specs (`goto('/#/report')`).
+- Deps: tailwindcss, @tailwindcss/vite, react-router-dom, zustand,
+  framer-motion, recharts, lucide-react (54 packages).
+- Rulings: React 19 kept (no 18 downgrade); HashRouter (static drop has
+  no server rewrites); hand-written sw.js kept (no vite-plugin-pwa —
+  offline panic path risk); Tailwind utilities-only (Astryx reset owns
+  the base); `.db-flow` re-seats `--rk-*` on the dark palette instead of
+  restyling 12 screens; shield stays a flat two-tone SVG (no glow, Step 5
+  unslop ruling); mock numbers never hard-coded (₹12,500 / 00:47:23 /
+  #RK-2026-1187 / upi_txn.png are screenshot fiction — real saved data
+  only, seeded ₹20,000 demo only when no incident exists).
+
+The six live-E2E fixes (each has a Playwright test in dashboard.spec.ts):
+1. Back: JudgeScreen + TriageScreen Wapas buttons; HashRouter gives real
+   history entries, so browser Back moves between routes instead of
+   exiting the app. Test: Judge → Wapas → Panic; Triage → Wapas →
+   detail; home → report → browser Back → home.
+2. Bank Kit: `bankDraft(stored, bankName)` — switching bank re-fills the
+   draft from the new bank (was: stuck on HDFC after SBI switch).
+   Reference number no longer auto-saves on keystroke: explicit "Save
+   karein" button + status confirmation + persists across reload.
+3. Caregiver: visible everywhere — "Caregiver mode ON" badge on Panic
+   the moment the box is ticked, Caregiver badge in the header,
+   "Caregiver ne bhara hai" on the incident card, "(caregiver)" on vault
+   rows (byCaregiver was already stored, never shown).
+4. Clock: `windowLabel` on every deadline (1930 ≤48 hours, portal ≤24
+   hours, bank ≤3 working days) rendered on Home chips and Actions
+   chips, plus an explainer line when any deadline is overdue ("portal
+   (24h) 1930 (48h) se pehle khatm hota hai").
+5. Dates + calm tick: Incident timeline `hi-IN` → `en-IN` (was mixed
+   script "27 नव॰, 03:55 pm"); calm prompt extracted into a `CalmPrompt`
+   child that owns the 1s interval — the countdown is plain text, the
+   "Aage badhein" button label is static, and the mic/emergency sections
+   never re-render per tick. TTS rate now follows the settings value.
+6. Offline: the suite's offline reload test (production.spec.ts) passes
+   — service worker serves the report screen with the network off.
+
+Bugs the suite itself caught (all fixed in this step):
+- FollowUpList crashed every page it rendered on: the Zustand selector
+  `s.followups[incident.id] ?? {}` returned a NEW object on every
+  getSnapshot call, so React's useSyncExternalStore looped to error
+  #185 ("getSnapshot should be cached") and the error boundary showed
+  "Kuch gadbad ho gayi". First full run: 22 failed / 6 passed, all
+  through seedDemo → detail. Fix: module-level `EMPTY_FOLLOWUPS`
+  constant. Only selector in the codebase with the pattern (grep-verified).
+- Axe color-contrast on the dark dashboard: (a) an Astryx wrapper div
+  (`display: contents`, class `xjp7ctv`) re-set the inherited text color
+  to #171c22 between #root and the shell — fixed with `color` on
+  `.db-shell`; (b) Astryx's layered `p`/`small` rules paint dark text on
+  dark cards — fixed with un-layered `.db-flow p` and `.db-quick small
+  { color: inherit }` + `color` on `.db-shield-alert` (its `p` rule never
+  matched the `<p class>` itself); (c) Astryx secondary buttons inherit
+  the shell's white text (via un-layered `button { color: inherit }`)
+  while keeping their light #e0f2fe bg — fixed with an un-layered
+  `.db-flow .astryx-button[data-variant="secondary"]` override (dark
+  elevated bg, light text). Ghost (transparent) and destructive (red)
+  buttons already passed.
+- Mobile 390 overflow: header Settings avatar pushed 38px past the
+  viewport (hidden on mobile — Settings is in bottom nav + drawer;
+  scoped to that button only, the hamburger shares the class), then the
+  Settings selects overflowed 10px (rows stack on mobile now).
+- Test-only fixes (not app bugs): ₹20,000 / '1 items saved' / 'Chain
+  sahi hai' strict-mode multi-matches (`.first()` / exact / region
+  scoping); helpline renders as `<a>`, not `<button>`; timeline string
+  is "Aapne RAKSHIO ko bataya", not "Incident darj hua"; drawer link
+  scoped to the dialog (the hidden sidebar link matches first in DOM
+  order).
+
+Evidence: `npm run build` green (2.40s); first-load JS 983.20 kB
+(gzip 318.96 kB) vs 655.74 kB Step 4 — shell cost (router + zustand +
+framer-motion + lucide + Dexie in main chunk); lazy chunks IncidentsPage
+440.00 kB, proofpack 517.51 kB (warning is the lazy proofpack chunk
+only, never blocks first paint); `npx vitest run` **26/26**;
+`npx playwright test` **28/28** (dashboard 17/17 incl. the 5 fix tests,
+smoke 2/2, production incl. offline reload + render-crash fallback,
+shots, all-screens); axe 0 violations on home, incidents page, Panic
+and Incident screens; mobile 390 bottom nav + drawer + overflow 0.
+Secret scan clean; no .env files; no binaries pushed.
+
+## Rulings (Step 6)
+- The FollowUpList crash is the reason the dashboard was NEVER green
+  before this step: the suite was not run after the rebuild until the
+  fixes landed, and every seeded flow hits the detail page. A one-line
+  selector literal (`?? {}`) took the whole app down — selectors must
+  return cached references; grep for `?? {}` / `?? []` in selectors on
+  any future store change.
+- Astryx styles live in a cascade layer: our un-layered rules always
+  win, which is both the cause (button `color: inherit`) and the fix
+  (overrides). Any future Astryx color surprise: check layers first,
+  then the `display: contents` wrapper.
+- First-load JS grew ~50% for the shell. Accepted: the dashboard is the
+  Round 2 deliverable and the heavy chunks (charts, proof pack) are
+  lazy. Do not "fix" by removing the shell deps.
+- NOT redeployed. Live link still serves the Step 4 build (Step 5 dist
+  `rakshio-dist-v3.zip` ready, redeploy is his call). This step is
+  code-complete and pushed; deploy only on his word.

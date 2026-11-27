@@ -54,6 +54,7 @@ export function ActionsScreen({
           <div key={s.id} className={`deadline-chip ${s.state}`}>
             <div className="time">{s.state === 'overdue' ? 'Samay khatm' : formatDuration(s.remainingMs)}</div>
             <div className="name">{s.label}</div>
+            <div className="window">{s.windowLabel} window</div>
           </div>
         ))}
       </div>

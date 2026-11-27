@@ -32,10 +32,13 @@ export function findBank(name: string | null): BankInfo | null {
 
 // Pre-filled draft — the user reviews and edits it before sending anywhere.
 // RAKSHIO never sends it; there is no send button.
-export function bankDraft(stored: StoredIncident): string {
+// bankName overrides the incident's bank: when the user switches the bank
+// in the picker, the draft must follow the selection (live bug: draft kept
+// saying HDFC after switching to SBI).
+export function bankDraft(stored: StoredIncident, bankName?: string): string {
   const lines = [
     'Namaste,',
-    `Main ${stored.bank ?? 'apne bank'} ka khaata-dhaarak hoon.`,
+    `Main ${bankName ?? stored.bank ?? 'apne bank'} ka khaata-dhaarak hoon.`,
     stored.amount != null
       ? `Mere account se ₹${stored.amount.toLocaleString('en-IN')} kat gaye.`
       : 'Mere account se bina permission ke paise kat gaye.',

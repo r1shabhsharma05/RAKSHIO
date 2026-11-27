@@ -1,4 +1,5 @@
 import type { ExtractedIncident } from '../engines/understanding/extract';
+import type { IncidentStatus } from './incidents';
 
 // One incident per device for Step 1. Only the masked transcript is stored:
 // OTP/PIN/CVV digits are masked by the Understanding Engine before this point.
@@ -19,6 +20,10 @@ export interface StoredIncident {
   maskedCredentials: boolean;
   callTappedAt: string | null;
   caregiverMode: boolean;
+  // Dashboard status, set by the user (or by their own recorded actions:
+  // ack saved -> awaiting-portal, bank ref saved -> bank-notified).
+  // Absent on pre-dashboard incidents — the dashboard defaults it.
+  status?: IncidentStatus;
 }
 
 const KEY = 'rakshio.incident.v1';

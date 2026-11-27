@@ -5,7 +5,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 // Demo flow up to the confirmed incident card (no mic needed).
 async function reachIncident(page: Page) {
-  await page.goto('/');
+  await page.goto('/#/report');
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
@@ -15,7 +15,7 @@ async function reachIncident(page: Page) {
 }
 
 test('offline reload serves the Panic screen from the service worker', async ({ page, context }) => {
-  await page.goto('/');
+  await page.goto('/#/report');
   await expect(page.getByRole('heading', { name: 'Boliye, kya hua?' })).toBeVisible();
   // Wait for the worker to activate, then one reload so it takes control.
   await page.waitForFunction(
@@ -32,7 +32,7 @@ test('offline reload serves the Panic screen from the service worker', async ({ 
 
 test('corrupt stored incident falls back to Panic, never a blank page', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('rakshio.incident.v1', '{broken json'));
-  await page.goto('/');
+  await page.goto('/#/report');
   await expect(page.getByRole('heading', { name: 'Boliye, kya hua?' })).toBeVisible();
 });
 
@@ -61,7 +61,7 @@ test('Ack save and copy-deck copy both toast', async ({ page }) => {
 });
 
 test('mic button is keyboard-focusable', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/report');
   const mic = page.getByRole('button', { name: 'Boliye kya hua — mic se batayein' });
   await mic.focus();
   await expect(mic).toBeFocused();
@@ -77,7 +77,7 @@ test('a render crash shows the calm fallback, never a blank page', async ({ page
       throw new Error('injected render fault');
     };
   });
-  await page.goto('/');
+  await page.goto('/#/report');
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });

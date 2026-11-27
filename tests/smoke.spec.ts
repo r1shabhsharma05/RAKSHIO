@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 // Full click-through of the Step 1 loop + Step 2 Vault, in a real browser.
 // Catches what unit tests cannot: dead buttons, broken transitions, a11y.
 test('demo flow end to end + vault tamper turns red', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/report');
   await expect(page.getByRole('heading', { name: 'Boliye, kya hua?' })).toBeVisible();
 
   // axe on the Panic screen: no violations allowed.
@@ -51,7 +51,7 @@ test('demo flow end to end + vault tamper turns red', async ({ page }) => {
 });
 
 test('shield truth card flags a recovery scam', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/report');
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });

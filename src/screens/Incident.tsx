@@ -34,7 +34,9 @@ export function IncidentScreen({
     );
   }, { scope: listRef });
 
-  const created = new Date(stored.createdAt).toLocaleString('hi-IN', {
+  // One consistent format: 'en-IN' everywhere (hi-IN rendered a mixed-script
+  // "27 नव॰, 03:55 pm" — Devanagari month + Latin pm).
+  const created = new Date(stored.createdAt).toLocaleString('en-IN', {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 

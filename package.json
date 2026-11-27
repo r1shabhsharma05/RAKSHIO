@@ -14,13 +14,20 @@
     "@astryxdesign/theme-neutral": "^0.7.17",
     "@gsap/react": "^2.1.2",
     "@stylexjs/stylex": "^0.19.2",
+    "@tailwindcss/vite": "^4.3.5",
     "dexie": "^4.4.7",
+    "framer-motion": "^14.14.0",
     "gsap": "^3.15.1",
     "jszip": "^3.10.2",
+    "lucide-react": "^1.82.0",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.7",
+    "recharts": "^3.11.1",
+    "tailwindcss": "^4.3.5",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@astryxdesign/cli": "^0.7.17",

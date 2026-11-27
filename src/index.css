@@ -1,6 +1,11 @@
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
 @import '@astryxdesign/theme-neutral/theme.css';
+/* Tailwind utilities only — no preflight. The Astryx reset above already
+   owns the base; a second reset would fight it and the panic-flow screens.
+   Utilities are used for shell layout (flex/grid/spacing). */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
 
 /* Calm Mode tokens — from the ui-ux-pro-max design-system lookup
    (Trust & Authority + Conversion pattern, Accessible & Ethical style).
@@ -35,8 +40,6 @@ body { margin: 0; background: var(--rk-bg); }
 
 #root {
   width: 100%;
-  max-width: 28rem;
-  margin: 0 auto;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -59,20 +62,6 @@ button, input, textarea { font: inherit; color: inherit; }
   border-radius: 0.375rem;
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--rk-card);
-  border-bottom: 1px solid var(--rk-muted);
-}
-.app-header .wordmark { font-size: 1.375rem; font-weight: 700; letter-spacing: 0.02em; }
-.app-header .tagline { font-size: 0.875rem; color: var(--rk-primary); }
-
-.app-main { flex: 1; display: flex; flex-direction: column; padding: 1rem; gap: 1rem; }
-.app-footer { padding: 0.75rem 1rem 1.25rem; font-size: 1rem; text-align: center; color: var(--rk-primary); }
 
 /* Permanent banner: the one honest sentence, on every screen. */
 .no-report-banner {
@@ -181,6 +170,7 @@ textarea.rk-input, input.rk-input {
 }
 .deadline-chip .time { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .deadline-chip .name { font-size: 0.875rem; }
+.deadline-chip .window { font-size: 0.75rem; color: var(--rk-muted-text); margin-top: 0.125rem; }
 .deadline-chip.soon { border-color: #f59e0b; background: var(--rk-warn-bg); }
 .deadline-chip.overdue { border-color: var(--rk-destructive); background: #fee2e2; }
 .deadline-chip.overdue .time { color: var(--rk-destructive); }
