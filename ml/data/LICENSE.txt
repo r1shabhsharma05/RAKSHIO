@@ -1,0 +1,68 @@
+SMS Spam Collection v.1: License (original, preserved verbatim)
+================================================================
+
+The text below is reproduced from the original SMS Spam Collection v.1 readme
+distributed by Tiago Agostinho de Almeida and Jose Maria Gomez Hidalgo. The
+deduplicated release published here makes no modifications to these terms.
+
+We would appreciate if:
+
+- In case you find this corpus useful, please make a reference to previous
+  paper and the web page: http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/
+  in your papers, research, etc.
+- Send a message to tiago@dt.fee.unicamp.br in case you make use of the
+  corpus.
+
+The SMS Spam Collection v.1 is provided for free and with no limitations
+excepting:
+
+1. Tiago Agostinho de Almeida and Jose Maria Gomez Hidalgo hold the copyright
+   (c) for the SMS Spam Collection v.1.
+
+2. No Warranty / Use At Your Risk. THE CORPUS IS MADE AT NO CHARGE.
+   ACCORDINGLY, THE CORPUS IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND,
+   INCLUDING WITHOUT LIMITATION THE WARRANTIES THAT THEY ARE MERCHANTABLE, FIT
+   FOR A PARTICULAR PURPOSE OR NON-INFRINGING. YOU ARE SOLELY RESPONSIBLE FOR
+   YOUR USE, DISTRIBUTION, MODIFICATION, REPRODUCTION AND PUBLICATION OF THE
+   CORPUS AND ANY DERIVATIVE WORKS THEREOF BY YOU AND ANY OF YOUR SUBLICENSEES
+   (COLLECTIVELY, "YOUR CORPUS USE"). THE ENTIRE RISK AS TO YOUR CORPUS USE IS
+   BORNE BY YOU. YOU AGREE TO INDEMNIFY AND HOLD THE COPYRIGHT HOLDERS, AND
+   THEIR AFFILIATES HARMLESS FROM ANY CLAIMS ARISING FROM OR RELATING TO YOUR
+   CORPUS USE.
+
+3. Limitation of Liability. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR THEIR
+   AFFILIATES, OR THE CORPUS CONTRIBUTING EDITORS, BE LIABLE FOR ANY INDIRECT,
+   SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES, INCLUDING, WITHOUT
+   LIMITATION, DAMAGES FOR LOSS OF GOODWILL OR ANY AND ALL OTHER COMMERCIAL
+   DAMAGES OR LOSSES, EVEN IF ADVISED OF THE POSSIBILITY THEREOF, AND
+   REGARDLESS OF WHETHER ANY CLAIM IS BASED UPON ANY CONTRACT, TORT OR OTHER
+   LEGAL OR EQUITABLE THEORY, RELATING OR ARISING FROM THE CORPUS, YOUR
+   CORPUS USE OR THIS LICENSE AGREEMENT.
+
+
+Cleaning script (scripts/clean.py)
+----------------------------------
+
+The cleaning script in this repository is released under the MIT license:
+
+MIT License
+
+Copyright (c) 2026 Jakob Neugebauer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

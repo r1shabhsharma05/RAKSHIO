@@ -405,6 +405,11 @@ select.db-input { appearance: auto; }
   --rk-warn-fg: #fde68a;
 }
 .gd-app[data-theme="dark"] .db-flow .rk-primary-btn { background: var(--db-primary); }
+/* Step 14: .rk-primary-btn kept its blue background but inherited the
+   shell's dark text — the glassy `.gd-app :where(button){color:inherit}`
+   ties .rk-primary-btn on specificity and comes later. White text wins
+   in both themes (light #0369a1 5.2:1, dark #3159e8 5.9:1). */
+.gd-app .rk-primary-btn { color: var(--rk-on-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn { background: var(--db-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn.listening { background: #b91c1c; }
 .gd-app[data-theme="dark"] .db-flow .calm-card { background: #161616; }

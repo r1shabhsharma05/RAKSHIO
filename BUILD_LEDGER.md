@@ -963,3 +963,84 @@ needs his word.
 - Shield rule → guide mappings must point at the most specific guide
   (courier → courier-scam, not the generic phishing guide). When a new
   guide covers an existing Shield rule better, re-point the rule.
+
+## Step 14: complete (2026-11-27) — genuinely trained TF.js model on real SMS spam data
+
+User call 27 Nov 23:12 IST: "TF.js trained model banao" + "isko trained
+kro is situation and data sets pe" + "internet hugging face khi se bhi
+dataset leke aao" + "ya kaggle se khi se bhi leke aao".
+
+Dataset: `jngb-labs/sms-spam` (Hugging Face, UCI SMS Spam Collection
+deduplicated) — 5,159 real rows, 4,517 ham / 642 spam, columns
+label,text. SHA-256 verified against a fresh download
+(7d26034188ae533814ad3738dcb08223b41e232537d13606ad1c294815132eff).
+License in `ml/data/LICENSE.txt` (SMS Spam Collection v.1, verbatim in
+`ml/README.md`): free, redistribution allowed, copyright attribution.
+Re-download: `ml/download-data.sh`. Kaggle not used — no token exists,
+none requested, no credential-free direct download.
+
+Model: binary bag-of-words (1,500-token vocab built ONLY from the
+training split) → Dense(32, relu) → Dense(1, sigmoid). Seeded (42)
+80/10/10 split: train 4,127 / val 515 / test 517. `npm run train`
+(Node CPU, ~1 min) rewrites the model + metrics + fixtures and
+round-trip reloads the written file before reporting.
+Artifact: `public/ml/shield-model/model.json` (264 KB, single file —
+standard TF.js ModelArtifacts serialization, modelTopology + weightSpecs
++ base64 weightData, loaded via public `tf.io.fromMemory`; no binary
+weight shard, nothing to upload separately). Tokenizer is one shared
+module (`ml/tokenizer.mjs`) for train and browser — no drift.
+
+REAL held-out test metrics (n = 517, never training data): accuracy
+98.26% (508/517), precision 98.31%, recall 87.88% (TP 58, FP 1, TN
+450, FN 8). These are the numbers the Shield screen quotes.
+
+Shield wiring (Shield screen only): TF.js loads lazily on first check,
+never on first load (separate 1.1 MB chunk, dynamic import). The model
+score shows next to the rules verdict with an honest disclosure:
+dataset name + 5,159 rows + held-out test accuracy 98.3% + "extra
+signal only — rules are the explanation, model never overrides flags"
++ on-device, nothing leaves the phone. The 16-rules engine is
+unchanged. The 32 Situation Guides are guides, NOT training classes —
+never claimed otherwise.
+
+Honest limits (in `ml/README.md` and the UI): English SMS spam from
+2011 — does NOT cover digital arrest, UPI collect, crypto, task scams,
+etc.; Hinglish coverage is none (out-of-vocabulary). Recall is the weak
+side (87.9%): a low model score is NOT proof a message is safe. Seen
+live in the screenshot: the Hinglish danger example ("Turant OTP
+batao…") scores 1% safe from the model while the rules correctly say
+KHATRA — the documented weakness, with the rules winning.
+
+Rejected datasets (reasons in `ml/README.md`): bolewara Hinglish
+(only 63 hand-written rows, not real messages); bhavya2910 synthetic
+(Gemini-generated); ganesh9353 (templated, unclear provenance);
+vichetkao (gated, needs HF login); Kaggle (no token).
+
+Also fixed in this step (found by the new axe check on Shield):
+`.rk-primary-btn` inherited the shell's dark text on blue (glassy
+`.gd-app :where(button){color:inherit}` ties it on specificity and
+comes later) — 2.71:1. One rule in `src/dashboard.css` restores white
+text (light 5.2:1, dark 5.9:1). Pre-existing, not caused by the model.
+
+Evidence: build green (3.72s); vitest 39/39 (9 files, incl. 2 new
+model tests: real held-out fixtures + full test-split accuracy within
+±0.02 of the reported number); Playwright dashboard 42/43 — the 1
+failure (step 12 light-mode cards) is a flake, passes alone right
+after, untouched by this change (no .db-card CSS touched); new Step 14
+spec passes incl. axe 0 on Shield. Screenshots read
+(`tests/shots-local/step14-shield-*.png`): verdict card + model score
++ disclosure render, Check button white-on-blue. Secret scan clean.
+NOT deployed — live still serves v6; deploy needs his word.
+
+## Rulings (Step 14)
+
+- The model is an extra signal only. No UI copy may say the model
+  "decides", "detects", or overrides the rules; no copy may say it was
+  trained on the 32 situations.
+- Metrics quoted anywhere must be the held-out test numbers in
+  `ml/metrics.json` (accuracy 98.3%, precision 98.3%, recall 87.9%),
+  never training accuracy. The vitest accuracy check pins this.
+- Any tokenizer change retrains the model (`npm run train`) — train
+  and browser share `ml/tokenizer.mjs`, never edit one side only.
+- The Hinglish gap is a data gap, not a tuning gap: do not claim it
+  fixed until a real labeled Hinglish dataset is trained on.

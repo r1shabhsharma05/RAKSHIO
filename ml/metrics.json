@@ -1,0 +1,20 @@
+{
+  "n": 517,
+  "tp": 58,
+  "fp": 1,
+  "tn": 450,
+  "fn": 8,
+  "accuracy": 0.9825918762088974,
+  "precision": 0.9830508474576272,
+  "recall": 0.8787878787878788,
+  "dataset": "jngb-labs/sms-spam (UCI SMS Spam Collection, deduplicated)",
+  "rows": 5159,
+  "split": {
+    "seed": 42,
+    "train": 4127,
+    "val": 515,
+    "test": 517
+  },
+  "vocabSize": 1500,
+  "epochs": 15
+}
