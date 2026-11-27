@@ -41,6 +41,22 @@ function shortId(id: string): string {
   return `#${id.replace(/^rk-/, 'RK-').toUpperCase()}`;
 }
 
+// Step 11: empty-state previews reuse the same copy as the live widgets,
+// so the no-incident Home teaches the flow instead of showing bare hints.
+const CLOCK_WHY = [
+  'Higher chance to block the transaction',
+  'Bank and UPI dispute works best now',
+  'Collect and secure all evidence',
+];
+
+const PLAN_PREVIEW = [
+  { id: 'call1930', title: 'Call 1930 (Now)', why: 'Report the fraud and get an acknowledgement number.' },
+  { id: 'portal', title: 'Complete Portal Complaint', why: 'On cybercrime.gov.in within 24 hours.' },
+  { id: 'bank', title: 'Notify Your Bank', why: 'Raise a fraud dispute and block if needed.' },
+  { id: 'evidence', title: 'Save Evidence', why: 'Screenshots, transaction ID, messages, etc.' },
+  { id: 'shield', title: 'Beware of Second Scams', why: 'Don\u2019t trust \u201crecovery agents\u201d or refund calls.' },
+];
+
 function Tile({
   icon,
   title,
@@ -212,9 +228,9 @@ export function HomePage() {
             <div>
               <strong>Why it matters?</strong>
               <ul className="db-why">
-                <li>Higher chance to block the transaction</li>
-                <li>Bank and UPI dispute works best now</li>
-                <li>Collect and secure all evidence</li>
+                {CLOCK_WHY.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
               </ul>
             </div>
             <div className="db-chip-row" role="timer" aria-live="off">
@@ -234,12 +250,22 @@ export function HomePage() {
             )}
           </>
         ) : (
-          <div className="db-empty">
-            <p>{t(lang, 'noIncident')}</p>
-            <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
-              {t(lang, 'startReport')}
-            </button>
-          </div>
+          <>
+            <div>
+              <strong>Why it matters?</strong>
+              <ul className="db-why">
+                {CLOCK_WHY.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="db-empty">
+              <p>{t(lang, 'noIncident')}</p>
+              <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
+                {t(lang, 'startReport')}
+              </button>
+            </div>
+          </>
         )}
       </section>
 
@@ -263,12 +289,18 @@ export function HomePage() {
             </Link>
           </div>
         ) : (
-          <div className="db-empty">
-            <p>{t(lang, 'noIncidentHint')}</p>
-            <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
-              {t(lang, 'startReport')}
-            </button>
-          </div>
+          <>
+            <ul className="db-why">
+              <li>Har incident ka apna ID, type, rashi aur date hoti hai</li>
+              <li>Detail kholte hi timeline, evidence aur status dikhta hai</li>
+            </ul>
+            <div className="db-empty">
+              <p>{t(lang, 'noIncidentHint')}</p>
+              <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
+                {t(lang, 'startReport')}
+              </button>
+            </div>
+          </>
         )}
       </section>
 
@@ -316,9 +348,22 @@ export function HomePage() {
             <p className="db-muted">Queue order follows the clock — portal rises as its 24-hour window nears. ({actions.length} actions tracked)</p>
           </>
         ) : (
-          <div className="db-empty">
-            <p>{t(lang, 'noIncidentHint')}</p>
-          </div>
+          <>
+            <div className="db-steps">
+              {PLAN_PREVIEW.map((p, i) => (
+                <div key={p.id} className="db-step">
+                  <span className="num todo">{i + 1}</span>
+                  <div className="body">
+                    <strong>{p.title}</strong>
+                    <p>{p.why}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="db-empty">
+              <p>{t(lang, 'noIncidentHint')}</p>
+            </div>
+          </>
         )}
       </section>
 
@@ -337,7 +382,13 @@ export function HomePage() {
             </div>
           </div>
         ) : (
-          <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          <>
+            <ul className="db-why">
+              <li>Fraud type, rashi, bank aur status — ek jhaank me</li>
+              <li>Agli deadline kab hai, woh bhi</li>
+            </ul>
+            <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          </>
         )}
       </section>
 
@@ -373,7 +424,13 @@ export function HomePage() {
             <Link to="/vault" className="db-btn db-btn-ghost">Vault kholein <ArrowRight size={16} aria-hidden="true" /></Link>
           </>
         ) : (
-          <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          <>
+            <ul className="db-why">
+              <li>SMS, screenshot, receipt, UTR — jo bhi hua, uska saboot</li>
+              <li>Har file ka SHA-256 hash banta hai — badlaav pakda jata hai</li>
+            </ul>
+            <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          </>
         )}
       </section>
 
@@ -383,7 +440,10 @@ export function HomePage() {
         {incident ? (
           <ProgressTracker incident={incident} evidenceCount={evidence.length} />
         ) : (
-          <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          <>
+            <p className="db-muted">1930 call, portal, bank, evidence, shield — 5 me se kitne poore hue, yahan dikhega.</p>
+            <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          </>
         )}
       </section>
 
@@ -437,7 +497,10 @@ export function HomePage() {
         {incident ? (
           <FollowUpList incident={incident} compact />
         ) : (
-          <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          <>
+            <p className="db-muted">1 ghante, 24 ghante, 3 din aur 7 din baad ke reminders — har ek ka status yahan dikhega.</p>
+            <p className="db-muted">{t(lang, 'noIncidentHint')}</p>
+          </>
         )}
       </section>
 

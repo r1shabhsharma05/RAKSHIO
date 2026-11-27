@@ -55,6 +55,26 @@ describe('situation guide engine', () => {
     expect(guideForShieldRule(null)).toBeNull();
   });
 
+  it('every guide carries category, time note, and valid related links', () => {
+    const ids = new Set(GUIDES.map((g) => g.id));
+    const categories = new Set(['money-lost', 'no-loss', 'account', 'message']);
+    for (const g of GUIDES) {
+      expect(categories.has(g.category), `${g.id}: bad category`).toBe(true);
+      expect(g.timeNote.length).toBeGreaterThan(0);
+      expect(g.related.length).toBeGreaterThanOrEqual(1);
+      for (const r of g.related) {
+        expect(ids.has(r), `${g.id}: related ${r} is not a guide`).toBe(true);
+        expect(r).not.toBe(g.id);
+      }
+    }
+    // Exactly the three most common situations are pinned.
+    expect(GUIDES.filter((g) => g.common).map((g) => g.id).sort()).toEqual([
+      'fake-customer-care',
+      'otp-scam',
+      'upi-fraud',
+    ]);
+  });
+
   it('never promises recovery or a trained model', () => {
     // The guides are fixed rule lists; no copy may claim AI, a trained
     // model, or guaranteed recovery.

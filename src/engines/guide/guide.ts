@@ -5,9 +5,21 @@
 //
 // Numbers used are only the established official windows (1930 ≤48h,
 // portal ≤24h, bank ≤3 working days) — never recovery promises.
+export type GuideCategory = 'money-lost' | 'no-loss' | 'account' | 'message';
+
 export interface SituationGuide {
   id: string;
   title: string;
+  // Filter category: money lost, no loss (attempt only), account access,
+  // or a threatening call/message.
+  category: GuideCategory;
+  // Why the first minutes matter — only the official windows (1930 ≤48h,
+  // portal ≤24h, bank ≤3 working days), never a recovery promise.
+  timeNote: string;
+  // Other guides that often follow this one (e.g. OTP scam → recovery scam).
+  related: string[];
+  // The three most common situations, pinned first on the guide list.
+  common?: boolean;
   recognize: string[];
   firstFiveMinutes: string[];
   reportSteps: string[];
@@ -24,6 +36,10 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'upi-fraud',
     title: 'UPI fraud / bina permission debit',
+    category: 'money-lost',
+    timeNote: '1930 par 48 ghante ke andar call karein — jitni jaldi, utni behtar. Bank dispute 3 working days ke andar.',
+    related: ['qr-scam', 'phishing-link'],
+    common: true,
     recognize: [
       'Account se paisa kata, aapne kuch nahi kiya',
       'UPI app me aisi transaction dikhe jo aapne nahi ki',
@@ -50,6 +66,10 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'otp-scam',
     title: 'OTP dhokha (customer care)',
+    category: 'money-lost',
+    timeNote: 'OTP share hote hi scammer ke paas access hai — turant block karein, phir 1930 par 48 ghante ke andar call karein.',
+    related: ['refund-scam', 'fake-customer-care'],
+    common: true,
     recognize: [
       "Kisi ne OTP manga — 'verification' ya 'refund' ke naam par",
       'Khud ko bank/customer care bataya, par number anjaan tha',
@@ -74,6 +94,10 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'fake-customer-care',
     title: 'Nakli customer care call',
+    category: 'money-lost',
+    timeNote: 'Screen-share app turant hatayein — phir 1930 par 48 ghante ke andar call karein.',
+    related: ['remote-access', 'otp-scam'],
+    common: true,
     recognize: [
       'Google se mila number par call ki — woh nakli nikla',
       "Call par 'support' ne screen-share app install karwaya",
@@ -98,6 +122,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'phishing-link',
     title: 'Fake link / SMS',
+    category: 'money-lost',
+    timeNote: 'Login karte hi paisa kat sakta hai — turant password badlein, phir 1930 par 48 ghante ke andar call karein.',
+    related: ['upi-fraud', 'kyc-scam'],
     recognize: [
       "SMS me link aaya — 'KYC update', 'refund', 'parcel' jaisa",
       'Link kholte hi bank jaisi site khuli, login manga',
@@ -122,6 +149,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'kyc-scam',
     title: 'KYC / account-block dhamki',
+    category: 'account',
+    timeNote: 'Agar OTP de diya ho to turant card block karein — phir 1930 par 48 ghante ke andar call karein.',
+    related: ['phishing-link', 'otp-scam'],
     recognize: [
       "SMS/call: 'KYC nahi hua to account band ho jayega'",
       "Link bheja — 'KYC update karein'",
@@ -146,6 +176,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'refund-scam',
     title: 'Refund / recovery agent dhokha',
+    category: 'money-lost',
+    timeNote: 'Recovery agent ko ek bhi rupaya mat dijiye — dusre scam ki report bhi 1930 par karein.',
+    related: ['otp-scam', 'investment-scam'],
     recognize: [
       "Koi kehta hai 'aapka paisa wapas karwa dunga' — pehle fee mangta hai",
       "'Recovery agent' bank/police ka naam leta hai",
@@ -175,6 +208,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'investment-scam',
     title: 'Investment / double-money dhokha',
+    category: 'money-lost',
+    timeNote: 'Aur paisa mat dijiye — 1930 par 48 ghante ke andar report karein, bank ko bhi batayein.',
+    related: ['refund-scam', 'job-scam'],
     recognize: [
       "'Double paisa' ya 'guaranteed profit' ka vaada",
       'Telegram/WhatsApp group me trading tips',
@@ -199,6 +235,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'sim-swap',
     title: 'SIM swap',
+    category: 'account',
+    timeNote: 'SIM block sabse pehla kadam hai — OTP aane ka intezaar mat karein. Phir 1930 par report karein.',
+    related: ['upi-fraud', 'otp-scam'],
     recognize: [
       "Achanak network gayab — 'No service' dikhne laga",
       'OTP aana band ho gaya, par paisa katne laga',
@@ -223,6 +262,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'qr-scam',
     title: 'QR-code scam',
+    category: 'money-lost',
+    timeNote: 'QR scan karte hi paisa kata — turant block karein, phir 1930 par 48 ghante ke andar call karein.',
+    related: ['upi-fraud', 'phishing-link'],
     recognize: [
       'Paise lene ke liye QR scan + PIN manga — paise aane par PIN nahi lagta',
       'QR scan karte hi paisa kat gaya',
@@ -247,6 +289,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'job-scam',
     title: 'Nakli naukri / job offer',
+    category: 'money-lost',
+    timeNote: 'Fee de di ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    related: ['loan-app-scam', 'investment-scam'],
     recognize: [
       "Job ke liye 'registration fee' ya 'training fee' mangi",
       'Work-from-home offer — pehle paisa, phir kaam',
@@ -271,6 +316,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'loan-app-scam',
     title: 'Loan-app dhokha',
+    category: 'money-lost',
+    timeNote: 'Dhamki se darr kar paisa mat dijiye — harassment ki report 1930 par karein.',
+    related: ['job-scam', 'digital-arrest'],
     recognize: [
       'Loan app ne contacts/photos access karke dhamkana shuru kiya',
       "'Pre-approved loan' ke naam par processing fee mangi",
@@ -300,6 +348,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'attempted-fraud',
     title: 'Dhokha hua nahi, koshish hui',
+    category: 'no-loss',
+    timeNote: 'Paise nahi gaye — koi deadline nahi hai. Phir bhi 1930 par report karein, isse dusre log bachte hain.',
+    related: ['otp-scam', 'phishing-link'],
     recognize: [
       'Call/SMS aaya — OTP, link ya paisa manga, par aapne kuch nahi diya',
       'Koi anjaan link ya QR bheja gaya',
@@ -328,6 +379,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'digital-arrest',
     title: 'Digital arrest dhamki',
+    category: 'message',
+    timeNote: 'Digital arrest jaisa koi kaanoon nahi hai — call kaatte hi khatra khatm. Report 1930 par karein.',
+    related: ['loan-app-scam', 'kyc-scam'],
     recognize: [
       "Video call par 'police/CBI' — 'aap giraftar honge'",
       "'Digital arrest' ka naam lekar paisa manga",
@@ -357,6 +411,9 @@ export const GUIDES: SituationGuide[] = [
   {
     id: 'remote-access',
     title: 'Screen-share (AnyDesk) dhokha',
+    category: 'account',
+    timeNote: 'Screen-share band karte hi access tootta hai — turant app hatayein, phir 1930 par report karein.',
+    related: ['fake-customer-care', 'otp-scam'],
     recognize: [
       "'Support' ne AnyDesk/TeamViewer install karwaya",
       'Screen share karte hi OTP/password dikh gaya',

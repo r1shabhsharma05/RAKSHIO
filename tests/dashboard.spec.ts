@@ -207,6 +207,10 @@ test('axe: 0 violations on home and incidents page', async ({ page }) => {
   await page.waitForTimeout(900);
   const listAxe = await new AxeBuilder({ page }).analyze();
   expect(listAxe.violations).toEqual([]);
+  await page.goto('/#/guide');
+  await page.waitForTimeout(900);
+  const guideAxe = await new AxeBuilder({ page }).analyze();
+  expect(guideAxe.violations).toEqual([]);
 });
 
 test('mobile 390: bottom dock, no horizontal scroll', async ({ page }) => {
@@ -386,11 +390,12 @@ test('step 10: language select options are dark and readable in the dark theme',
   await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
   // The reported bug: options rendered light-on-white (white box). The
   // option must carry the dark surface, not the UA white default.
+  // Step 11: the dark surface is true black (#111111 / #fafafa).
   const option = page.locator('.gd-lang select option').first();
   const bg = await option.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe('rgb(36, 28, 22)');
+  expect(bg).toBe('rgb(17, 17, 17)');
   const color = await option.evaluate((el) => getComputedStyle(el).color);
-  expect(color).toBe('rgb(255, 246, 233)');
+  expect(color).toBe('rgb(250, 250, 250)');
 });
 
 test('step 10: calm card never speaks without a tap; Suniye speaks once', async ({ page }) => {
@@ -498,7 +503,9 @@ test('step 10: situation guide list, detail, and shield truth-card link', async 
   await page.getByRole('link', { name: 'OTP dhokha (customer care)' }).click();
   await expect(page.getByRole('heading', { name: 'OTP dhokha (customer care)' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pehle 5 minute' })).toBeVisible();
-  await expect(page.getByText('1930 par call karein')).toBeVisible();
+  // Step 11: the text appears twice on the detail page (golden-hour strip
+  // + the report step) — the first is the strip action.
+  await expect(page.getByText('1930 par call karein').first()).toBeVisible();
 
   await page.goto('/#/shield');
   await page.getByLabel('Message paste karein').fill('Turant OTP batao, warna account band ho jayega');
@@ -521,4 +528,71 @@ test('step 10: theme toggle and search dialog navigate', async ({ page }) => {
   await dialog.getByLabel('Find a section').fill('vault');
   await dialog.getByRole('button', { name: /Evidence Vault/ }).click();
   await expect(page.getByRole('heading', { name: 'Evidence Vault' }).first()).toBeVisible({ timeout: 8000 });
+});
+
+// Step 11: dark = true black; guide page filled; empty states enriched.
+test('step 11: dark theme is true black, light theme unchanged', async ({ page }) => {
+  await page.goto('/#/');
+  await page.waitForTimeout(900);
+  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'dark');
+  const darkBg = await page.locator('.gd-app').evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(darkBg).toBe('rgb(0, 0, 0)');
+  const cardBg = await page.locator('.db-card').first().evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(cardBg).toBe('rgb(17, 17, 17)');
+  const muted = await page.locator('.db-hero-sub').evaluate((el) => getComputedStyle(el).color);
+  expect(muted).toBe('rgb(170, 184, 202)');
+  // The view-head h1 sits outside .db-flow: it must not keep the light
+  // Calm blue (#0c4a6e) on black.
+  const heading = await page.locator('.gd-view-head h1').evaluate((el) => getComputedStyle(el).color);
+  expect(heading).toBe('rgb(248, 250, 252)');
+  // Black-on-black must stay clean for assistive tech too.
+  const darkAxe = await new AxeBuilder({ page }).analyze();
+  expect(darkAxe.violations).toEqual([]);
+  await page.getByRole('button', { name: 'Switch to light theme' }).click();
+  await expect(page.locator('.gd-app')).toHaveAttribute('data-theme', 'light');
+  const lightBg = await page.locator('.gd-app').evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(lightBg).not.toBe('rgb(0, 0, 0)');
+});
+
+test('step 11: guide page is full — strip, search, filters, common, detail', async ({ page }) => {
+  await page.goto('/#/guide');
+  await expect(page.getByRole('heading', { name: 'Sabse pehle ye teen karein' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /1930 par call karein/ }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /Bank ko alert karein/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Portal par complaint karein/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sabse common' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /UPI fraud/ })).toBeVisible();
+  // Search narrows the grid.
+  await page.getByLabel('Situation dhoondhein…').fill('otp');
+  await expect(page.getByRole('link', { name: 'OTP dhokha (customer care)' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Digital arrest dhamki' })).toBeHidden();
+  await page.getByLabel('Situation dhoondhein…').fill('');
+  // Category filter: only the no-loss guide remains.
+  await page.getByRole('button', { name: 'Paisa nahi gaya' }).click();
+  await expect(page.getByRole('link', { name: 'Dhokha hua nahi, koshish hui' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'UPI fraud / bina permission debit' })).toBeHidden();
+  await page.getByRole('button', { name: 'Sabhi' }).click();
+  // Detail: all five sections + time note + related guides.
+  await page.getByRole('link', { name: 'OTP dhokha (customer care)' }).click();
+  await expect(page.getByRole('heading', { name: 'OTP dhokha (customer care)' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pehle 5 minute' })).toBeVisible();
+  await expect(page.getByText('Samay kyun zaroori hai')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Isse jude guides' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Refund / recovery agent dhokha' })).toBeVisible();
+});
+
+test('step 11: empty states are enriched — checklists, helplines, previews', async ({ page }) => {
+  await page.goto('/#/actions');
+  await expect(page.getByRole('heading', { name: 'Kya yaad rakhein' })).toBeVisible();
+  await expect(page.getByText('Portal ki window (24h)')).toBeVisible();
+  await page.goto('/#/bank');
+  await expect(page.getByText('SBI')).toBeVisible();
+  await expect(page.getByRole('link', { name: '1800 11 2211' })).toBeVisible();
+  await page.goto('/#/incidents');
+  await expect(page.getByText('Report Fraud se bolkar ya likhkar batayein')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Pehle Situation Guide padhein' })).toBeVisible();
+  await page.goto('/#/');
+  await expect(page.getByText('Why it matters?')).toBeVisible();
+  await expect(page.getByText('Call 1930 (Now)')).toBeVisible();
 });

@@ -34,7 +34,7 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
     <div className="db-clock-wrap">
       <div className="db-ring" role="timer" aria-live="off" aria-label={over ? 'Golden Hour khatm' : `Golden Hour me bacha samay ${formatHMS(remainingMs)}`}>
         <svg width="144" height="144" viewBox="0 0 144 144" aria-hidden="true">
-          <circle cx="72" cy="72" r={r} fill="none" stroke="#12243a" strokeWidth="10" />
+          <circle cx="72" cy="72" r={r} fill="none" stroke="#262626" strokeWidth="10" />
           <circle
             cx="72"
             cy="72"

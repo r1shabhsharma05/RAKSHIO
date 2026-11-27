@@ -220,6 +220,13 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **Axe/mobile fixes:** coloured buttons got white text that actually wins over the glassy CSS + deeper backgrounds (4.5:1); 390px overflow fixed (status pill, brand subtitle, top-bar Settings link hidden ≤760px — Caregiver pill stays, Settings lives in the bottom dock).
 - Evidence: build green, vitest **32/32**, Playwright dashboard **29/29**, axe 0; light/dark home, empty state, Guide, Settings, mobile screenshots read. NOT deployed — live still serves Step 8.
 
+## Step 11 — true-black dark mode + filled pages (27 Nov)
+
+- **Dark mode is now true black, not blue.** Every dark neutral is black/grey: app `#000000`, cards `#111111`, elevated `#161616`, borders `#262626`; background photo dimmed to near-black with a flat black scrim. Accents (blue primary, red, teal, amber) stay. Light theme unchanged. The page headings were still dim blue (they sit outside the dark flow scope) — now white in dark, pinned by test.
+- **Situation Guide page, filled.** Golden-hour strip first (1930 call, Bank Kit, portal link); search + category filters with counts (Sabhi 14, Paisa gaya 9, Paisa nahi gaya 1, Account 3, Call/Message 1); 3 most common pinned; every guide is a card with category, time note ("Samay kyun zaroori hai" — official windows only), recognition signs, and first step visible before clicking. Detail shows all 5 sections + related guides.
+- **Every empty page, filled.** All 7 gated tools now show a "Kya yaad rakhein" checklist; Bank's empty state previews verified helplines (SBI, HDFC, ICICI, Axis — tel: links). Home's no-incident widgets teach the flow (clock "why", incident-card preview, 5-step Action Plan preview, Vault/Progress/Follow-up explainers). Incidents empty adds how-to-start steps + a Situation Guide link.
+- Evidence: build green, vitest **33/33**, Playwright dashboard **32/32**, axe 0 on home + incidents + guide (light) and dark home; dark/light home, guide list + detail, bank + actions empty states, mobile 390 screenshots read. NOT deployed — live still serves Step 8.
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

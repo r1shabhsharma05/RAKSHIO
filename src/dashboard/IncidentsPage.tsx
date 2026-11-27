@@ -84,10 +84,10 @@ export function IncidentsPage() {
               <div style={{ width: '100%', height: 220 }}>
                 <ResponsiveContainer>
                   <BarChart data={byType} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                    <CartesianGrid stroke="#1e3a5f" vertical={false} />
+                    <CartesianGrid stroke="#262626" vertical={false} />
                     <XAxis dataKey="name" tick={{ fill: '#aab8ca', fontSize: 12 }} interval={0} angle={0} textAnchor="middle" height={36} tickFormatter={(v: string) => v.split(' (')[0]} />
                     <YAxis tick={{ fill: '#aab8ca', fontSize: 12 }} tickFormatter={(v: number) => `₹${Math.round(v / 1000)}k`} />
-                    <Tooltip formatter={(v) => formatINR(Number(v))} contentStyle={{ background: '#0d1b2e', border: '1px solid #1e3a5f', color: '#f8fafc' }} />
+                    <Tooltip formatter={(v) => formatINR(Number(v))} contentStyle={{ background: '#111111', border: '1px solid #262626', color: '#f8fafc' }} />
                     <Bar dataKey="amount" fill="#3159e8" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -154,9 +154,17 @@ export function IncidentsPage() {
         <div className="db-empty">
           <p>{incidents.length === 0 ? 'Abhi koi incident nahi hai.' : 'Is filter me koi incident nahi mila.'}</p>
           {incidents.length === 0 && (
-            <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
-              Report Fraud shuru karein
-            </button>
+            <>
+              <ul className="db-why" style={{ textAlign: 'left' }}>
+                <li>Report Fraud se bolkar ya likhkar batayein — rashi, date, UTR nikal kar incident card banta hai</li>
+                <li>Har incident ka status yahan dikhta hai — Reported se Closed tak</li>
+                <li>Bina mic ke dekhna ho to Judge Mode ya demo data se shuru karein</li>
+              </ul>
+              <button type="button" className="db-btn db-btn-red" onClick={() => navigate('/report')}>
+                Report Fraud shuru karein
+              </button>
+              <Link to="/guide">Pehle Situation Guide padhein</Link>
+            </>
           )}
         </div>
       ) : (

@@ -649,3 +649,102 @@ still serves the Step 8 build; deploy needs his word.
   completion signal (toast / rendered row). An IndexedDB read created
   before a write commits sees the pre-write snapshot; that is not a
   Dexie bug.
+
+## Step 11: complete (2026-11-27) — true-black dark mode + filled guide + filled empty pages
+
+His order: "dark mode me black ho jaye blue nhi or situation guide vale
+page ko bhr de khali lag rha h or jo bhi page khali lag rha h bhr de use
+koi or detail dal de ya or clear krkr dal de usi detail ko ya fir kuch or
+add kr de un pages pe upgarde" — dark mode truly black (not blue), fill
+the Situation Guide page, fill every page that feels empty.
+
+- **Dark = true black (Task 1).** The Step 6 navy (`#06101F` family)
+  and the Glassy warm browns are gone from every dark neutral:
+  `dashboard.css` `:root` → bg `#000000`, sidebar `#0a0a0a`, card
+  `#111111`, elevated `#161616`, border `#262626`; dark `.db-flow`
+  rk vars → `#000000`/`#111111`/`#161616`, calm card `#161616`, toast
+  text `#000000`; glassy dark block in `glassy-dashboard.tsx` →
+  neutral blacks (`--gd-surface #0a0a0a`, `--gd-card rgb(17 17 17 /
+  58%)`, `--gd-rail rgb(10 10 10 / 62%)`, `--gd-ink #fafafa`,
+  `--gd-muted #d4d4d4`, `--gd-focus #f5f5f5`); background photo dimmed
+  (`brightness(.30) saturate(.45)`) + a FLAT black scrim
+  (`rgb(0 0 0 / 62%)`, no gradient) over it, so the photo is a faint
+  texture only. Chart stragglers fixed too: Golden Hour ring track
+  `#262626`, Incidents chart grid `#262626`, tooltip `#111111`/`#262626`.
+  Accents stay — blue primary, red emergency, teal, amber, the shield
+  logo, the amber honest banner. Light theme UNCHANGED (verified: app
+  background is not black in light). Catch found by reading the
+  screenshots: the view-head h1 ("Home", "Action Plan"…) rendered in
+  dim blue — it sits outside `.db-flow`, so it kept the light Calm
+  `--rk-fg` (`#0c4a6e`, computed `rgb(12, 74, 110)`). Fixed with
+  `.gd-app[data-theme="dark"] .gd-view-head h1 { color: var(--db-text) }`
+  and pinned by the dark test (expects `rgb(248, 250, 252)`).
+- **Situation Guide page, filled (Task 2).** Engine fields added to
+  every guide (`category`, `timeNote`, `related`, `common?`): 9
+  money-lost, 1 no-loss, 3 account, 1 message; time notes use only the
+  official windows (1930 ≤48h, portal ≤24h, bank ≤3 working days);
+  related links point at real guide ids (vitest asserts validity +
+  exactly 3 commons: upi-fraud, otp-scam, fake-customer-care). The page
+  (`GuidePage.tsx`, wide `.db-flow-wide` grid) now has: a "Sabse pehle
+  ye teen karein" strip (1930 tel: link, Bank Kit link, cybercrime.gov.in
+  link — on list AND detail); search over title + recognition + first-5
+  steps; filter chips with counts (Sabhi 14, Paisa gaya 9, Paisa nahi
+  gaya 1, Account 3, Call/Message 1); the 3 most common as pinned
+  buttons (buttons, not links — the grid keeps the only link per title,
+  which the Step 10 test clicks by name); every guide as a card with
+  category chip, time note ("Samay kyun zaroori hai", amber left bar),
+  first 2 recognition signs, and the first first-5-minutes step +
+  "Poora guide padhein". Detail shows all 5 sections + time note +
+  related guides. 20 new i18n keys (en/hi/hg) for the strip, search,
+  chips, and headings; guide content stays Hinglish. One CSS fix from
+  the screenshots: in the narrow `.db-flow` detail view the strip
+  stacks vertically (3× ~8rem columns wrapped "1930 par call karein"
+  mid-phrase).
+- **Every empty-looking page, filled (Task 3).** `NeedsIncident` now
+  takes `tips: string[]` + optional `extra`: every gated tool shows a
+  "Kya yaad rakhein" checklist (3 real tips each — deadlines, what to
+  keep ready, what never happens automatically). Bank's empty state
+  adds a verified-helpline preview (SBI 1800 11 2211, HDFC 1800 1600,
+  ICICI 1800 1080, Axis 1860 419 5555 — tel: links, same numbers the kit
+  uses; full list of 10 lives in the kit). Home's no-incident widgets
+  now teach the flow: clock shows the "Why it matters?" bullets,
+  Current Incident lists what the card will hold, Action Plan previews
+  the 5 steps (same titles as the live plan), Snapshot/Vault/Progress/
+  Follow-up each explain what they will show (shared `CLOCK_WHY` /
+  `PLAN_PREVIEW` consts — the live branches reuse them, no copy drift).
+  Incidents empty adds a 3-step "how to start" list + a "Pehle Situation
+  Guide padhein" link. Settings (5 sections) and the report flow were
+  already full — untouched. No feature removed; all 12 routes, engines,
+  Glassy shell, 3 languages, tap-only TTS, mic fixes intact.
+
+Verification: build green (`tsc -b && vite build`, 2.54s); vitest
+**33/33** (8 files, +1 new guide-fields test); Playwright
+dashboard **32/32** (2.1m; 3 new Step 11 tests: dark-is-black incl. dark
+axe 0 + h1 white, guide full incl. search/filter/detail, enriched empty
+states). Two Step 10 tests needed updates for intentional changes: the
+dark option colours are now `#111111`/`#fafafa` (were `#241c16`/
+`#fff6e9`), and the guide-detail '1930 par call karein' text now
+appears twice (strip + report step) so the assertion uses `.first()`.
+Axe 0 on home + incidents + guide (light, in-suite) and on dark home
+(in the Step 11 dark test). First-load index chunk 919.00 kB (was
+905,113 bytes Step 10 — guide grid + empty-state copy). Screenshots
+read (`tests/shots-local/step11-*.png`): home 1440 dark (true black,
+white heading) + light, guide list + detail dark, bank + actions empty
+states dark, home + guide 390 dark (no overflow, bottom dock labelled).
+Secret scan clean. NOT deployed — live still serves the Step 8 build;
+deploy needs his word.
+
+## Rulings (Step 11)
+
+- Dark theme rule: every neutral must be a neutral black/grey — no
+  blue-tinted and no warm-tinted surface survives in dark. Accents
+  (blue primary, red, teal, amber) are meaning, not tint, and stay.
+- The view-head h1 lives OUTSIDE `.db-flow`, so the dark flow's
+  `--rk-*` re-seat never reaches it — it kept the light `--rk-fg`.
+  Any future heading outside `.db-flow`/`.db-card` needs the same
+  explicit dark rule. (The suite's dark test now pins its colour.)
+- Common guides on the list are buttons, not links: the grid must keep
+  exactly one link per guide title (the Step 10 test clicks it by
+  name; a duplicate would break strict mode).
+- The golden strip stacks vertically inside `.db-flow` (detail view)
+  and at ≤767px — three narrow columns wrap labels mid-phrase.

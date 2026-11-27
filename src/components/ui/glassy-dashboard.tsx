@@ -70,34 +70,37 @@ const dashboardStyles = `
   font-weight: 550;
   font-variant-numeric: tabular-nums;
 }
+/* Step 11: dark = TRUE BLACK, not blue. Every neutral is a neutral
+   black/grey — the warm browns are gone. Accents (coral/teal/ochre,
+   the RAKSHIO blue primary) stay. */
 .gd-app[data-theme="dark"] {
-  --gd-ink: #fff6e9;
-  --gd-muted: #e5d5c7;
-  --gd-line: rgb(243 221 198 / 19%);
-  --gd-grid: rgb(243 221 198 / 19%);
-  --gd-rim: rgb(255 236 212 / 31%);
-  --gd-edge-light: rgb(255 242 225 / 49%);
-  --gd-edge-shade: rgb(11 6 5 / 30%);
-  --gd-gloss: rgb(255 237 213 / 13%);
-  --gd-frame: rgb(42 31 29 / 52%);
-  --gd-rail: rgb(45 32 30 / 59%);
-  --gd-card: rgb(47 36 34 / 53%);
-  --gd-card-light: rgb(106 88 81 / 30%);
-  --gd-raised: rgb(80 67 61 / 82%);
-  --gd-inner: rgb(78 61 56 / 49%);
-  --gd-surface: #3b302c;
-  --gd-track: rgb(245 226 212 / 16%);
-  --gd-primary: #f3ddca;
-  --gd-primary-ink: #231a16;
-  --gd-pick: #f9eee0;
-  --gd-pick-ink: #241b17;
+  --gd-ink: #fafafa;
+  --gd-muted: #d4d4d4;
+  --gd-line: rgb(255 255 255 / 16%);
+  --gd-grid: rgb(255 255 255 / 16%);
+  --gd-rim: rgb(255 255 255 / 28%);
+  --gd-edge-light: rgb(255 255 255 / 42%);
+  --gd-edge-shade: rgb(0 0 0 / 45%);
+  --gd-gloss: rgb(255 255 255 / 7%);
+  --gd-frame: rgb(0 0 0 / 55%);
+  --gd-rail: rgb(10 10 10 / 62%);
+  --gd-card: rgb(17 17 17 / 58%);
+  --gd-card-light: rgb(38 38 38 / 32%);
+  --gd-raised: rgb(22 22 22 / 85%);
+  --gd-inner: rgb(22 22 22 / 52%);
+  --gd-surface: #0a0a0a;
+  --gd-track: rgb(255 255 255 / 14%);
+  --gd-primary: #fafafa;
+  --gd-primary-ink: #000000;
+  --gd-pick: #fafafa;
+  --gd-pick-ink: #000000;
   --gd-coral: #ff9177;
   --gd-teal: #75dac0;
   --gd-ochre: #f1be58;
-  --gd-graph-ink: #e7d9cd;
-  --gd-focus: #f9bf9b;
-  --gd-dark-shadow: 10 4 3;
-  background: #40322b;
+  --gd-graph-ink: #e5e5e5;
+  --gd-focus: #f5f5f5;
+  --gd-dark-shadow: 0 0 0;
+  background: #000000;
   color-scheme: dark;
 }
 
@@ -129,7 +132,11 @@ const dashboardStyles = `
   background: linear-gradient(116deg, rgb(73 48 37 / 35%), transparent 43%, rgb(162 101 63 / 24%) 76%, transparent 100%),
     linear-gradient(0deg, rgb(53 33 25 / 34%), transparent 58%);
 }
-.gd-app[data-theme="dark"] .gd-background { filter: sepia(.15) saturate(.75) brightness(.61); }
+/* Step 11: in dark mode the photo is dimmed to near-black and a flat
+   black scrim sits over it, so the whole theme reads black, not blue.
+   No gradient — a flat overlay, so the photo is a faint texture only. */
+.gd-app[data-theme="dark"] .gd-background { filter: brightness(.30) saturate(.45); }
+.gd-app[data-theme="dark"]::before { background: rgb(0 0 0 / 62%); }
 .gd-surround {
   inline-size: min(calc(100% - 100px), 1380px);
   margin-inline: auto;

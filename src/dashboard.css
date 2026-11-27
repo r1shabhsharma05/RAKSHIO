@@ -8,12 +8,15 @@
    light photo background. */
 
 /* ---------- palette ---------- */
+/* Step 11: dark = TRUE BLACK. The old navy (#06101F family) is gone —
+   every neutral is black/grey. Accents (blue primary, red, teal, amber)
+   stay: they are meaning, not tint. */
 :root {
-  --db-bg: #06101f;
-  --db-sidebar: #091629;
-  --db-card: #0d1b2e;
-  --db-elevated: #12243a;
-  --db-border: #1e3a5f;
+  --db-bg: #000000;
+  --db-sidebar: #0a0a0a;
+  --db-card: #111111;
+  --db-elevated: #161616;
+  --db-border: #262626;
   --db-primary: #3159e8;
   --db-primary-soft: #60a5fa;
   --db-red: #ef4444;
@@ -52,6 +55,10 @@
   margin: 0 0 1rem;
 }
 
+/* Step 11: the view-head h1 sits outside .db-flow, so it kept the light
+   Calm --rk-fg (#0c4a6e) — a dim blue on black. In dark it is plain white. */
+.gd-app[data-theme="dark"] .gd-view-head h1 { color: var(--db-text); }
+
 /* Top-bar pills: caregiver badge + offline status. */
 .gd-pill {
   display: inline-flex; align-items: center; gap: 0.375rem;
@@ -72,7 +79,7 @@
    Windows Chrome (white box, barely-visible text). Options get the
    component surface explicitly, in both themes. */
 .gd-app select option { background: #f6ece2; color: #25201e; }
-.gd-app[data-theme="dark"] select option { background: #241c16; color: #fff6e9; }
+.gd-app[data-theme="dark"] select option { background: #111111; color: #fafafa; }
 
 /* The ask pill's 240px min-width pushes the 390px top bar 1px past
    the viewport (brand + 240px pill > 346px bar). Let it shrink. The
@@ -330,11 +337,63 @@ select.db-input { appearance: auto; }
   flex-direction: column;
   gap: 1rem;
 }
+/* Step 11: wide pages (guide list) get room for a real grid. */
+.db-flow-wide {
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+/* Golden-hour strip: the three first actions, always visible on guide. */
+.db-golden-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+/* In the narrow flow (guide detail) the three actions stack — three
+   8rem columns wrap the 1930 label mid-phrase. */
+.db-flow .db-golden-strip { grid-template-columns: 1fr; }
+.db-golden-action {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  background: var(--db-elevated); border: 1px solid var(--db-border);
+  border-radius: 0.75rem; padding: 0.875rem 1rem;
+  text-decoration: none; color: var(--db-text);
+}
+.db-golden-action strong { font-size: 1.0625rem; display: flex; align-items: center; gap: 0.375rem; }
+.db-golden-action span { font-size: 0.875rem; color: var(--db-muted); line-height: 1.45; }
+.db-golden-action.call { border-color: var(--db-red); }
+.db-golden-action.call strong { color: var(--db-red-soft); }
+/* Most-common row: buttons, not links — the guide grid below keeps the
+   only link per title (the Step 10 test clicks it by name). */
+.db-common-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.db-common-btn {
+  text-align: left; background: var(--db-card); border: 1px solid var(--db-border);
+  border-radius: var(--db-radius); padding: 1rem; cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.375rem; color: var(--db-text);
+}
+.db-common-btn strong { font-size: 1.0625rem; }
+.db-common-btn span { font-size: 0.9375rem; line-height: 1.45; }
+.db-common-btn .db-muted { font-size: 0.875rem; }
+/* Guide cards: recognition + time note visible before any click. */
+.db-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.db-guide-card ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.db-guide-card li { font-size: 1rem; line-height: 1.5; color: var(--db-text); }
+.db-guide-card h3 a { text-decoration: none; color: var(--db-text); }
+.db-guide-card h3 a:hover { text-decoration: underline; }
+.db-time-note {
+  display: flex; gap: 0.5rem; align-items: flex-start;
+  border-left: 3px solid var(--db-amber); padding-left: 0.75rem;
+  color: var(--db-muted); font-size: 0.9375rem; line-height: 1.5;
+}
+.db-time-note svg { flex: none; margin-top: 0.125rem; color: var(--db-amber-soft); }
+/* Enriched empty states (Step 11): a short "what to remember" checklist
+   under the preview, so no gated page is a bare card. */
+.db-tips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.db-tips li { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 1rem; line-height: 1.5; color: var(--db-text); }
+.db-tips li::before { content: '✓'; color: var(--db-teal-soft); font-weight: 800; flex: none; }
 .gd-app[data-theme="dark"] .db-flow {
-  --rk-bg: #06101f;
+  --rk-bg: #000000;
   --rk-fg: #f8fafc;
-  --rk-card: #0d1b2e;
-  --rk-muted: #12243a;
+  --rk-card: #111111;
+  --rk-muted: #161616;
   --rk-primary: #60a5fa;
   --rk-secondary: #38bdf8;
   --rk-accent: #34d399;
@@ -346,11 +405,11 @@ select.db-input { appearance: auto; }
 .gd-app[data-theme="dark"] .db-flow .rk-primary-btn { background: var(--db-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn { background: var(--db-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn.listening { background: #b91c1c; }
-.gd-app[data-theme="dark"] .db-flow .calm-card { background: #12243a; }
+.gd-app[data-theme="dark"] .db-flow .calm-card { background: #161616; }
 .gd-app[data-theme="dark"] .db-flow .deadline-chip.overdue { background: #450a0a; }
 .gd-app[data-theme="dark"] .db-flow .deadline-chip.soon { background: #451a03; }
-.gd-app[data-theme="dark"] .db-flow .toast { background: #f8fafc; color: #06101f; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5); }
-.gd-app[data-theme="dark"] .db-flow .toast-close { color: #06101f; }
+.gd-app[data-theme="dark"] .db-flow .toast { background: #f8fafc; color: #000000; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5); }
+.gd-app[data-theme="dark"] .db-flow .toast-close { color: #000000; }
 .gd-app[data-theme="dark"] .db-flow .shield-danger { border-color: #f87171; }
 .gd-app[data-theme="dark"] .db-flow .shield-danger h2 { color: #f87171; }
 .gd-app[data-theme="dark"] .db-flow .shield-suspicious { border-color: #fbbf24; }
@@ -386,6 +445,10 @@ select.db-input { appearance: auto; }
   .db-tiles { grid-template-columns: 1fr; }
   .db-ring { width: 7rem; height: 7rem; }
   .db-ring .ring-num { font-size: 1.25rem; }
+  /* Step 11: guide grids collapse to one column on mobile. */
+  .db-guide-grid { grid-template-columns: 1fr; }
+  .db-golden-strip { grid-template-columns: 1fr; }
+  .db-common-row { grid-template-columns: 1fr; }
   /* Settings rows stack on mobile: the fixed-width selects (w-48/w-56)
      overflow 390px by 10px in a row layout. */
   .db-setting-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
