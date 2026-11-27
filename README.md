@@ -1,13 +1,32 @@
-# RAKSHIO — Fraud Golden Hour Response System
+<div align="center">
 
-Voice-first cyber fraud recovery companion for India. After UPI fraud, an
-unauthorised debit, a fake customer-care call or an OTP scam, the victim
-speaks what happened in Hindi/Hinglish — RAKSHIO extracts the facts,
-confirms them back, and walks the victim through the first hour: stop the
-loss, call 1930, notify the bank, complete the portal complaint.
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=26&pause=1000&color=0369A1&center=true&vCenter=true&width=600&lines=RAKSHIO;Fraud+Golden+Hour+Response+System;Panic+me+bhi%2C+sahi+kadam.)](https://bright-boba-9edf34.netlify.app)
+
+**Voice-first cyber fraud recovery companion for India.**
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://bright-boba-9edf34.netlify.app)
+[![Tests](https://img.shields.io/badge/vitest-26%2F26-4B8BF5?style=for-the-badge)](https://github.com/r1shabhsharma05/RAKSHIO)
+[![Playwright](https://img.shields.io/badge/playwright-9%2F9-2EAD33?style=for-the-badge)](https://github.com/r1shabhsharma05/RAKSHIO)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://github.com/r1shabhsharma05/RAKSHIO)
+[![Zero backend](https://img.shields.io/badge/backend-none-0369A1?style=for-the-badge)](https://github.com/r1shabhsharma05/RAKSHIO)
+
+### 👉 Try it live: [bright-boba-9edf34.netlify.app](https://bright-boba-9edf34.netlify.app)
+
+</div>
+
+After UPI fraud, an unauthorised debit, a fake customer-care call or an OTP
+scam, the victim speaks what happened in Hindi/Hinglish — RAKSHIO extracts
+the facts, confirms them back, and walks the victim through the first hour:
+stop the loss, call 1930, notify the bank, complete the portal complaint.
 
 Built for Scaler × Wispr Flow **"India Runs on Voice"** — Round 2, Track 5
 (Everyday Access). Solo entry, Rishabh.
+
+## Screenshots
+
+| Panic | Incident | Actions |
+|---|---|---|
+| ![Panic screen — giant mic, 1930 call button](tests/shots/panic.png) | ![Incident card — confirmed facts, timeline](tests/shots/incident.png) | ![Actions — Golden Hour Clock, action queue](tests/shots/actions.png) |
 
 ## What RAKSHIO does NOT do
 
@@ -133,7 +152,7 @@ without it the app silently offers Text Mode instead of a dead mic button.
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).
-- Deploy, GitHub repo, submission — all need Rishabh's word.
+- Dashboard submission (30 Nov 11:59 pm) — needs Rishabh's word.
 
 ## Architecture
 
