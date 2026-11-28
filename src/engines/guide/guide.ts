@@ -3,7 +3,7 @@
 // fixed, reviewed list of steps for one fraud situation. The extractor and
 // the Shield map onto these guides; nothing here is generated or guessed.
 //
-// Numbers used are only the established official windows (1930 ≤48h,
+// Numbers used are only the established official windows (1930 turant — pehle 4 ghante me sabse behtar,
 // portal ≤24h, bank ≤3 working days) — never recovery promises.
 export type GuideCategory = 'money-lost' | 'no-loss' | 'account' | 'message';
 
@@ -13,7 +13,7 @@ export interface SituationGuide {
   // Filter category: money lost, no loss (attempt only), account access,
   // or a threatening call/message.
   category: GuideCategory;
-  // Why the first minutes matter — only the official windows (1930 ≤48h,
+  // Why the first minutes matter — only the official windows (1930 turant — pehle 4 ghante me sabse behtar,
   // portal ≤24h, bank ≤3 working days), never a recovery promise.
   timeNote: string;
   // Other guides that often follow this one (e.g. OTP scam → recovery scam).
@@ -27,7 +27,7 @@ export interface SituationGuide {
   evidence: string[];
 }
 
-const REPORT_1930 = '1930 par call karein — 48 ghante ke andar, jitni jaldi ho sake';
+const REPORT_1930 = '1930 par call karein — turant, pehle 4 ghante me sabse behtar';
 const REPORT_PORTAL = 'cybercrime.gov.in par 24 ghante me complaint likhein';
 const REPORT_BANK = 'Bank me likhit dispute dein — 3 working days ke andar';
 const REPORT_ACK = 'Ack number sambhal kar rakhein — har jagah wahi kaam aayega';
@@ -37,7 +37,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'upi-fraud',
     title: 'UPI fraud / bina permission debit',
     category: 'money-lost',
-    timeNote: '1930 par 48 ghante ke andar call karein — jitni jaldi, utni behtar. Bank dispute 3 working days ke andar.',
+    timeNote: 'turant 1930 par call karein — pehle 4 ghante me sabse behtar. Bank dispute 3 working days ke andar.',
     related: ['qr-scam', 'phishing-link'],
     common: true,
     recognize: [
@@ -67,7 +67,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'otp-scam',
     title: 'OTP dhokha (customer care)',
     category: 'money-lost',
-    timeNote: 'OTP share hote hi scammer ke paas access hai — turant block karein, phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'OTP share hote hi scammer ke paas access hai — turant block karein, phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['refund-scam', 'fake-customer-care'],
     common: true,
     recognize: [
@@ -95,7 +95,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'fake-customer-care',
     title: 'Nakli customer care call',
     category: 'money-lost',
-    timeNote: 'Screen-share app turant hatayein — phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Screen-share app turant hatayein — phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['remote-access', 'otp-scam'],
     common: true,
     recognize: [
@@ -123,7 +123,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'phishing-link',
     title: 'Fake link / SMS',
     category: 'money-lost',
-    timeNote: 'Login karte hi paisa kat sakta hai — turant password badlein, phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Login karte hi paisa kat sakta hai — turant password badlein, phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['upi-fraud', 'kyc-scam'],
     recognize: [
       "SMS me link aaya — 'KYC update', 'refund', 'parcel' jaisa",
@@ -150,7 +150,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'kyc-scam',
     title: 'KYC / account-block dhamki',
     category: 'account',
-    timeNote: 'Agar OTP de diya ho to turant card block karein — phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Agar OTP de diya ho to turant card block karein — phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['phishing-link', 'otp-scam'],
     recognize: [
       "SMS/call: 'KYC nahi hua to account band ho jayega'",
@@ -209,7 +209,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'investment-scam',
     title: 'Investment / double-money dhokha',
     category: 'money-lost',
-    timeNote: 'Aur paisa mat dijiye — 1930 par 48 ghante ke andar report karein, bank ko bhi batayein.',
+    timeNote: 'Aur paisa mat dijiye — turant 1930 par report karein — pehle 4 ghante me sabse behtar, bank ko bhi batayein.',
     related: ['refund-scam', 'job-scam'],
     recognize: [
       "'Double paisa' ya 'guaranteed profit' ka vaada",
@@ -263,7 +263,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'qr-scam',
     title: 'QR-code scam',
     category: 'money-lost',
-    timeNote: 'QR scan karte hi paisa kata — turant block karein, phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'QR scan karte hi paisa kata — turant block karein, phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['upi-fraud', 'phishing-link'],
     recognize: [
       'Paise lene ke liye QR scan + PIN manga — paise aane par PIN nahi lagta',
@@ -290,7 +290,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'job-scam',
     title: 'Nakli naukri / job offer',
     category: 'money-lost',
-    timeNote: 'Fee de di ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Fee de di ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['loan-app-scam', 'investment-scam'],
     recognize: [
       "Job ke liye 'registration fee' ya 'training fee' mangi",
@@ -440,7 +440,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'courier-scam',
     title: 'Parcel / courier dhokha',
     category: 'money-lost',
-    timeNote: 'Parcel ke naam par paisa gaya ho to turant bank ko batayein — phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Parcel ke naam par paisa gaya ho to turant bank ko batayein — phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['phishing-link', 'delivery-fee-scam'],
     common: true,
     recognize: [
@@ -468,7 +468,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'lottery-scam',
     title: 'Lottery / prize dhokha',
     category: 'money-lost',
-    timeNote: 'Prize ke naam par fee de di ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Prize ke naam par fee de di ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['refund-scam', 'phishing-link'],
     recognize: [
       "'Aapne lottery jeeti hai' — par aapne kabhi ticket kharida hi nahi",
@@ -495,7 +495,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'electricity-scam',
     title: 'Bijli bill / connection kaatne ki dhamki',
     category: 'money-lost',
-    timeNote: 'Bill ke naam par paisa gaya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Bill ke naam par paisa gaya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['kyc-scam', 'phishing-link'],
     recognize: [
       "SMS: 'aaj raat bijli kaat di jayegi — bill update karein'",
@@ -522,7 +522,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'matrimonial-scam',
     title: 'Shaadi / matrimonial dhokha',
     category: 'money-lost',
-    timeNote: 'Shaadi ke naam par paisa gaya ho to saboot sambhalein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Shaadi ke naam par paisa gaya ho to saboot sambhalein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['romance-scam', 'refund-scam'],
     recognize: [
       'Matrimonial site par "rishta" — jaldi shaadi ka dabav',
@@ -549,7 +549,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'romance-scam',
     title: 'Romance / dating dhokha',
     category: 'money-lost',
-    timeNote: 'Bharose me aakar paisa bhej diya ho to saboot sambhalein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Bharose me aakar paisa bhej diya ho to saboot sambhalein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['matrimonial-scam', 'sextortion-scam'],
     recognize: [
       'Online "rishta" — milne se pehle hi paisa manga',
@@ -635,7 +635,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'card-reward-scam',
     title: 'Card reward-points / card-block dhokha',
     category: 'money-lost',
-    timeNote: 'Reward-points ke naam par OTP de diya ho to turant card block karein — phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Reward-points ke naam par OTP de diya ho to turant card block karein — phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['kyc-scam', 'otp-scam'],
     recognize: [
       "SMS/call: 'aapke reward points expire ho rahe hain'",
@@ -662,7 +662,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'olx-buyer-scam',
     title: 'OLX buyer dhokha',
     category: 'money-lost',
-    timeNote: 'Saman bechte hue paisa gaya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Saman bechte hue paisa gaya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['upi-collect-scam', 'qr-scam'],
     recognize: [
       'Buyer turant deal pakki karta hai — bina dekhe',
@@ -689,7 +689,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'upi-collect-scam',
     title: 'UPI collect-request dhokha',
     category: 'money-lost',
-    timeNote: 'Collect request approve karte hi paisa kata — turant block karein, phir 1930 par 48 ghante ke andar call karein.',
+    timeNote: 'Collect request approve karte hi paisa kata — turant block karein, phir turant 1930 par call karein — pehle 4 ghante me sabse behtar.',
     related: ['upi-fraud', 'olx-buyer-scam'],
     recognize: [
       'UPI app me "collect request" aayi — paise aane ke bajaye jaane wali thi',
@@ -716,7 +716,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'delivery-fee-scam',
     title: 'Delivery fee / address-update dhokha',
     category: 'money-lost',
-    timeNote: 'Delivery fee ke naam par paisa gaya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Delivery fee ke naam par paisa gaya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['courier-scam', 'phishing-link'],
     recognize: [
       "SMS: 'address galat hai — ₹25 fee bhar kar update karein'",
@@ -743,7 +743,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'crypto-scam',
     title: 'Crypto / fake trading-app dhokha',
     category: 'money-lost',
-    timeNote: 'Aur paisa mat dijiye — 1930 par 48 ghante ke andar report karein, bank ko bhi batayein.',
+    timeNote: 'Aur paisa mat dijiye — turant 1930 par report karein — pehle 4 ghante me sabse behtar, bank ko bhi batayein.',
     related: ['investment-scam', 'refund-scam'],
     recognize: [
       "'Crypto me guaranteed profit' — fake trading app",
@@ -770,7 +770,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'visa-scam',
     title: 'Nakli visa / immigration agent',
     category: 'money-lost',
-    timeNote: 'Visa ke naam par paisa gaya ho to saboot sambhalein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Visa ke naam par paisa gaya ho to saboot sambhalein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['job-scam', 'refund-scam'],
     recognize: [
       "'Visa guarantee' — bina interview ke",
@@ -797,7 +797,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'rental-scam',
     title: 'Nakli rental / property listing',
     category: 'money-lost',
-    timeNote: 'Advance de diya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Advance de diya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['olx-buyer-scam', 'upi-fraud'],
     recognize: [
       'Bazaar se bahut sasta flat/room — "turant token bharo"',
@@ -856,7 +856,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'task-scam',
     title: 'Part-time task dhokha (like/rating)',
     category: 'money-lost',
-    timeNote: 'Task ke naam par paisa gaya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Task ke naam par paisa gaya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['job-scam', 'investment-scam'],
     common: true,
     recognize: [
@@ -884,7 +884,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'scholarship-scam',
     title: 'Nakli admission / scholarship dhokha',
     category: 'money-lost',
-    timeNote: 'Admission/scholarship ke naam par paisa gaya ho to saboot sambhalein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Admission/scholarship ke naam par paisa gaya ho to saboot sambhalein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['job-scam', 'refund-scam'],
     recognize: [
       "'Scholarship mil gayi — processing fee bharo'",
@@ -911,7 +911,7 @@ export const GUIDES: SituationGuide[] = [
     id: 'travel-scam',
     title: 'Nakli travel booking dhokha',
     category: 'money-lost',
-    timeNote: 'Booking ke naam par paisa gaya ho to turant bank ko batayein — 1930 par 48 ghante ke andar report karein.',
+    timeNote: 'Booking ke naam par paisa gaya ho to turant bank ko batayein — turant 1930 par report karein — pehle 4 ghante me sabse behtar.',
     related: ['olx-buyer-scam', 'refund-scam'],
     recognize: [
       'Saste flight/hotel deal — "aaj hi book karo"',
@@ -946,6 +946,11 @@ const FRAUD_TYPE_TO_GUIDE: Record<string, string> = {
   'qr-scam': 'qr-scam',
   'investment-scam': 'investment-scam',
   'job-scam': 'job-scam',
+  // Step 21 (#11): new extractor types point at their own guides.
+  'courier-scam': 'courier-scam',
+  'task-scam': 'task-scam',
+  'crypto-scam': 'crypto-scam',
+  'loan-app-scam': 'loan-app-scam',
   'phishing-link': 'phishing-link',
   'unauthorised-debit': 'upi-fraud',
 };

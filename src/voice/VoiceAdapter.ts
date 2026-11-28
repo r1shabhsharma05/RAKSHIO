@@ -142,12 +142,34 @@ export async function requestMicAccess(): Promise<MicAccess> {
   }
 }
 
+// Step 21 (T5): TTS used to set u.lang and hope — on a device with no
+// Hindi voice installed, the utterance came out in the wrong voice (or
+// not at all) with no fallback. Pick the best available voice: exact
+// language match first, then same language family (hi-* for hi-IN), then
+// the browser default. Pure — unit-tested with fake voice lists.
+export function pickVoice(
+  voices: readonly { lang: string; default?: boolean }[],
+  lang: string,
+): { lang: string; default?: boolean } | null {
+  const want = lang.toLowerCase();
+  const family = want.split('-')[0];
+  return (
+    voices.find((v) => v.lang.toLowerCase() === want) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith(`${family}-`)) ??
+    voices.find((v) => v.default) ??
+    voices[0] ??
+    null
+  );
+}
+
 export function speak(text: string, opts: { rate?: number; lang?: string } = {}): void {
   if (!ttsSupported()) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = opts.lang ?? 'hi-IN';
   u.rate = opts.rate ?? 1;
+  const voice = pickVoice(window.speechSynthesis.getVoices(), u.lang);
+  if (voice) u.voice = voice as SpeechSynthesisVoice;
   window.speechSynthesis.speak(u);
 }
 

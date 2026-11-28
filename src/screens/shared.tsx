@@ -73,6 +73,10 @@ export function ScreenSkeleton({ label, hint }: { label: string; hint?: string }
 
 // Text field with an optional mic toggle. The mic only appears when the
 // browser actually supports recognition — never a dead mic button.
+// Step 21 (T1/P5): when recognition is missing, the field says WHY
+// (Chrome-only, HTTPS-only) instead of hiding the mic silently; and the
+// mic follows the user's chosen speech language (settings.speechLang,
+// synced to the UI language) instead of always listening in Hindi.
 export function VoiceInput({
   value,
   onChange,
@@ -84,6 +88,8 @@ export function VoiceInput({
   placeholder: string;
   label: string;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
+  const speechLang = useDashboard((s) => s.settings.speechLang);
   const supported = recognitionSupported();
   const [listening, setListening] = useState(false);
   const listenerRef = useRef<{ start: () => void; stop: () => void } | null>(null);
@@ -97,7 +103,7 @@ export function VoiceInput({
       return;
     }
     try {
-      const l = createListener('hi-IN', {
+      const l = createListener(speechLang, {
         onFinal: (t) => onChange(t),
         onInterim: () => undefined,
         onError: () => setListening(false),
@@ -121,11 +127,13 @@ export function VoiceInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
       />
-      {supported && (
+      {supported ? (
         <button type="button" className="mic-btn mic-btn-sm" onClick={toggleListen} aria-pressed={listening}>
           <MicIcon size={28} />
           <span className="mic-label">{listening ? 'Rukiye' : 'Boliye'}</span>
         </button>
+      ) : (
+        <p className="step2-note">{t(lang, 'voiceInputUnsupported')}</p>
       )}
     </div>
   );

@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import type { StoredIncident } from '../state/store';
 import { deadlineStatuses } from '../engines/orchestrator/clock';
+import { loadAck } from '../engines/ack/ack';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
 
 // Golden Hour = the first 60 minutes after the fraud. The ring shows how
 // much of that hour is left, ticking every second. Past the hour it says
-// so plainly — the 48h/24h/72h deadlines still run underneath (see the
+// so plainly — the 4h/24h deadlines still run underneath (see the
 // deadline chips), so the victim is never told the window is closed.
+// Step 21 (P1): when the fraud time is unknown, there is NO ring and NO
+// countdown — the old code fell back to createdAt (report time), so a
+// 2-day-old fraud showed a fresh 60-minute countdown. Unknown time shows
+// "report now" instead. Step 21 (P2): the portal chip is anchored to the
+// 1930 call time once an ack is saved.
 const GOLDEN_HOUR_MS = 60 * 60_000;
 
 function formatHMS(ms: number): string {
@@ -26,8 +32,10 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
     return () => window.clearInterval(t);
   }, []);
 
-  const start = incident.fraudAt ? new Date(incident.fraudAt) : new Date(incident.createdAt);
-  const elapsedMs = now.getTime() - start.getTime();
+  // P1: no fraud time, no countdown — never restart the ring from
+  // report time. Rendered below as the unknown-time state.
+  const start = incident.fraudAt ? new Date(incident.fraudAt) : null;
+  const elapsedMs = start ? now.getTime() - start.getTime() : 0;
   const remainingMs = GOLDEN_HOUR_MS - elapsedMs;
   const over = remainingMs <= 0;
   const frac = Math.max(0, Math.min(1, remainingMs / GOLDEN_HOUR_MS));
@@ -36,17 +44,35 @@ export function GoldenHourRing({ incident }: { incident: StoredIncident }) {
   // khuli hain" contradicts the "Samay khatm" chip. Say which windows are
   // open and what to do next — never invent a new deadline.
   // Step 16 (bug 2): this body copy follows the selected language.
-  const statuses = deadlineStatuses(start, now);
+  // P2: portal anchored to the saved 1930 call time (this incident's ack).
+  const ack = loadAck();
+  const calledAt = start && ack?.incidentId === incident.id && ack.calledAt ? new Date(ack.calledAt) : null;
+  const statuses = start ? deadlineStatuses(start, now, calledAt) : [];
   const portal = statuses.find((s) => s.id === 'portal');
   const helpline = statuses.find((s) => s.id === '1930');
+  // Step 21 (P2 fallout): 1930 overdue + portal still pending (no call
+  // yet) is its own state — the old "still open" line lied about 1930.
   const overText =
     portal?.state === 'overdue' && helpline?.state === 'overdue'
       ? t(lang, 'clockOverBodyBoth')
       : portal?.state === 'overdue'
         ? t(lang, 'clockOverBodyPortal')
-        : t(lang, 'clockOverBodyOpen');
+        : helpline?.state === 'overdue'
+          ? t(lang, 'clockOverBodyHelpline')
+          : t(lang, 'clockOverBodyOpen');
   const r = 62;
   const circ = 2 * Math.PI * r;
+
+  if (!start) {
+    return (
+      <div className="db-clock-wrap">
+        <div className="db-clock-side">
+          <strong style={{ fontSize: '1rem' }}>{t(lang, 'clockUnknownTitle')}</strong>
+          <p className="db-muted">{t(lang, 'clockUnknownBody')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="db-clock-wrap">

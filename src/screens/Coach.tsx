@@ -5,6 +5,7 @@ import { formatINR, fraudTypeLabel, BackButton } from './shared';
 import { useToast } from '../components/Toast';
 import { useDashboard } from '../state/dashboardStore';
 import { t, methodLabel, whenText } from '../i18n';
+import { bankDueDate, formatDurationLang } from '../engines/orchestrator/clock';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
 // confirmed facts + a checklist. "Done" logs only that Done was pressed —
@@ -53,6 +54,31 @@ export function CoachScreen({
   return (
     <>
       <p>{t(lang, 'coachIntro')}</p>
+
+      {/* Step 21 (#1): the two clocks, live on the call screen — the
+          golden hour elapsed since the fraud, and the RBI 3-working-day
+          zero-liability deadline (Sundays skipped). Guidance only: the
+          bank's own notice governs, and the note says so. */}
+      {stored.fraudAt && (() => {
+        const fraudDate = new Date(stored.fraudAt);
+        const elapsed = Date.now() - fraudDate.getTime();
+        const goldenOver = elapsed > 60 * 60 * 1000;
+        // Step 21 (P3/H5): bank due via bankDueDate — 3 working days until
+        // 31 Dec 2026, five calendar days from 1 Jan 2027.
+        const bankDue = bankDueDate(fraudDate);
+        return (
+          <section className="rk-card" aria-label={t(lang, 'coachClockTitle')}>
+            <h2>{t(lang, 'coachClockTitle')}</h2>
+            <p role="timer">
+              {goldenOver
+                ? t(lang, 'coachGoldenOver', { time: formatDurationLang(lang, elapsed) })
+                : t(lang, 'coachGoldenLeft', { time: formatDurationLang(lang, elapsed) })}
+            </p>
+            <p>{t(lang, 'coachBankDue', { date: bankDue.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) })}</p>
+            <p className="note">{t(lang, 'coachBankNote')}</p>
+          </section>
+        );
+      })()}
 
       <section className="rk-card">
         <h2>{t(lang, 'coachScriptTitle')}</h2>

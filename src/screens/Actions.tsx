@@ -6,6 +6,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
 import { deadlineStatuses, formatDurationLang, orderActions } from '../engines/orchestrator/clock';
+import { loadAck } from '../engines/ack/ack';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
 
@@ -43,17 +44,27 @@ export function ActionsScreen({
     );
   }, { scope: cardsRef });
 
-  const fraudAt = stored.fraudAt ? new Date(stored.fraudAt) : new Date(stored.createdAt);
-  const statuses = deadlineStatuses(fraudAt, now);
-  const actions = orderActions(fraudAt, now, stored.credentialShared, lang);
+  // Step 21 (P1): fraud time unknown — no deadline chips at all, and the
+  // action queue is ordered from report time only (ordering, never a
+  // countdown). P2: portal anchored to the saved 1930 call time.
+  const fraudAt = stored.fraudAt ? new Date(stored.fraudAt) : null;
+  const ack = loadAck();
+  const calledAt = ack?.incidentId === stored.id && ack.calledAt ? new Date(ack.calledAt) : null;
+  const statuses = fraudAt ? deadlineStatuses(fraudAt, now, calledAt) : [];
+  const actions = orderActions(fraudAt ?? new Date(stored.createdAt), now, stored.credentialShared, lang, calledAt);
 
   return (
     <>
       <h2>{t(lang, 'clockTitle')}</h2>
+      {!fraudAt && (
+        <p className="db-muted">
+          <strong>{t(lang, 'clockUnknownTitle')}</strong> — {t(lang, 'clockUnknownBody')}
+        </p>
+      )}
       <div className="clock-row" role="timer" aria-live="off">
         {statuses.map((s) => (
           <div key={s.id} className={`deadline-chip ${s.state}`}>
-            <div className="time">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDurationLang(lang, s.remainingMs)}</div>
+            <div className="time">{s.state === 'overdue' ? t(lang, 'chipOverdue') : s.state === 'pending' ? t(lang, 'chipPortalPending') : formatDurationLang(lang, s.remainingMs)}</div>
             <div className="name">{s.labelKey ? t(lang, s.labelKey) : s.label}</div>
             <div className="window">{t(lang, 'actionsWindow', { window: s.windowLabel })}</div>
           </div>

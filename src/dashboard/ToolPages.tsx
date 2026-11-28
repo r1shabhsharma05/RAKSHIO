@@ -10,6 +10,7 @@ import { ShieldScreen } from '../screens/Shield';
 import { TriageScreen } from '../screens/Triage';
 import { BankKitScreen } from '../screens/BankKit';
 import { AckBridgeScreen } from '../screens/AckBridge';
+import { DoNotPayScreen } from '../screens/DoNotPay';
 import { ChunkFallback, loadCareChunk, loadProofChunk, loadVaultChunk, useChunk } from '../components/chunkRecovery';
 
 // Every tool screen mounts inside the dashboard's dark flow scope (.db-flow)
@@ -81,6 +82,7 @@ function BankHelplinePreview() {
           </div>
         ))}
       </div>
+      {BANKS.slice(0, 4).some((b) => b.chargeable) && <p className="db-muted">{t(lang, 'bankChargeNote')}</p>}
       <p className="db-muted">{t(lang, 'bankPreviewNote')}</p>
     </div>
   );
@@ -233,6 +235,18 @@ export function VaultPage() {
   );
 }
 
+// Step 21 (#12): no incident needed — the card must work the second
+// the recovery scammer calls, before any report exists.
+export function DoNotPayPage() {
+  const navigate = useNavigate();
+  const active = useDashboard((s) => s.active());
+  return (
+    <div className="db-flow">
+      <DoNotPayScreen onBack={() => navigate(active ? `/incidents/${active.id}` : '/')} />
+    </div>
+  );
+}
+
 export function ShieldPage() {
   const navigate = useNavigate();
   const active = useDashboard((s) => s.active());
@@ -242,6 +256,10 @@ export function ShieldPage() {
       <ShieldScreen
         onBack={() => navigate(active ? `/incidents/${active.id}` : '/')}
         onVerdict={(v, text) => setShieldLast({ text, level: v.level, score: v.score, at: new Date().toISOString() })}
+        onModel={(score, coverage) => {
+          const cur = useDashboard.getState().shieldLast;
+          if (cur) setShieldLast({ ...cur, mlScore: score, mlCoverage: coverage });
+        }}
       />
     </div>
   );

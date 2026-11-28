@@ -61,6 +61,7 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
   return (
     <>
       <p>{t(lang, 'proofIntro')}</p>
+      <p className="note-strong">{t(lang, 'proofCheckNote')}</p>
 
       <section className="rk-card">
         <div className="field-row"><span className="label">{t(lang, 'proofIncidentLabel', { id: `#${stored.id.replace(/^rk-/, 'RK-').toUpperCase()}` })}</span></div>

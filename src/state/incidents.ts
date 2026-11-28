@@ -44,6 +44,9 @@ export interface Settings {
   caregiver: boolean;
   ttsRate: number;
   speechLang: 'hi-IN' | 'en-IN';
+  // Step 21 (#4): opt-in large type for elderly / low-vision users.
+  // Default off — the Step 12 type scale (16px root) stays the default.
+  largeType: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -52,9 +55,10 @@ export const DEFAULT_SETTINGS: Settings = {
   caregiver: false,
   ttsRate: 0.85,
   speechLang: 'hi-IN',
+  largeType: false,
 };
 
-export type FollowupId = '1h' | '24h' | '3d' | '7d';
+export type FollowupId = '1h' | '24h' | '3d' | '7d' | '30d' | '90d';
 export type Followups = Record<string, Partial<Record<FollowupId, 'done'>>>;
 
 export interface ShieldLast {
@@ -62,6 +66,10 @@ export interface ShieldLast {
   level: 'safe' | 'suspicious' | 'danger';
   score: number;
   at: string;
+  // Step 21 (T3): the model's own score/coverage for the same check, so
+  // the Home tile can surface a rules-vs-model disagreement.
+  mlScore?: number | null;
+  mlCoverage?: number | null;
 }
 
 function read<T>(key: string): T | null {
@@ -73,11 +81,18 @@ function read<T>(key: string): T | null {
   }
 }
 
+// Step 21 (P7): a failed write used to vanish silently — in private mode
+// or with storage full, the victim believed their incident was saved when
+// it only existed in memory. `write` now records the failure in a module
+// flag the dashboard store surfaces as a persistent banner.
+export let storageFailed = false;
+
 function write(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    storageFailed = false;
   } catch {
-    /* storage full / private mode — the app keeps working in memory */
+    storageFailed = true;
   }
 }
 

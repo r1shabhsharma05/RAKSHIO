@@ -61,7 +61,8 @@ export function IncidentDetailPage() {
         <h2>{t(lang, 'detailStatusTitle')}</h2>
         <div className="db-setting-row">
           <div>
-            <strong>{t(lang, STATUS_KEY[incident.status ?? 'in-progress'])}</strong>
+            <strong>{t(lang, STATUS_KEY[incident.status ?? 'in-progress'])}</strong>{' '}
+            {incident.demo && <span className="db-badge gray">DEMO</span>}
             <p className="db-muted">{t(lang, 'detailStatusNote')}</p>
           </div>
           <select

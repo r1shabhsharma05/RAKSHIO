@@ -7,7 +7,7 @@ import { extractIncident, type ExtractedIncident } from '../engines/understandin
 import { toStored } from '../state/store';
 import { useDashboard } from '../state/dashboardStore';
 import { recognitionSupported, stopSpeaking } from '../voice/VoiceAdapter';
-import { DEMO_TRANSCRIPT } from '../demo/seed';
+import { DEMO_TRANSCRIPT, makeDemoFresh } from '../demo/seed';
 import { PanicScreen } from '../screens/Panic';
 import { ListenScreen } from '../screens/Listen';
 import { GapsScreen, type GapField } from '../screens/Gaps';
@@ -69,6 +69,9 @@ export function ReportFlow() {
   const [confirmState, setConfirmState] = useState<Record<ConfirmField, ConfirmState>>(EMPTY_CONFIRM);
   const screenRef = useRef<HTMLDivElement>(null);
   const autoStarted = useRef(false);
+  // Step 21 (D4): the demo transcript takes the confirm path too — remember
+  // it came from the demo so the stored incident is made fresh + fictional.
+  const demoRef = useRef(false);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const settings = useDashboard((s) => s.settings);
@@ -101,6 +104,7 @@ export function ReportFlow() {
 
   function handleTranscript(text: string) {
     if (!text.trim()) return;
+    demoRef.current = text.trim() === DEMO_TRANSCRIPT;
     const { incident: inc, maskedTranscript: mt, masked: m } = extractIncident(text);
     setIncident(inc);
     setMaskedTranscript(mt);
@@ -154,7 +158,11 @@ export function ReportFlow() {
 
   function handleConfirmDone() {
     if (!incident) return;
-    const s = toStored(incident, maskedTranscript, masked, incident.fraudAt.value, settings.caregiver);
+    const isDemo = demoRef.current;
+    let s = toStored(incident, maskedTranscript, masked, incident.fraudAt.value, settings.caregiver);
+    // Step 21 (D4): the in-flow demo seed is also 20 minutes old and
+    // marked fictional — never yesterday's stale clock.
+    if (isDemo) s = makeDemoFresh(s);
     s.confirmed = {
       amount: confirmState.amount === 'yes',
       fraudAt: confirmState.fraudAt === 'yes',
@@ -162,12 +170,13 @@ export function ReportFlow() {
       bank: confirmState.bank === 'yes',
     };
     s.status = 'reported';
-    addIncident(s);
+    addIncident(s, isDemo ? { demo: true } : undefined);
     navigate(`/incidents/${s.id}`);
   }
 
   function resetAll() {
     stopSpeaking();
+    demoRef.current = false;
     setIncident(null);
     setTranscript('');
     setInterim('');
@@ -230,7 +239,7 @@ export function ReportFlow() {
             onDone={handleConfirmDone}
           />
         )}
-        {screen === 'judge' && <JudgeScreen showTitle active={active ? { id: `#${active.id.replace(/^rk-/, 'RK-').toUpperCase()}`, amount: active.amount != null ? formatINR(active.amount) : '—' } : null} onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
+        {screen === 'judge' && <JudgeScreen showTitle active={active ? { id: `#${active.id.replace(/^rk-/, 'RK-').toUpperCase()}`, amount: active.amount != null ? formatINR(active.amount) : '—' } : null} rawId={active?.id ?? null} onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
       </div>
       {screen !== 'panic' && (
         <button type="button" className="demo-link" onClick={resetAll}>{t(settings.language, 'reportStartNew')}</button>

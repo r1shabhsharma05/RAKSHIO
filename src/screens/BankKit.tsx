@@ -54,6 +54,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
             {bank.numbers.map((n) => (
               <Button key={n} label={t(lang, 'bankCallBtn', { bank: bank.name, n })} variant="destructive" size="lg" width="100%" href={`tel:${n.replace(/\s/g, '')}`} />
             ))}
+            {bank.chargeable && <p className="db-muted">{t(lang, 'bankChargeNote')}</p>}
             <p>{bankBlockSteps(bank, lang)}</p>
           </>
         )}

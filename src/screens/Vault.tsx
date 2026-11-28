@@ -63,20 +63,63 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
     }
   }
 
+  // Step 21 (T2): files over 5 MB are rejected with a reason (an uncapped
+  // base64 photo can blow the IndexedDB budget on a low-end phone), and
+  // images are downscaled to at most 1280px on the long side as JPEG 0.85
+  // before storage — a screenshot stays readable, the stored bytes stay
+  // small. The save is wrapped: a full/quota-blocked store used to fail
+  // silently.
+  const MAX_FILE_BYTES = 5 * 1024 * 1024;
+  const MAX_IMAGE_DIM = 1280;
+
+  function readAsDataURL(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('read failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function downscaleImage(file: File): Promise<string | null> {
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, MAX_IMAGE_DIM / Math.max(bmp.width, bmp.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bmp.width * scale));
+      canvas.height = Math.max(1, Math.round(bmp.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      return canvas.toDataURL('image/jpeg', 0.85);
+    } catch {
+      return null;
+    }
+  }
+
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
+    e.target.value = '';
+    if (f.size > MAX_FILE_BYTES) {
+      showToast(t(lang, 'vaultFileTooBig'));
+      return;
+    }
+    try {
+      const data = f.type.startsWith('image/')
+        ? ((await downscaleImage(f)) ?? (await readAsDataURL(f)))
+        : await readAsDataURL(f);
       await addEvidence({
         incidentId: stored.id, kind: 'file', label: f.name,
         text: `File: ${f.name} (${Math.round(f.size / 1024)} KB)`,
-        data: String(reader.result), capturedAt: new Date().toISOString(), byCaregiver: caregiver,
+        data, capturedAt: new Date().toISOString(), byCaregiver: caregiver,
       });
       setVerify(null);
       await refresh();
-    };
-    reader.readAsDataURL(f);
+    } catch {
+      showToast(t(lang, 'vaultSaveFail'));
+    }
   }
 
   async function onVerify() {
@@ -159,6 +202,18 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
         )}
       </section>
       {rows.length > 0 && <p><Badge label="Hash-chained • SHA-256" variant="success" /></p>}
+
+      {/* Step 21 (#6): the capture guide — what to keep, before the
+          victim deletes it. Static advice only; nothing is auto-saved. */}
+      <section className="rk-card">
+        <h2>{t(lang, 'vaultKeepTitle')}</h2>
+        <ul>
+          <li>{t(lang, 'vaultKeep1')}</li>
+          <li>{t(lang, 'vaultKeep2')}</li>
+          <li>{t(lang, 'vaultKeep3')}</li>
+          <li>{t(lang, 'vaultKeep4')}</li>
+        </ul>
+      </section>
       <BackButton onBack={onBack} />
     </>
   );

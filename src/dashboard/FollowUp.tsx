@@ -19,6 +19,11 @@ export const REMINDERS: { id: FollowupId; label: string; detail: string; hours: 
   { id: '24h', label: '24 ghante baad', detail: 'Portal complaint cybercrime.gov.in par poori hui?', hours: 24 },
   { id: '3d', label: '3 din baad', detail: 'Bank se dispute/reference number mila?', hours: 72 },
   { id: '7d', label: '7 din baad', detail: 'Status check: bank + portal par kya update hai?', hours: 168 },
+  // Step 21 (#5): the two post-report clocks nobody shows — bank
+  // resolution is due in 30 days, the final answer in 90 days, then the
+  // RBI Ombudsman. Same honest rule as the rest: user-reported only.
+  { id: '30d', label: '30 din baad', detail: 'Bank ka jawab 30 din me aana chahiye — nahi aaya to RBI Ombudsman.', hours: 720 },
+  { id: '90d', label: '90 din baad', detail: 'Final jawab 90 din me aana chahiye — abhi bhi pending ho to Ombudsman se follow-up karein.', hours: 2160 },
 ];
 
 const EMPTY_FOLLOWUPS: Partial<Record<FollowupId, 'done'>> = {};
@@ -30,6 +35,8 @@ const REMINDER_TEXT: Record<FollowupId, { labelKey: string; detailKey: string }>
   '24h': { labelKey: 'rem24hLabel', detailKey: 'rem24hDetail' },
   '3d': { labelKey: 'rem3dLabel', detailKey: 'rem3dDetail' },
   '7d': { labelKey: 'rem7dLabel', detailKey: 'rem7dDetail' },
+  '30d': { labelKey: 'rem30dLabel', detailKey: 'rem30dDetail' },
+  '90d': { labelKey: 'rem90dLabel', detailKey: 'rem90dDetail' },
 };
 
 export function remindersFor(incident: StoredIncident): Reminder[] {

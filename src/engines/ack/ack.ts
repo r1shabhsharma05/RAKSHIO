@@ -13,6 +13,15 @@ export interface AckRecord {
   incidentId: string;
 }
 
+// Step 21 (H4): real acknowledgement numbers are 14 digits — 1930 calls
+// start 329, portal-filed complaints start 229. Warn, never block: a
+// mistyped or differently-formatted number must not strand the victim.
+// Returns true when the number does NOT look like a real ack.
+export function ackFormatWarning(ackNumber: string): boolean {
+  const digits = ackNumber.replace(/[\s-]/g, '');
+  return !/^(229|329)\d{11}$/.test(digits);
+}
+
 export function saveAck(rec: AckRecord): void {
   try { localStorage.setItem(ACK_KEY, JSON.stringify(rec)); } catch { /* ignore */ }
 }

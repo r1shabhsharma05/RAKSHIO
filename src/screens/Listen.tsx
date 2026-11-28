@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createListener, requestMicAccess, type MicMeter } from '../voice/VoiceAdapter';
+import { createListener, recognitionSupported, requestMicAccess, type MicMeter } from '../voice/VoiceAdapter';
 import { BackButton, MicIcon } from './shared';
 import { useDashboard } from '../state/dashboardStore';
 import { t } from '../i18n';
@@ -37,7 +37,7 @@ export function ListenScreen({
 }) {
   const lang = useDashboard((s) => s.settings.language);
   const [elapsed, setElapsed] = useState(0);
-  const [perm, setPerm] = useState<'pending' | 'granted' | 'denied' | 'unavailable'>('pending');
+  const [perm, setPerm] = useState<'pending' | 'granted' | 'denied' | 'unavailable' | 'unsupported'>('pending');
   const [hasMeter, setHasMeter] = useState(false);
   const [errorKind, setErrorKind] = useState<'network' | 'no-mic' | 'other' | null>(null);
   const [silent, setSilent] = useState(false);
@@ -62,6 +62,18 @@ export function ListenScreen({
     setHasMeter(false);
     heardRef.current = false;
     finalRef.current = '';
+
+    // Step 21 (T1): check recognition support BEFORE asking for the mic —
+    // Firefox, Brave, in-app browsers and installed iOS apps have no
+    // SpeechRecognition at all, so the old flow asked for mic permission
+    // and then died silently inside recognition. Unsupported gets its own
+    // honest state + the text-mode button, never a dead mic.
+    if (!recognitionSupported()) {
+      setPerm('unsupported');
+      return () => {
+        alive = false;
+      };
+    }
 
     // Permission first: a denied mic is caught here with a clear reason.
     requestMicAccess().then((access) => {
@@ -181,6 +193,14 @@ export function ListenScreen({
             <p className="step2-note" role="alert">
               {t(lang, 'listenUnavailable')}
             </p>
+          )}
+          {perm === 'unsupported' && (
+            <div role="alert">
+              <p className="step2-note">{t(lang, 'listenUnsupported')}</p>
+              {onTextMode && (
+                <button type="button" className="rk-primary-btn" onClick={onTextMode}>{t(lang, 'panicWriteBtn')}</button>
+              )}
+            </div>
           )}
           {errorKind === 'network' && (
             <div role="alert">

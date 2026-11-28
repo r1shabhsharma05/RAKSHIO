@@ -70,6 +70,13 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
           </section>
         </>
       )}
+      {!consent && (
+        <section className="rk-card">
+          <h2>{t(lang, 'careAloneTitle')}</h2>
+          <p>{t(lang, 'careAloneBody')}</p>
+          <a className="rk-primary-btn" href="tel:1930">{t(lang, 'coachCallBtn')}</a>
+        </section>
+      )}
       <BackButton onBack={onBack} />
     </>
   );

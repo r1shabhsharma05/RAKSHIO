@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
-import { loadAck, portalCopyDeck, portalDeadline, saveAck } from '../engines/ack/ack';
+import { ackFormatWarning, loadAck, portalCopyDeck, portalDeadline, saveAck } from '../engines/ack/ack';
+import { chakshuDraft } from '../engines/chakshu/chakshu';
 import { formatDurationLang } from '../engines/orchestrator/clock';
 import { BackButton, copyText } from './shared';
 import { useToast } from '../components/Toast';
@@ -54,12 +55,18 @@ export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: Stored
         <h2>{t(lang, 'portalAckTitle')}</h2>
         <label htmlFor="ack-input" className="rk-label">{t(lang, 'portalAckLabel')}</label>
         <input id="ack-input" className="rk-input" value={ackNumber} onChange={(e) => setAckNumber(e.target.value)} placeholder={t(lang, 'portalAckPlaceholder')} />
+        {ackNumber.trim().length >= 3 && ackFormatWarning(ackNumber.trim()) && (
+          <p className="step2-note" role="alert">{t(lang, 'portalAckWarn')}</p>
+        )}
         <button
           type="button"
           className="rk-primary-btn"
           disabled={ackNumber.trim().length < 3}
           onClick={() => {
-            const at = new Date().toISOString();
+            // Step 21 (H4): anchor the 24h portal clock to the actual call.
+            // The Coach Done tap happens right after the 1930 call, so its
+            // timestamp is the call time when it exists; otherwise now.
+            const at = stored.coachDoneAt ?? new Date().toISOString();
             saveAck({ ackNumber: ackNumber.trim(), calledAt: at, incidentId: stored.id });
             setSavedAt(at);
             showToast(t(lang, 'portalAckToast'));
@@ -85,6 +92,19 @@ export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: Stored
           </div>
         ))}
         <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">{t(lang, 'portalOpenLink')}</a>
+      </section>
+
+      {/* Step 21 (#2): the third official text from the same narration —
+          the Chakshu report (Sanchar Saathi), for the attempt itself. Copy
+          only; nothing is sent by the app, and the note says to review
+          every number first. */}
+      <section className="rk-card">
+        <h2>{t(lang, 'chakshuTitle')}</h2>
+        <p className="note">{t(lang, 'chakshuIntro')}</p>
+        <p className="script-box">{chakshuDraft(stored, lang)}</p>
+        <Button label="Copy" variant="secondary" size="lg" onClick={() => copy(chakshuDraft(stored, lang), t(lang, 'chakshuTitle'))} />
+        <p className="note">{t(lang, 'chakshuNote')}</p>
+        <a href="https://sancharsaathi.gov.in" target="_blank" rel="noopener noreferrer">sancharsaathi.gov.in — Chakshu</a>
       </section>
       <BackButton onBack={onBack} />
     </>

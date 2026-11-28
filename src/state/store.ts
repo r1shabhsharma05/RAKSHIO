@@ -24,6 +24,9 @@ export interface StoredIncident {
   // a 1930 call happened when only Done was pressed.
   coachDoneAt: string | null;
   caregiverMode: boolean;
+  // Step 21 (D2): demo/fictional incidents (Judge Mode seed) are marked
+  // so no screen can confuse them with a real report.
+  demo?: boolean;
   // Dashboard status, set by the user (or by their own recorded actions:
   // ack saved -> awaiting-portal, bank ref saved -> bank-notified).
   // Absent on pre-dashboard incidents — the dashboard defaults it.

@@ -14,6 +14,9 @@ import { methodLabel, t, whenText, type Lang } from '../../i18n';
 export interface BankInfo {
   name: string;
   numbers: string[];
+  // Step 21 (H6): 1860 numbers are chargeable — a victim on a low balance
+  // must know before tapping call. 1800 numbers are toll-free.
+  chargeable?: boolean;
   // Step 17: the fraud-line note follows the UI language. `hg` is the
   // old Hinglish text verbatim; `en` is its translation. Hindi shows the
   // Hinglish text, as it did before keying (no Devanagari version exists).
@@ -29,8 +32,8 @@ export const BANKS: BankInfo[] = [
   { name: 'SBI', numbers: ['1800 11 2211', '1800 425 3800'], blockSteps: { en: 'SBI: fraud line 1800 11 1109. Or block your card from the YONO/SBI app.', hg: 'SBI: fraud line 1800 11 1109. Ya YONO/SBI app se card block karein.' } },
   { name: 'HDFC', numbers: ['1800 1600', '1800 2600'], blockSteps: { en: 'HDFC: block your card from the app, or SMS "Block CC".', hg: 'HDFC: app se card block karein, ya "Block CC" SMS karein.' } },
   { name: 'ICICI', numbers: ['1800 1080'], blockSteps: { en: 'ICICI: block your card from the iMobile app, or net banking.', hg: 'ICICI: iMobile app se card block karein, ya net banking se.' } },
-  { name: 'Axis', numbers: ['1860 419 5555', '1860 500 5555'], blockSteps: { en: 'Axis: block your card from the app, or net banking.', hg: 'Axis: app se card block karein, ya net banking se.' } },
-  { name: 'Kotak', numbers: ['1860 266 2666'], blockSteps: { en: 'Kotak: block your card from the app, or net banking.', hg: 'Kotak: app se card block karein, ya net banking se.' } },
+  { name: 'Axis', numbers: ['1860 419 5555', '1860 500 5555'], chargeable: true, blockSteps: { en: 'Axis: block your card from the app, or net banking.', hg: 'Axis: app se card block karein, ya net banking se.' } },
+  { name: 'Kotak', numbers: ['1860 266 2666'], chargeable: true, blockSteps: { en: 'Kotak: block your card from the app, or net banking.', hg: 'Kotak: app se card block karein, ya net banking se.' } },
   { name: 'PNB', numbers: ['1800 180 2222'], blockSteps: { en: 'PNB: block your card from the app, or net banking.', hg: 'PNB: app se card block karein, ya net banking se.' } },
   { name: 'Bank of Baroda', numbers: ['1800 102 4455', '1800 258 4455'], blockSteps: { en: 'Bank of Baroda: block your card from the app, or net banking.', hg: 'Bank of Baroda: app se card block karein, ya net banking se.' } },
   { name: 'Canara', numbers: ['1800 425 0018'], blockSteps: { en: 'Canara: block your card from the app, or net banking.', hg: 'Canara: app se card block karein, ya net banking se.' } },

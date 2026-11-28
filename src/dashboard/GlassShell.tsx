@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import {
+  Ban,
   BookOpen,
   ChevronRight,
   FileCheck,
@@ -85,7 +86,7 @@ const BOTTOM_SHORT: Record<string, string> = {
   '/settings': 'navSettingsShort',
 };
 // Routes with no dock entry still need a page title.
-const EXTRA_TITLES: Record<string, string> = { '/judge': 'navJudge', '/triage': 'triageTitle' };
+const EXTRA_TITLES: Record<string, string> = { '/judge': 'navJudge', '/triage': 'triageTitle', '/donotpay': 'navDoNotPay' };
 // Step 16 (bug 7): hovering or keyboard-focusing a dock link warms that
 // route's lazy chunk before the click, so the navigation feels instant.
 // The idle prefetch in App covers the same chunks; this is the fast path.
@@ -103,10 +104,12 @@ function preloadRoute(to: string) {
 const SEARCH_ALIASES: Record<string, string[]> = {
   '/guide': ['situations', 'scam guide', 'fraud guide'],
   '/judge': ['demo', 'seeded'],
+  '/donotpay': ['do not pay', 'recovery', 'recovery scam', 'refusal'],
 };
 const SEARCHABLE = [
   ...NAV,
   { to: '/judge', key: 'navJudge', icon: Scale, end: false },
+  { to: '/donotpay', key: 'navDoNotPay', icon: Ban, end: false },
 ] as const;
 
 function SearchDialog({ close }: { close: () => void }) {
@@ -187,6 +190,18 @@ export function GlassShell() {
   const lang = useDashboard((s) => s.settings.language);
   const setSettings = useDashboard((s) => s.setSettings);
   const caregiver = useDashboard((s) => s.settings.caregiver);
+  const largeType = useDashboard((s) => s.settings.largeType);
+  const storageError = useDashboard((s) => s.storageError);
+
+  // Step 21 (#4): large-type mode scales the root rem (16px -> 18px),
+  // so every rem-sized control grows with it; off restores the Step 12
+  // default. Opt-in only — the default type scale is pinned by test.
+  useEffect(() => {
+    document.documentElement.style.fontSize = largeType ? '18px' : '';
+    return () => {
+      document.documentElement.style.fontSize = '';
+    };
+  }, [largeType]);
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [offlineReady, setOfflineReady] = useState(false);
@@ -370,14 +385,23 @@ export function GlassShell() {
               <p className="gd-banner" role="note">
                 {t(lang, 'bannerText')}
               </p>
+              {storageError && (
+                <p className="gd-banner" role="alert" style={{ background: '#7f1d1d', color: '#fff' }}>
+                  {t(lang, 'storageErrorBanner')}
+                </p>
+              )}
               <div className="gd-content" ref={content} key={location.pathname}>
                 <Outlet />
               </div>
             </div>
           </main>
           <nav className="gd-dock gd-dock-bottom" aria-label="Quick navigation">
-            {NAV.filter(({ to }) => (BOTTOM_NAV as readonly string[]).includes(to)).map(({ to, key, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} aria-label={t(lang, key)}>
+            {NAV.filter(({ to }) => (BOTTOM_NAV as readonly string[]).includes(to)).map(({ to, icon: Icon, end }) => (
+              // Step 21 (axe): the bottom dock shows the SHORT label, so its
+              // accessible name must be the short label too — the long
+              // "Incident Dashboard" name failed label-content at 390px
+              // ("Incidents" is not part of "Incident Dashboard").
+              <NavLink key={to} to={to} end={end} aria-label={t(lang, BOTTOM_SHORT[to])}>
                 <Icon aria-hidden="true" />
                 <span className="gd-dock-short" aria-hidden="true">{t(lang, BOTTOM_SHORT[to])}</span>
               </NavLink>

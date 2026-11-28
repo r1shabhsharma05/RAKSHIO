@@ -9,6 +9,15 @@ import type { EvidenceRecord } from '../evidence/vault';
 // The PDF is Latin-script Hinglish, not Devanagari — pdf-lib's standard
 // fonts have no Devanagari glyphs, and embedding a font would need a
 // network fetch at generation time. Latin script keeps it offline-safe.
+// Step 21 (H8): the PDF used to print every field the same way — a wrong
+// extraction read as a confirmed fact on a bank/police document. Fields
+// the victim confirmed in the Confirm step are marked "(aapne confirm
+// kiya)"; the rest are marked "(aapke bataye anusaar)" so the reader can
+// see what was verified and what is as-reported. Pure helper, unit-tested.
+export function confirmedMark(confirmed: boolean | undefined): string {
+  return confirmed ? '(aapne confirm kiya)' : '(aapke bataye anusaar)';
+}
+
 export async function buildProofPdf(
   stored: StoredIncident,
   evidence: EvidenceRecord[],
@@ -39,10 +48,10 @@ export async function buildProofPdf(
   line('RAKSHIO — Fraud Incident Proof Pack', 16, true, 24);
   line('Ye RAKSHIO dwara banaya gaya record hai. Ye koi police/bank report nahi hai.', 10, false, 26);
   line('Incident Summary (Vivaran)', 13, true);
-  line(`Rashi (Amount): ${stored.amount != null ? `Rs ${stored.amount.toLocaleString('en-IN')}` : 'Pata nahi'}`);
-  line(`Samay (Date/Time): ${stored.fraudAtDisplay ?? 'Pata nahi'}`);
-  line(`Bank / App: ${stored.bank ?? 'Pata nahi'}`);
-  line(`Tareeka (Method): ${stored.method ?? 'Pata nahi'}`);
+  line(`Rashi (Amount): ${stored.amount != null ? `Rs ${stored.amount.toLocaleString('en-IN')}` : 'Pata nahi'} ${confirmedMark(stored.confirmed?.amount)}`);
+  line(`Samay (Date/Time): ${stored.fraudAtDisplay ?? 'Pata nahi'} ${confirmedMark(stored.confirmed?.fraudAt)}`);
+  line(`Bank / App: ${stored.bank ?? 'Pata nahi'} ${confirmedMark(stored.confirmed?.bank)}`);
+  line(`Tareeka (Method): ${stored.method ?? 'Pata nahi'} ${confirmedMark(stored.confirmed?.method)}`);
   line(`UTR / Reference: ${stored.utr ?? 'Nahi mila'}`);
   line(`Fraud type: ${stored.fraudType ?? 'Pata nahi'}`);
   line(`OTP/PIN share hua: ${stored.credentialShared ? 'Haan' : 'Nahi'}`);

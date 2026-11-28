@@ -108,9 +108,13 @@ export function redactText(text: string): { text: string; redacted: boolean } {
   const masked = maskCredentials(text);
   let out = masked.text;
   let redacted = masked.masked;
-  out = out.replace(/\b(\d{4})[\s-]?\d{4}[\s-]?\d{4}[\s-]?(\d{4})\b/g, (_m, a: string, b: string) => {
+  // Step 21 (H1): the old branch kept the FIRST 4 digits of a card
+  // ("1234 •••• •••• 5678") — the privacy claim is last-4-only, and the
+  // masker above already reduces cards to last 4 before this runs. This
+  // branch is defence-in-depth for anything the masker missed.
+  out = out.replace(/\b(\d{4})[\s-]?\d{4}[\s-]?\d{4}[\s-]?(\d{4})\b/g, (_m, _a: string, b: string) => {
     redacted = true;
-    return `${a} •••• •••• ${b}`;
+    return `•••• •••• •••• ${b}`;
   });
   out = out.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, (m) => {
     redacted = true;

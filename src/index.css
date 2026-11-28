@@ -225,6 +225,14 @@ textarea.rk-input, input.rk-input, select.rk-input {
   white-space: pre-wrap;
 }
 
+/* Step 21 (#12): the Do-Not-Pay card is read at arm's length, mid-call —
+   22px bold, well under the 32px display cap (Step 12). */
+.dnp-big {
+  font-size: 1.375rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
 .demo-link {
   background: none; border: none; color: var(--rk-primary);
   font-size: 0.9375rem; text-decoration: underline; cursor: pointer;

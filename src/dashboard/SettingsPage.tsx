@@ -108,6 +108,20 @@ export function SettingsPage() {
             onClick={() => setSettings({ caregiver: !settings.caregiver })}
           />
         </div>
+        <div className="db-setting-row">
+          <div>
+            <strong>{t(lang, 'settingsLargeType')}</strong>
+            <p className="db-muted">{t(lang, 'settingsLargeTypeHint')}</p>
+          </div>
+          <button
+            type="button"
+            className="db-toggle"
+            role="switch"
+            aria-checked={settings.largeType}
+            aria-label={t(lang, 'settingsLargeTypeSwitch')}
+            onClick={() => setSettings({ largeType: !settings.largeType })}
+          />
+        </div>
       </section>
 
       <section className="db-card" aria-label="Speech settings">
