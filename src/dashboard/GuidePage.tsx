@@ -101,31 +101,31 @@ export function GuidePage() {
               {guide.timeNote}
             </span>
           </p>
-          <h2>Kaise pehchanein</h2>
+          <h2>{t(lang, 'guideHRecognize')}</h2>
           <ul>
             {guide.recognize.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <h2>Pehle 5 minute</h2>
+          <h2>{t(lang, 'guideHFirst5')}</h2>
           <ol>
             {guide.firstFiveMinutes.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ol>
-          <h2>Report kaise karein</h2>
+          <h2>{t(lang, 'guideHReport')}</h2>
           <ol>
             {guide.reportSteps.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ol>
-          <h2>Ye mat karein</h2>
+          <h2>{t(lang, 'guideHDont')}</h2>
           <ul>
             {guide.dontDo.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <h2>Kya saboot rakhein</h2>
+          <h2>{t(lang, 'guideHEvidence')}</h2>
           <ul>
             {guide.evidence.map((item) => (
               <li key={item}>{item}</li>

@@ -15,10 +15,14 @@ export interface StoredIncident {
   fraudType: string | null;
   credentialShared: boolean;
   contactChannel: string | null;
-  confirmed: { amount: boolean; fraudAt: boolean; method: boolean };
+  confirmed: { amount: boolean; fraudAt: boolean; method: boolean; bank: boolean };
   transcript: string;
   maskedCredentials: boolean;
   callTappedAt: string | null;
+  // Step 19 (A2): pressing Coach "Done" is NOT a call tap — it gets its
+  // own timestamp, so the Proof PDF (driven by callTappedAt) never claims
+  // a 1930 call happened when only Done was pressed.
+  coachDoneAt: string | null;
   caregiverMode: boolean;
   // Dashboard status, set by the user (or by their own recorded actions:
   // ack saved -> awaiting-portal, bank ref saved -> bank-notified).
@@ -64,10 +68,11 @@ export function toStored(
     fraudType: incident.fraudType.value,
     credentialShared: incident.credentialShared,
     contactChannel: incident.contactChannel.value,
-    confirmed: { amount: false, fraudAt: false, method: false },
+    confirmed: { amount: false, fraudAt: false, method: false, bank: false },
     transcript,
     maskedCredentials: masked,
     callTappedAt: null,
+    coachDoneAt: null,
     caregiverMode,
   };
 }

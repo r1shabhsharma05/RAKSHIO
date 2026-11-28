@@ -30,6 +30,7 @@ function demoIncident(): StoredIncident {
     transcript: 'test',
     maskedCredentials: false,
     callTappedAt: null,
+    coachDoneAt: null,
     caregiverMode: false,
   };
 }

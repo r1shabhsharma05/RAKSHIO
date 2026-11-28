@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeGaps } from './ReportFlow';
 import { extractIncident } from '../engines/understanding/extract';
+import { DEMO_TRANSCRIPT } from '../demo/seed';
 
 describe('step 16: confirm gate asks Bank', () => {
   it('asks Bank when the transcript names no bank', () => {
@@ -23,5 +24,22 @@ describe('step 16: confirm gate asks Bank', () => {
     expect(computeGaps(incident)).toEqual(
       expect.arrayContaining(['amount', 'fraudAt', 'method', 'bank']),
     );
+  });
+});
+
+// Step 19 (A4): OTP sharing is asked whenever it was not detected, so the
+// Step 18 OTP alert is reachable through the guided flow — not only when
+// the user volunteers a matching phrase in the first transcript.
+describe('step 19: OTP sharing is asked when not detected', () => {
+  it('asks OTP when the transcript never mentions it', () => {
+    const { incident } = extractIncident('Mere SBI account se kal shaam 7 baje bees hazaar rupaye kat gaye');
+    expect(incident.credentialShared).toBe(false);
+    expect(computeGaps(incident)).toContain('otp');
+  });
+
+  it('does not ask OTP when sharing was detected', () => {
+    const { incident } = extractIncident(DEMO_TRANSCRIPT);
+    expect(incident.credentialShared).toBe(true);
+    expect(computeGaps(incident)).not.toContain('otp');
   });
 });

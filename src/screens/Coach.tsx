@@ -7,8 +7,8 @@ import { useDashboard } from '../state/dashboardStore';
 import { t, methodLabel, whenText } from '../i18n';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
-// confirmed facts + a checklist. "Done" logs that the button was tapped —
-// never that the call happened or the complaint was filed.
+// confirmed facts + a checklist. "Done" logs only that Done was pressed —
+// never a call tap, never that the call happened or the complaint was filed.
 export function CoachScreen({
   stored,
   onCallTap,

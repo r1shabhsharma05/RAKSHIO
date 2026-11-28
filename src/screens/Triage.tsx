@@ -13,6 +13,7 @@ export function TriageScreen({ stored, onBack }: { stored: StoredIncident; onBac
     amount: stored.amount,
     credentialShared: stored.credentialShared,
     fraudType: stored.fraudType,
+    lang,
   });
 
   return (

@@ -166,10 +166,16 @@ function parseUtr(text: string): Field<string> {
 }
 
 function parseBank(text: string): Field<string> {
+  // First mention in the TEXT wins, not array order (live bug: "SBI se
+  // HDFC account me..." picked HDFC because HDFC is first in BANKS).
+  let best: { name: string; index: number } | null = null;
   for (const b of BANKS) {
-    if (b.aliases.some((a) => text.includes(a))) return { value: b.name, confidence: 0.9 };
+    for (const a of b.aliases) {
+      const idx = text.indexOf(a);
+      if (idx !== -1 && (!best || idx < best.index)) best = { name: b.name, index: idx };
+    }
   }
-  return { value: null, confidence: 0 };
+  return best ? { value: best.name, confidence: 0.9 } : { value: null, confidence: 0 };
 }
 
 function parseMethod(text: string): Field<'UPI' | 'card' | 'netbanking' | 'wallet'> {
@@ -191,28 +197,56 @@ function parseFraudType(text: string): Field<string> {
 }
 
 function parseFraudAt(text: string, now: Date): { at: Field<Date>; display: Field<string> } {
-  const dayOffset = /parson/.test(text) ? -2 : /kal/.test(text) ? -1 : /aaj/.test(text) ? 0 : null;
-  // Hour: digits or Hindi words before "baje".
+  // Day: Hindi (parson/kal/aaj) or English (day before yesterday/yesterday/
+  // today, last night, tonight, this morning/afternoon/evening).
+  const dayOffset = /day before yesterday/.test(text) ? -2
+    : /last night/.test(text) ? -1
+    : /yesterday/.test(text) ? -1
+    : /today|tonight|this (morning|afternoon|evening|night)/.test(text) ? 0
+    : /parson/.test(text) ? -2 : /kal/.test(text) ? -1 : /aaj/.test(text) ? 0 : null;
+  // Hour: digits or Hindi words before "baje", or English "7 pm" / "7 o'clock".
   let hour: number | null = null;
+  let pm = false;
   const hm = text.match(/(?:(\d{1,2})|([a-z]+))\s*baje/);
   if (hm) {
     hour = hm[1] ? Number(hm[1]) : (ONES[hm[2]] ?? null);
+  } else {
+    const em = text.match(/\b(\d{1,2})(?::\d{2})?\s*(am|pm)\b/);
+    if (em) {
+      hour = Number(em[1]);
+      pm = em[2] === 'pm';
+    } else {
+      const om = text.match(/\b(\d{1,2})\s*o'?clock\b/);
+      if (om) hour = Number(om[1]);
+    }
   }
-  if (dayOffset === null && hour === null) {
+  // Part of day, Hindi or English — used when no hour is given.
+  const part = /(morning|subah)/.test(text) ? 'morning'
+    : /(afternoon|dopahar)/.test(text) ? 'afternoon'
+    : /(evening|shaam)/.test(text) ? 'evening'
+    : /(night|raat)/.test(text) ? 'night' : null;
+  if (dayOffset === null && hour === null && part === null) {
     return { at: { value: null, confidence: 0 }, display: { value: null, confidence: 0 } };
   }
   const date = new Date(now);
   if (dayOffset !== null) date.setDate(date.getDate() + dayOffset);
   if (hour !== null) {
     let h = hour % 12;
-    if (/(dopahar|shaam|raat)/.test(text)) h += 12;
-    if (/(subah)/.test(text) && hour === 12) h = 0;
+    if (pm || /(dopahar|shaam|raat|afternoon|evening|night)/.test(text)) h += 12;
+    if (/(subah|morning)/.test(text) && hour === 12) h = 0;
     date.setHours(h, 0, 0, 0);
+  } else if (part) {
+    // No hour stated, only the part of day: a canonical hour for that
+    // part (morning 9, afternoon 3, evening 7, night 10). The display
+    // keeps the part word, so no false precision is shown.
+    const canonical: Record<string, number> = { morning: 9, afternoon: 15, evening: 19, night: 22 };
+    date.setHours(canonical[part], 0, 0, 0);
   } else {
     date.setHours(12, 0, 0, 0);
   }
   const dayWord = dayOffset === 0 ? 'aaj' : dayOffset === -1 ? 'kal' : dayOffset === -2 ? 'parson' : '';
-  const display = `${dayWord}${hour !== null ? `, ${hour} baje` : ''}`.trim();
+  const partWord = part === 'morning' ? 'subah' : part === 'afternoon' ? 'dopahar' : part === 'evening' ? 'shaam' : part === 'night' ? 'raat' : '';
+  const display = `${dayWord}${hour !== null ? `, ${hour} baje` : partWord ? `, ${partWord}` : ''}`.trim();
   const confidence = dayOffset !== null && hour !== null ? 0.85 : 0.6;
   return { at: { value: date, confidence }, display: { value: display || null, confidence } };
 }
@@ -235,7 +269,7 @@ export function extractIncident(rawTranscript: string, now = new Date()): { inci
   const stripped = utr.value ? text.replace(/\b(\d{4}[\s-]?\d{4}[\s-]?\d{4}|\d{12})\b/, ' ') : text;
 
   const fraudAt = parseFraudAt(text, now);
-  const credentialShared = /(otp|pin|cvv|password)/.test(text) && /(manga|maanga|bata|diya|bheja|share|install)/.test(text);
+  const credentialShared = /(otp|pin|cvv|password)/.test(text) && /(manga|maanga|bata|diya|bheja|share|install|le liya|leliya)/.test(text);
   const contact = /customer ?care/.test(text)
     ? { value: 'customer-care call', confidence: 0.85 }
     : /whatsapp/.test(text)

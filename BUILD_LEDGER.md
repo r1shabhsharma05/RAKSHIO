@@ -1491,6 +1491,139 @@ his word.
 - The 300+ lines of own code requirement is already satisfied
   (thousands of lines) — no action.
 
+## Step 19: complete (2026-11-28) — full bug hunt, all 15 fixed in one pass
+
+Source: `tests/full-bug-hunt-2026-11-28.md` (A1–A15). One pass, no
+follow-up rounds, per the user's order.
+
+- **A1 (Medium) Judge confirm on #/report said "No active incident
+  yet".** `ReportFlow.tsx` rendered `<JudgeScreen>` with no `active`
+  prop (unlike `JudgePage.tsx`). Now passes the active incident
+  (`#RK-…`, formatted amount or '—'). Pinned by a Playwright test:
+  seed incident → #/report Judge confirm names it.
+- **A2 (Medium) Coach Done logged a call tap.** `ToolPages.tsx`
+  wired both `onCallTap` and `onDone` to `logCallTap`. Split:
+  `logCoachDone` sets a new `coachDoneAt` on the stored incident;
+  the Proof PDF still reads `callTappedAt` only, so it now claims a
+  call tap only when the call button was actually tapped. Pinned by
+  unit + Playwright (Done-only → `callTappedAt` null, `coachDoneAt`
+  set; the real tel:1930 quick action still sets `callTappedAt`).
+  Honest limit: the PDF-content pin is the store assertion, not a
+  byte check — pdf-lib Flate-compresses its streams, so no text is
+  searchable in the PDF bytes (verified via a vite-node probe).
+- **A3 (Medium) English time expressions parsed to null.**
+  "yesterday evening" / "yesterday 7 pm" → fraudAt null; Hindi
+  parsed fine. The extractor now parses English day words
+  (yesterday/today/day before yesterday/last night/tonight/this
+  morning|afternoon|evening|night), hour digits with am/pm and
+  o'clock, and part-of-day canonical hours when no hour is given
+  (morning 9, afternoon 15, evening 19, night 22) while the display
+  keeps the part word ("kal, shaam" — no false precision).
+  Confidence 0.85 day+hour, 0.6 otherwise, same as Hindi. The gap
+  answer and the confirm-gate correction re-run the same extractor,
+  so the loop is fixed in-flow. Pinned by unit tests for both
+  phrases + Hindi regression + "English time never money".
+- **A4 (Medium) OTP sharing was never asked.** `computeGaps` only
+  asked amount/fraudAt/method/bank; `credentialShared` needed a
+  narrow volunteered phrase. The gaps flow now asks an OTP/PIN
+  question (Yes/No buttons — the OTP itself is never typed) whenever
+  the transcript never mentions it, so the Step 18 OTP-shared alert
+  and Copy Deck OTP line are reachable via the guided flow. Pinned
+  by a Playwright test driving the question → alert visible. Test
+  note: the probe sentence has no method word, so the gaps are
+  [method, otp] — the test answers the method gap first.
+- **A5 (Medium) Triage fully Hinglish in EN mode.** `triageRoute`
+  now takes an optional `lang` (default 'hg'); title + steps via
+  `t()`. Pinned by a Playwright test in EN mode, axe 0.
+- **A6 (Low) Guide detail 5 hardcoded Hinglish h2s.** Keyed
+  (`guideHRecognize`, `guideHFirst5`, `guideHReport`, `guideHDont`,
+  `guideHEvidence`). Pinned by a Playwright test in EN mode, axe 0.
+- **A7 (Low) Multi-bank sentence picked the wrong bank by array
+  order.** `parseBank` now picks the first mention in the TEXT, not
+  array order. Confirm-gate correction stays the fallback.
+- **A8 (Low) Mic level meter AudioContext never resumed.**
+  `await ctx.resume()` after `new Ctx()`. Live mic still untested
+  here — only Rishabh on his own Chrome can verify it; not claimed.
+- **A9 (Low) Offline reload failed on the very first visit.** This
+  one needed a real diagnosis — the hunt's prescribed fix
+  (skipWaiting + clients.claim) was NOT enough:
+  1. First-visit JS/CSS load *before* the worker takes control, so
+     those requests never pass through it and are never cached — an
+     offline reload served index.html with a dead script tag. Fix:
+     the app posts its loaded same-origin asset URLs to the active
+     worker (`cache-assets` message, from `main.tsx`), and the
+     worker caches them.
+  2. Even with the bundle cached, the offline reload STILL served a
+     blank page. A diagnostic probe (temp spec, deleted after) showed
+     the worker's `caches.match(event.request)` returning null for
+     the main JS/CSS while a page-side `caches.match(url)` returned
+     200. Root cause, confirmed by headers: the server sends
+     `Vary: Origin` on assets; entries cached via `cache.add()`
+     carry no Origin header, while the page's CORS asset requests
+     (module scripts are `crossorigin`) carry one — so the plain
+     match misses. Fix: `caches.match(..., { ignoreVary: true })`
+     in both fetch branches (same-origin hashed files; the URL alone
+     is the key). Pinned by unit tests + the A9 Playwright test
+     (offline reload on first visit renders the report screen).
+  Residual, honest: lazy chunks and Manrope woff2 fonts fail offline
+  if the reload happens before the idle prefetch finishes — the app
+  renders with fallback fonts; the panic path is unaffected.
+- **A10 (Low) 390px touch targets 41px.** `.gd-ask` and the
+  icon-only top-action button raised to 44px in both media queries.
+  Regression it caused: the +3px pill made the page overflow by 1px
+  at 1034×633 — fixed by moving the stage-fit constant 212→215px
+  (measured overflow + 2px slack). Pinned by bounding-box tests at
+  390px and 1034px.
+- **A11 (Low) 1930 ack placeholder mismatched the real format.**
+  `1930XXXXXXXX` → `329XXXXXXXXXXX` (14 digits, starts 329 — The
+  Hindu, Aug 2025). Pinned by a Playwright test.
+- **A12 (Low) `banks.ts:59` Devanagari fallback bypassed i18n.**
+  Now `t(lang, 'bankDraftMyBank')`.
+- **A13 (Low) Dead export `DEMO_LABEL`.** Removed (grep confirmed
+  zero uses).
+- **A14 (Low) Docker hardening.** `docker-compose.yml`: `restart:
+  unless-stopped` + HEALTHCHECK (`wget -q -O /dev/null
+  http://localhost:3000/`, interval 30s, timeout 5s, retries 3,
+  start_period 10s). `.dockerignore`: `ml/data/raw` (152 MB) +
+  `tests/shots-local` (31 MB) — the build context no longer ships
+  them. `docker compose up` still NOT run here (no Docker on the
+  VM — not installed); the judges' run is the remaining untested
+  step.
+- **A15 (Low) Manifest had no 192/512 PNG icons.** Generated
+  locally with PIL (no SVG rasterizer on the VM — no cairosvg,
+  ImageMagick, inkscape, sharp/resvg): the favicon.svg geometry
+  (blue shield #0369a1 + white check, 4× supersample → LANCZOS
+  downscale), pixel-verified (blue shield, white check, transparent
+  corners). `public/icon-192.png` (1,552 bytes) +
+  `public/icon-512.png` (35,165 bytes); manifest references both
+  (SVG entry kept). **Binary — NOT in this push (push-files is
+  UTF-8 text only); upload via the GitHub web UI afterwards.**
+  SW cache bumped `rakshio-v2` → **`rakshio-v3`**.
+
+First full Playwright run after the fixes: 79 passed / 7 failed.
+6 were test bugs, not app bugs (helper clicked the EN 'Write it
+instead' label in a Hinglish flow; `page.goto('/guide?id=…')` on a
+HashRouter app; hidden-button boundingBox; EN footer text asserted
+in HG mode; A4's method gap, above), and 1 was a real regression
+(the A10 1px overflow). All 7 fixed; the A9 probe was re-run twice
+more before the final suite.
+
+Evidence: build green; vitest **78/78** (15 files: +12 Step 19 —
+i18n parity 20 keys × 3 locales, A3/A4/A7/A12, triage language,
+PWA guards incl. `ignoreVary` + `cache-assets` — +2 reportFlow,
++2 router, +1 pwa); Playwright full suite **86/86 passed (6.8m),
+0 failed, exit 0** (dashboard 43 + step16 8 + step17 6 + step18 7
++ step19 10 + smoke 2 + production 6 + all-screens 1 +
+live-e2e-probe 1 + shots 1 + step18-shots 1); axe 0 on triage,
+guide and coach in English; screenshots read
+(`tests/shots-local/step19-a1-judge-confirm.png` — Judge confirm
+names the active incident; `step19-a4-otp-alert.png` — incident
+card ₹20,000 / kal 7 baje / UPI / SBI after the OTP Yes answer;
+`step19-a5-triage-en.png`, `step19-a6-guide-en.png`,
+`step19-a10-390.png`, `step19-home-1034-maxscroll.png`). Secret
+scan clean, no `.env` file. NOT deployed — live still serves v10;
+deploy needs his word.
+
 ## Rulings (Step 16)
 
 - The model score is never fudged, hidden, or overridden. Disagreement
@@ -1512,3 +1645,11 @@ his word.
 - The floating bottom dock still passes over stage content mid-scroll by
   design. Only the page fit and the end-of-scroll clearance are
   test-pinned; do not claim the dock never covers anything.
+- A9's lesson: `skipWaiting` + `clients.claim` only fixes control, not
+  caching. First-visit assets load before the worker takes control,
+  and `caches.match(request)` can still miss a cached entry when the
+  server sends `Vary: Origin` (stored no-Origin vs queried with
+  Origin). When an offline reload serves a blank page, probe the
+  worker's own match result — never assume the cache is the problem.
+- `pkill -f` with the pattern in the command kills your own shell
+  (re-learned this step on a header check). Bare PID only, always.

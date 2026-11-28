@@ -56,7 +56,7 @@ export function bankDraft(stored: StoredIncident, lang: Lang = 'hg', bankName?: 
   const when = stored.fraudAt || stored.fraudAtDisplay ? whenText(stored.fraudAt, stored.fraudAtDisplay, lang) : null;
   const lines = [
     t(lang, 'bankDraftGreet'),
-    t(lang, 'bankDraftAccount', { bank: bankName ?? stored.bank ?? (lang === 'en' ? 'my bank' : lang === 'hi' ? 'अपने बैंक' : 'apne bank') }),
+    t(lang, 'bankDraftAccount', { bank: bankName ?? stored.bank ?? t(lang, 'bankDraftMyBank') }),
     stored.amount != null
       ? t(lang, 'bankDraftAmount', { v: stored.amount.toLocaleString('en-IN') })
       : t(lang, 'bankDraftAmountUnknown'),

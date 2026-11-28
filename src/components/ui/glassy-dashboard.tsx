@@ -574,15 +574,17 @@ const dashboardStyles = `
        overscroll-behavior: contain the wheel over the stage never scrolled
        the page, so the footer was unreachable. The fit constant grows by
        the measured overflow + 2px slack, restoring "the page never scrolls"
-       at tablet widths too. */
-    block-size: max(360px, min(865px, calc(100svh - 212px)));
+       at tablet widths too.
+       Step 19 (A10): the search pill went 41px -> 44px, so the bar grew
+       3px and the page overflowed by 1px at 1034x633 — 212 -> 215. */
+    block-size: max(360px, min(865px, calc(100svh - 215px)));
   }
   /* Step 16 (bug 3): below 1060px the three-column top bar cannot hold
      the caregiver pill + status pill + lang + 2 buttons next to the search
      pill — use the two-row layout (search full-width on row 2) here instead
      of only below 760px, so nothing can overlap at tablet widths either. */
   .gd-top { grid-template-columns: minmax(0, 1fr) auto; padding: 7px 9px; gap: 6px 12px; border-radius: 21px; }
-  .gd-ask { grid-area: 2 / 1 / 3 / -1; min-block-size: 41px; }
+  .gd-ask { grid-area: 2 / 1 / 3 / -1; min-block-size: 44px; }
   .gd-top-actions { grid-area: 1 / 2; }
   .gd-command-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .gd-command-grid > .gd-command-chart { grid-column: 1; }
@@ -593,9 +595,9 @@ const dashboardStyles = `
   .gd-surround { padding-top: 11px; padding-bottom: calc(73px + env(safe-area-inset-bottom)); inline-size: calc(100% - 24px); }
   .gd-top { grid-template-columns: minmax(0, 1fr) auto; padding: 7px 9px; gap: 6px 12px; border-radius: 21px; }
   .gd-brand { padding-inline-start: 3px; }
-  .gd-ask { grid-area: 2 / 1 / 3 / -1; min-block-size: 41px; }
+  .gd-ask { grid-area: 2 / 1 / 3 / -1; min-block-size: 44px; }
   .gd-top-actions { grid-area: 1 / 2; }
-  .gd-top-actions .gd-icon-button { width: 41px; min-inline-size: 41px; min-block-size: 41px; }
+  .gd-top-actions .gd-icon-button { width: 44px; min-inline-size: 44px; min-block-size: 44px; }
   .gd-stage { border-radius: 23px; }
   .gd-stage-scroll { block-size: auto; padding: 15px 13px 88px; overflow: visible; }
   .gd-view-head { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 14px; }

@@ -109,6 +109,10 @@ export async function requestMicAccess(): Promise<MicAccess> {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return { ok: true, meter: null };
     const ctx = new Ctx();
+    // Step 19 (A8): a context created outside a user gesture starts
+    // "suspended" under Chrome's autoplay policy — the analyser then
+    // returns flat values and the level meter never moves. Resume it.
+    await ctx.resume();
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 512;

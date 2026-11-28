@@ -29,4 +29,17 @@ createRoot(document.getElementById('root')!).render(
 // exactly the same online.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  // Step 19 (A9): the worker can only cache requests that pass through
+  // it, and this page's own JS/CSS loaded before it took control — so an
+  // offline reload on the first visit served a blank page even with
+  // skipWaiting + clients.claim. Tell the active worker which
+  // same-origin assets the page loaded, so it can cache them.
+  navigator.serviceWorker.ready
+    .then((reg) => {
+      const urls = [...document.querySelectorAll('script[src], link[rel="stylesheet"][href]')]
+        .map((el) => (el as HTMLScriptElement).src || (el as HTMLLinkElement).href)
+        .filter((u) => u.startsWith(location.origin));
+      reg.active?.postMessage({ type: 'cache-assets', urls });
+    })
+    .catch(() => undefined);
 }

@@ -25,6 +25,11 @@ export function computeGaps(inc: ExtractedIncident): GapField[] {
   if (!inc.fraudAt.value || inc.fraudAt.confidence < 0.7) gaps.push('fraudAt');
   if (!inc.method.value || inc.method.confidence < 0.7) gaps.push('method');
   if (!inc.bank.value || inc.bank.confidence < 0.7) gaps.push('bank');
+  // Step 19 (A4): OTP sharing was never asked — the Step 18 OTP alert was
+  // reachable only if the user volunteered a matching phrase. Ask whenever
+  // sharing was not detected, so the alert and the Copy Deck OTP line are
+  // reachable through the guided flow.
+  if (!inc.credentialShared) gaps.push('otp');
   return gaps;
 }
 
@@ -41,7 +46,12 @@ function summaryText(inc: ExtractedIncident, lang: Lang): string {
   return parts.join(' ');
 }
 
-const EMPTY_CONFIRM: Record<GapField, ConfirmState> = { amount: 'pending', fraudAt: 'pending', method: 'pending', bank: 'pending' };
+const EMPTY_CONFIRM: Record<ConfirmField, ConfirmState> = { amount: 'pending', fraudAt: 'pending', method: 'pending', bank: 'pending' };
+
+// The confirm gate covers four fields; the gaps list can also ask about
+// OTP sharing (GapField 'otp'), which is answered in the gaps screen and
+// never reaches the confirm gate.
+type ConfirmField = 'amount' | 'fraudAt' | 'method' | 'bank';
 
 // The victim's first touch, unchanged from Steps 1–5 — only the shell
 // around it is new. /report always starts a fresh report at Panic.
@@ -56,7 +66,7 @@ export function ReportFlow() {
   const [masked, setMasked] = useState(false);
   const [gaps, setGaps] = useState<GapField[]>([]);
   const [unknownFields, setUnknownFields] = useState<Set<GapField>>(new Set());
-  const [confirmState, setConfirmState] = useState<Record<GapField, ConfirmState>>(EMPTY_CONFIRM);
+  const [confirmState, setConfirmState] = useState<Record<ConfirmField, ConfirmState>>(EMPTY_CONFIRM);
   const screenRef = useRef<HTMLDivElement>(null);
   const autoStarted = useRef(false);
   const navigate = useNavigate();
@@ -64,6 +74,9 @@ export function ReportFlow() {
   const settings = useDashboard((s) => s.settings);
   const setSettings = useDashboard((s) => s.setSettings);
   const addIncident = useDashboard((s) => s.addIncident);
+  // Step 19 (A1): the #/report Judge confirm must name the active
+  // incident — JudgeScreen defaults `active` to undefined without it.
+  const active = useDashboard((s) => s.active());
 
   // Hero deep-link: ?mode=voice jumps straight to the mic, once.
   useEffect(() => {
@@ -106,6 +119,12 @@ export function ReportFlow() {
   // Gap answers reuse the same deterministic extractor. A bare number-word
   // answer ("bees hazaar") gets a money cue appended, or it would not parse.
   function mergeField(field: GapField, text: string) {
+    // Step 19 (A4): the OTP answer is a yes/no, not text to extract.
+    if (field === 'otp') {
+      const yes = /^(yes|haan|ha|ji|true)$/i.test(text.trim());
+      setIncident((prev) => (prev ? { ...prev, credentialShared: yes } : prev));
+      return;
+    }
     const cue = field === 'amount' ? `${text} rupaye` : text;
     const { incident: g } = extractIncident(cue);
     setIncident((prev) => {
@@ -125,7 +144,7 @@ export function ReportFlow() {
     // Fields the user already said "pata nahi" to arrive pre-resolved.
     setConfirmState((prev) => {
       const next = { ...prev };
-      (Object.keys(next) as GapField[]).forEach((f) => {
+      (Object.keys(next) as ConfirmField[]).forEach((f) => {
         if (unknownFields.has(f)) next[f] = 'unknown';
       });
       return next;
@@ -211,7 +230,7 @@ export function ReportFlow() {
             onDone={handleConfirmDone}
           />
         )}
-        {screen === 'judge' && <JudgeScreen showTitle onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
+        {screen === 'judge' && <JudgeScreen showTitle active={active ? { id: `#${active.id.replace(/^rk-/, 'RK-').toUpperCase()}`, amount: active.amount != null ? formatINR(active.amount) : '—' } : null} onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
       </div>
       {screen !== 'panic' && (
         <button type="button" className="demo-link" onClick={resetAll}>{t(settings.language, 'reportStartNew')}</button>

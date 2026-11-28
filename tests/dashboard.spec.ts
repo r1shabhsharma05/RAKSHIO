@@ -682,8 +682,9 @@ test('step 12: coach Done toasts and logs visibly', async ({ page }) => {
   await seedDemo(page);
   await page.goto('/#/coach');
   await page.getByRole('button', { name: "Call ke baad 'Done' dabaiye" }).click();
-  await expect(page.getByText('Call tap log ho gaya')).toBeVisible();
-  await expect(page.getByText(/✓ Logged — Call tap hua/)).toBeVisible();
+  // Step 19 (A2): Done is not a call tap — the note and toast say so.
+  await expect(page.getByText('Done mark ho gaya')).toBeVisible();
+  await expect(page.getByText(/✓ Noted — aapne call step done mark kiya/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Ack number bharein (Ack Bridge)' })).toBeVisible();
 });
 

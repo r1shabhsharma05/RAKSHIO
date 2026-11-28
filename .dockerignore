@@ -4,3 +4,7 @@
 node_modules
 dist
 .git
+# Local-only data, never pushed: 152 MB of raw training downloads and
+# 31 MB of local test screenshots must not enter a build context.
+ml/data/raw
+tests/shots-local

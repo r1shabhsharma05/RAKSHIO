@@ -96,7 +96,14 @@ function useToolNav() {
     if (!active) return;
     updateIncident(active.id, { callTappedAt: new Date().toISOString() });
   };
-  return { navigate, active, updateIncident, backToIncident, logCallTap };
+  // Step 19 (A2): "Done" is a separate fact from a call tap — it must
+  // never set callTappedAt, or the Proof PDF would claim a 1930 call
+  // happened when only Done was pressed.
+  const logCoachDone = () => {
+    if (!active) return;
+    updateIncident(active.id, { coachDoneAt: new Date().toISOString() });
+  };
+  return { navigate, active, updateIncident, backToIncident, logCallTap, logCoachDone };
 }
 
 export function ActionsPage() {
@@ -125,7 +132,7 @@ export function ActionsPage() {
 }
 
 export function CoachPage() {
-  const { navigate, active, logCallTap } = useToolNav();
+  const { navigate, active, logCallTap, logCoachDone } = useToolNav();
   const lang = useDashboard((s) => s.settings.language);
   if (!active) {
     return (
@@ -139,7 +146,7 @@ export function CoachPage() {
   }
   return (
     <div className="db-flow">
-      <CoachScreen stored={active} onCallTap={logCallTap} onDone={logCallTap} onOpenAck={() => navigate('/portal')} onBack={() => navigate('/actions')} />
+      <CoachScreen stored={active} onCallTap={logCallTap} onDone={logCoachDone} onOpenAck={() => navigate('/portal')} onBack={() => navigate('/actions')} />
     </div>
   );
 }
