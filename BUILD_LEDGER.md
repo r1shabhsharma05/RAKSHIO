@@ -1624,6 +1624,101 @@ card ₹20,000 / kal 7 baje / UPI / SBI after the OTP Yes answer;
 scan clean, no `.env` file. NOT deployed — live still serves v10;
 deploy needs his word.
 
+## Step 20: complete (2026-11-28) — Hunt 2, all 8 fixed in one pass
+
+Source: `tests/full-bug-hunt-2-2026-11-28.md` (B1–B8). One pass, no
+follow-up rounds, per the user's order ("ek bar me sab bugs find kr
+le... fir ek bar me fix kr de").
+
+- **B1 (High) Amount parser: English number words + silent wrong
+  amounts.** `extract.ts`: ONES gained one..ninety, SCALES gained
+  hundred/thousand; `parseNumberWords` skips "and" mid-run, counts
+  "a/an" as 1 only right before a scale, and "half" adds 0.5 instead
+  of overwriting ("half a lakh" → ₹50,000, "one and a half lakh" →
+  ₹150,000). `parseAmount`: decimal+scale pre-pass ("1.5 lakh" →
+  ₹150,000, "2.5 lakh" → ₹250,000 — tokens() used to split "1.5"
+  into "1"+"5"); "20k"/"20K" shorthand (×1000); the digit regex now
+  requires ≥3 digits ending in a digit, so "2 lakh 50 thousand"
+  no longer returns ₹50 from the "50 " fragment. All 17 Hunt 2
+  FAIL probes now pass (matrix in
+  `src/engines/understanding/step20.test.ts`, 51 tests) and the
+  52 OK cases stay OK; Playwright end-to-end for "twenty thousand"
+  free text AND gap answer (incident card ₹20,000 / kal, shaam /
+  UPI / SBI — screenshot `step20-b1-amount.png`).
+- **B2 (High) Vault chain broke on a second incident's evidence.**
+  `addEvidence` read prevHash from the GLOBAL last row while
+  `verifyChain` is per-incident. Now per-incident prevHash, so
+  interleaved A+B adds keep both chains green. Pinned by vitest
+  interleave (4+4) + Playwright (add A1, seed B, add B1, verify B,
+  switch back to A, verify A — screenshot `step20-b2-chain.png`:
+  "Saved evidence (1)", "#RK-… ke evidence", "✓ Chain sahi hai —
+  1 entries, koi change nahi.").
+- **B3 (High) Double-clicking Save forked the chain.**
+  `addEvidence` now runs read+hash+add inside one Dexie
+  transaction, and the Vault Save button has a synchronous ref
+  guard + disabled state while a save is in flight (state alone
+  is not fast enough between the two clicks of a dblclick).
+  Pinned by vitest 10 concurrent adds (10 rows, chain true) +
+  Playwright dblclick (1 row, chain OK).
+- **B4 (Medium) Vault/Proof showed "0 / No evidence yet" for the
+  wrong incident.** Both screens now show WHICH incident the
+  evidence belongs to (`vaultIncidentLabel` /
+  `proofIncidentLabel`, `#RK-…`) and, when the active incident
+  has none but another does, name it
+  ("Is incident ke liye koi evidence nahi hai — 1 #RK-… ke under
+  save hai. Wo incident kholkar dekhein." — screenshot
+  `step20-b4-label.png`). Pinned by Playwright (add to A, switch
+  to B, note names A, switch back, count 1).
+- **B5 (Medium) OTP denial read as sharing.** `credentialShared`
+  now checks a ±40-char window around the credential word for
+  negations (not/never/didn't/nahi/nahin/mat/no); "nahi to"
+  (otherwise) is excluded. "I did not share any OTP" / "OTP nahi
+  diya" / "maine OTP nahi bataya" → false; all positive controls
+  still true. A false positive no longer suppresses the OTP gap
+  question. Limitation noted in code: mixed clauses ("PIN de diya,
+  OTP nahi diya") are beyond this rule — the first credential's
+  window decides.
+- **B6 (Medium) Vault/Proof flashed "0 / No evidence yet" before
+  rows loaded.** Both screens have a loading state distinct from
+  the empty state (`evidenceLoading`, all 3 locales). Pinned by
+  Playwright with a MutationObserver that counts false→true
+  transitions of the empty note (control: the note genuinely
+  appears with no evidence, 1 sighting; with an entry saved, 0
+  new sightings on reload).
+- **B7 (Low) Triage h1 said "Home".** `EXTRA_TITLES` gains
+  `'/triage': 'triageTitle'`. While pinning axe 0 on /triage, the
+  shared `NeedsIncident` empty state turned out to put an h3
+  ("Kya yaad rakhein", plus the Bank preview h3) directly under
+  the shell h1 — pre-existing on all 7 gated pages, same fix:
+  both are h2 now (1rem vs 0.9375rem, negligible visual change).
+- **B8 (Low) Header language `<select>` was 20px tall at 390px.**
+  `.gd-lang select` min-height auto → 44px. Pinned by Playwright
+  at 390×844.
+
+First full Playwright run after the fixes: 5 passed / 4 failed.
+All 4 were test bugs, not app bugs (Devanagari gap headings in a
+Hinglish-default flow; the free-text test skipped the fraudAt
+re-ask — "yesterday evening" parses at confidence 0.6, below the
+0.7 gap threshold, so the flow asks once more by design; the B6
+observer installed before `documentElement` existed and counted
+every mutation while the note was on screen instead of
+appearances). All 4 fixed; the B4 screenshot was re-taken scrolled
+into view.
+
+Evidence: build green (7.79s); vitest **133/133** (17 files:
++51 step20 extract matrix, +4 step20 vault); Playwright full
+suite **95/95 passed (7.1m), 0 failed, exit 0** (dashboard 43 +
+step16 8 + step17 6 + step18 7 + step19 10 + step20 9 + smoke 2 +
+production 6 + all-screens 1 + live-e2e-probe 1 + shots 1 +
+step18-shots 1); axe 0 on triage and vault; screenshots read
+(`tests/shots-local/step20-b1-amount.png`,
+`step20-b2-chain.png`, `step20-b4-label.png`,
+`step20-b8-390.png`, `step20-home-1034-maxscroll.png`). Secret
+scan clean, no `.env` file (only `.env.example`, placeholders).
+NOT deployed — live still serves v11; deploy needs his word.
+A15 PNG icons (`public/icon-192.png`, `public/icon-512.png`)
+still NOT in the repo — binary, upload via GitHub web UI.
+
 ## Rulings (Step 16)
 
 - The model score is never fudged, hidden, or overridden. Disagreement
@@ -1653,3 +1748,12 @@ deploy needs his word.
   worker's own match result — never assume the cache is the problem.
 - `pkill -f` with the pattern in the command kills your own shell
   (re-learned this step on a header check). Bare PID only, always.
+- Awaiting a non-Dexie promise inside a Dexie transaction lets
+  IndexedDB auto-commit before the next write
+  (PrematureCommitError) — use `Dexie.waitFor()` for the hash, or
+  the transaction is not a transaction.
+- A MutationObserver that counts "text present during a mutation"
+  counts toasts and heading updates as fresh sightings. Count
+  false→true transitions if the claim is "it never appeared".
+- `page.addInitScript` runs before `documentElement` exists —
+  retry-install, or `observe()` throws and nothing is recorded.

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
-import { listEvidence, rootHash, type EvidenceRecord } from '../engines/evidence/vault';
+import { listEvidence, countOtherEvidence, rootHash, type EvidenceRecord } from '../engines/evidence/vault';
 import { loadAck } from '../engines/ack/ack';
 import { buildProofPdf, buildProofZip, downloadBlob, rootHashQrDataUrl } from '../engines/proof/proofpack';
 import { BackButton } from './shared';
@@ -15,6 +15,10 @@ import { t } from '../i18n';
 export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack: () => void }) {
   const lang = useDashboard((s) => s.settings.language);
   const [evidence, setEvidence] = useState<EvidenceRecord[]>([]);
+  // Step 20 (B6): same loading-vs-empty split as the Vault.
+  const [loaded, setLoaded] = useState(false);
+  // Step 20 (B4): evidence saved under other incidents.
+  const [other, setOther] = useState<{ count: number; incidentId: string | null }>({ count: 0, incidentId: null });
   const [root, setRoot] = useState<string | null>(null);
   const [qr, setQr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -22,7 +26,8 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
   const showToast = useToast();
 
   useEffect(() => {
-    listEvidence(stored.id).then(setEvidence);
+    listEvidence(stored.id).then((rows) => { setEvidence(rows); setLoaded(true); });
+    countOtherEvidence(stored.id).then(setOther);
     rootHash(stored.id).then(async (r) => {
       setRoot(r);
       if (r) setQr(await rootHashQrDataUrl(r));
@@ -58,13 +63,22 @@ export function ProofScreen({ stored, onBack }: { stored: StoredIncident; onBack
       <p>{t(lang, 'proofIntro')}</p>
 
       <section className="rk-card">
+        <div className="field-row"><span className="label">{t(lang, 'proofIncidentLabel', { id: `#${stored.id.replace(/^rk-/, 'RK-').toUpperCase()}` })}</span></div>
         <div className="field-row"><span className="label">{t(lang, 'proofEvidenceLabel')}</span><span className="value">{evidence.length}</span></div>
         <div className="field-row"><span className="label">{t(lang, 'proofRootLabel')}</span><span className="value ev-hash">{root ? `${root.slice(0, 16)}…` : t(lang, 'proofNoEvidence')}</span></div>
         <div className="field-row"><span className="label">{t(lang, 'proofAckLabel')}</span><span className="value">{ack?.ackNumber ?? t(lang, 'proofNoAck')}</span></div>
       </section>
 
-      {evidence.length === 0 && (
+      {!loaded && (
+        <p className="note">{t(lang, 'evidenceLoading')}</p>
+      )}
+
+      {loaded && evidence.length === 0 && (
         <p className="note">{t(lang, 'proofEmptyNote')}</p>
+      )}
+
+      {loaded && evidence.length === 0 && other.count > 0 && other.incidentId && (
+        <p className="note">{t(lang, 'proofOtherEvidenceNote', { n: other.count, id: `#${other.incidentId.replace(/^rk-/, 'RK-').toUpperCase()}` })}</p>
       )}
 
       {qr && (

@@ -32,17 +32,35 @@ export const db = new RakshioDb();
 export async function addEvidence(
   rec: Omit<EvidenceRecord, 'id' | 'prevHash' | 'hash' | 'redacted'> & { text: string },
 ): Promise<EvidenceRecord> {
-  const last = await db.evidence.orderBy('id').last();
-  const prevHash = last?.hash ?? '';
-  const { text, redacted } = redactText(rec.text);
-  const base = { ...rec, text, redacted, prevHash };
-  const hash = await sha256Hex(canonical(base));
-  const id = await db.evidence.add({ ...base, hash });
-  return { ...base, hash, id };
+  // Step 20 (B2+B3): the prevHash comes from THIS incident's last row,
+  // inside one transaction — the old code read the GLOBAL last row
+  // (a second incident's evidence broke both chains) and read-then-added
+  // with no transaction (a double-tap stored two rows on the same
+  // prevHash). Dexie serializes transactions on this table, so two
+  // concurrent adds chain correctly instead of forking.
+  return db.transaction('rw', db.evidence, async () => {
+    const rows = await db.evidence.where('incidentId').equals(rec.incidentId).sortBy('id');
+    const prevHash = rows.length ? rows[rows.length - 1].hash : '';
+    const { text, redacted } = redactText(rec.text);
+    const base = { ...rec, text, redacted, prevHash };
+    // crypto.subtle is a non-Dexie promise: a plain await inside a
+    // transaction lets IndexedDB auto-commit before add() runs
+    // (PrematureCommitError). Dexie.waitFor keeps the transaction alive.
+    const hash = await Dexie.waitFor(sha256Hex(canonical(base)));
+    const id = await db.evidence.add({ ...base, hash });
+    return { ...base, hash, id };
+  });
 }
 
 export async function listEvidence(incidentId: string): Promise<EvidenceRecord[]> {
   return db.evidence.where('incidentId').equals(incidentId).sortBy('capturedAt');
+}
+
+// Step 20 (B4): evidence saved under OTHER incidents, so the Vault/Proof
+// screens can say where it is instead of showing a bare "0".
+export async function countOtherEvidence(incidentId: string): Promise<{ count: number; incidentId: string | null }> {
+  const others = await db.evidence.where('incidentId').notEqual(incidentId).toArray();
+  return { count: others.length, incidentId: others.length ? others[0].incidentId : null };
 }
 
 export async function verifyChain(incidentId: string): Promise<{ ok: boolean; brokenAt?: number; count: number }> {

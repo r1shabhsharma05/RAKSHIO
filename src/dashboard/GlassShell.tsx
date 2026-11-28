@@ -85,7 +85,7 @@ const BOTTOM_SHORT: Record<string, string> = {
   '/settings': 'navSettingsShort',
 };
 // Routes with no dock entry still need a page title.
-const EXTRA_TITLES: Record<string, string> = { '/judge': 'navJudge' };
+const EXTRA_TITLES: Record<string, string> = { '/judge': 'navJudge', '/triage': 'triageTitle' };
 // Step 16 (bug 7): hovering or keyboard-focusing a dock link warms that
 // route's lazy chunk before the click, so the navigation feels instant.
 // The idle prefetch in App covers the same chunks; this is the fast path.

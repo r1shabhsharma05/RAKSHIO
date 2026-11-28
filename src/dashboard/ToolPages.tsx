@@ -44,7 +44,7 @@ export function NeedsIncident({
         <p className="db-muted">{what}</p>
         <p className="db-muted">{preview}</p>
         {extra}
-        <h3>{t(lang, 'emptyRememberTitle')}</h3>
+        <h2>{t(lang, 'emptyRememberTitle')}</h2>
         <ul className="db-tips">
           {tips.map((tip) => (
             <li key={tip}>{tip}</li>
@@ -70,7 +70,7 @@ function BankHelplinePreview() {
   const lang = useDashboard((s) => s.settings.language);
   return (
     <div>
-      <h3>{t(lang, 'bankPreviewTitle')}</h3>
+      <h2>{t(lang, 'bankPreviewTitle')}</h2>
       <div className="db-rows">
         {BANKS.slice(0, 4).map((b) => (
           <div key={b.name} className="db-row">

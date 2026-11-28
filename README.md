@@ -305,6 +305,18 @@ without it the app silently offers Text Mode instead of a dead mic button.
 - **A14 Docker hardening:** `restart: unless-stopped` + HEALTHCHECK; `.dockerignore` adds `ml/data/raw` (152 MB) + `tests/shots-local` (31 MB). `docker compose up` still NOT run here (no Docker on the VM). **A15 PNG icons generated** (`public/icon-192.png`, `public/icon-512.png`, from the favicon SVG, pixel-verified) and referenced in the manifest — **binary, NOT in this push; upload via web UI afterwards.** SW cache `rakshio-v2` → `rakshio-v3`.
 - Evidence: build green, vitest **78/78** (15 files, +17 Step 19), Playwright full suite **86/86 passed (6.8m), 0 failed**, axe 0 on triage, guide and coach in English. Secret scan clean, no `.env` file. NOT deployed — live still serves v10; deploy needs his word.
 
+## Step 20 — Hunt 2, all 8 fixed in one pass (28 Nov)
+
+- **B1 Amount parser: English number words + silent wrong amounts.** ONES gained one..ninety, SCALES gained hundred/thousand; "and" joins runs, "a/an" counts as 1 only before a scale, "half" adds 0.5 ("half a lakh" → ₹50,000, "one and a half lakh" → ₹150,000). Decimal+scale pre-pass ("1.5 lakh" → ₹150,000), "20k" shorthand, digit regex now needs ≥3 digits ending in a digit ("2 lakh 50 thousand" → ₹250,000, not ₹50). All 17 Hunt 2 FAIL probes pass; 52 OK cases stay OK; Playwright end-to-end for "twenty thousand" free text AND gap answer.
+- **B2 Vault chain broke on a second incident's evidence.** `addEvidence` now takes prevHash from the incident's own last row, inside one Dexie transaction — interleaved A+B adds keep both chains green.
+- **B3 Double-clicking Save forked the chain.** Transaction (with `Dexie.waitFor` for the SHA-256 — a plain await auto-commits the transaction) + a synchronous ref guard and disabled state on the Save button. 10 concurrent adds → 10 rows, chain valid; dblclick → 1 row.
+- **B4 Vault/Proof showed "0 / No evidence yet" for the wrong incident.** Both screens show which incident the evidence belongs to (`#RK-…`) and name the incident holding it when the active one is empty.
+- **B5 OTP denial read as sharing.** Negation window around the credential word (not/never/didn't/nahi/nahin/mat/no; "nahi to" excluded). "I did not share any OTP" / "OTP nahi diya" → false.
+- **B6 Vault/Proof flashed "0 / No evidence yet" before rows loaded.** Loading state distinct from the empty state, pinned with a MutationObserver that counts appearances.
+- **B7 Triage h1 said "Home".** `EXTRA_TITLES` gains `/triage`. The shared empty-state h3s ("Kya yaad rakhein", Bank preview) became h2s — they followed the shell h1 directly on all 7 gated pages.
+- **B8 Header language `<select>` was 20px tall at 390px.** Now 44px.
+- Evidence: build green, vitest **133/133** (17 files), Playwright full suite **95/95 passed (7.1m), 0 failed**, axe 0 on triage and vault. Secret scan clean, no `.env` file. NOT deployed — live still serves v11; deploy needs his word. A15 PNG icons still NOT in the repo (binary, web-UI upload pending).
+
 ## Deliberately NOT done
 
 - Demo video (script ready in `docs/DEMO.md`, record 29 Nov).

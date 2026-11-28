@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { StoredIncident } from '../state/store';
-import { addEvidence, listEvidence, tamperTestCopy, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
+import { addEvidence, countOtherEvidence, listEvidence, tamperTestCopy, verifyChain, type EvidenceRecord } from '../engines/evidence/vault';
 import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 import { useDashboard } from '../state/dashboardStore';
@@ -16,30 +16,51 @@ import { t } from '../i18n';
 export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncident; caregiver: boolean; onBack: () => void }) {
   const lang = useDashboard((s) => s.settings.language);
   const [rows, setRows] = useState<EvidenceRecord[]>([]);
+  // Step 20 (B6): rows start empty while the async load is in flight —
+  // the empty note must not render before the stored rows arrive.
+  const [loaded, setLoaded] = useState(false);
+  // Step 20 (B4): evidence saved under OTHER incidents, so an empty Vault
+  // can name where it is instead of looking like data loss.
+  const [other, setOther] = useState<{ count: number; incidentId: string | null }>({ count: 0, incidentId: null });
   const [kind, setKind] = useState<'screenshot' | 'sms' | 'note' | 'file'>('sms');
   const [label, setLabel] = useState('');
   const [text, setText] = useState('');
   const [verify, setVerify] = useState<{ ok: boolean; brokenAt?: number; count: number } | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [tamperDemo, setTamperDemo] = useState<{ ok: boolean; brokenAt?: number; count: number } | null>(null);
+  // Step 20 (B3): a double-tap must save once. The ref guard is
+  // synchronous (state re-render is not fast enough between two clicks
+  // of a dblclick); the transaction in addEvidence is the second layer.
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const showToast = useToast();
 
   async function refresh() {
     setRows(await listEvidence(stored.id));
+    setOther(await countOtherEvidence(stored.id));
+    setLoaded(true);
   }
   useEffect(() => { refresh(); }, [stored.id]);
 
   async function add() {
     if (!text.trim() && kind !== 'file') return;
-    await addEvidence({
-      incidentId: stored.id, kind, label: label.trim() || kind,
-      text: text.trim(), capturedAt: new Date().toISOString(), byCaregiver: caregiver,
-    });
-    setText('');
-    setLabel('');
-    setVerify(null);
-    await refresh();
-    showToast(t(lang, 'vaultSavedToast'));
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      await addEvidence({
+        incidentId: stored.id, kind, label: label.trim() || kind,
+        text: text.trim(), capturedAt: new Date().toISOString(), byCaregiver: caregiver,
+      });
+      setText('');
+      setLabel('');
+      setVerify(null);
+      await refresh();
+      showToast(t(lang, 'vaultSavedToast'));
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -98,12 +119,17 @@ export function VaultScreen({ stored, caregiver, onBack }: { stored: StoredIncid
           </>
         )}
         <p className="note">{t(lang, 'vaultRedactNote')}</p>
-        <button type="button" className="rk-primary-btn" disabled={kind !== 'file' && text.trim().length < 1} onClick={add}>{t(lang, 'vaultSaveBtn')}</button>
+        <button type="button" className="rk-primary-btn" disabled={saving || (kind !== 'file' && text.trim().length < 1)} onClick={add}>{t(lang, 'vaultSaveBtn')}</button>
       </section>
 
       <section className="rk-card">
         <h2>{t(lang, 'vaultSavedTitle', { n: rows.length })}</h2>
-        {rows.length === 0 && <p className="note">{t(lang, 'vaultEmptyNote')}</p>}
+        <p className="note">{t(lang, 'vaultIncidentLabel', { id: `#${stored.id.replace(/^rk-/, 'RK-').toUpperCase()}` })}</p>
+        {!loaded && <p className="note">{t(lang, 'evidenceLoading')}</p>}
+        {loaded && rows.length === 0 && <p className="note">{t(lang, 'vaultEmptyNote')}</p>}
+        {loaded && rows.length === 0 && other.count > 0 && other.incidentId && (
+          <p className="note">{t(lang, 'vaultOtherEvidenceNote', { n: other.count, id: `#${other.incidentId.replace(/^rk-/, 'RK-').toUpperCase()}` })}</p>
+        )}
         {rows.map((r) => (
           <div key={r.id} className="field-row">
             <span className="label">[{r.kind}] {r.label}{r.byCaregiver ? t(lang, 'vaultCaregiverTag') : ''}<br /><span className="ev-text">{r.text.slice(0, 120)}</span></span>

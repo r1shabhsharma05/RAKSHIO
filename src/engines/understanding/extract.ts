@@ -31,10 +31,18 @@ const ONES: Record<string, number> = {
   gyarah: 11, barah: 12, terah: 13, chaudah: 14, pandrah: 15,
   solah: 16, satrah: 17, atharah: 18, unnees: 19, bees: 20, beez: 20,
   tees: 30, chalis: 40, pachaas: 50, saath: 60, sattar: 70, assi: 80, nabbe: 90,
+  // Step 20 (B1): English number words — the parser was Hindi-only, so
+  // "twenty thousand" parsed to null on every entry path.
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+  nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
+  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
+  eighty: 80, ninety: 90,
 };
 
 const SCALES: Record<string, number> = {
   sau: 100, hazaar: 1000, hazar: 1000, lakh: 100000, crore: 10000000,
+  hundred: 100, thousand: 1000,
 };
 
 const BANKS: { name: string; aliases: string[] }[] = [
@@ -96,9 +104,10 @@ function tokens(text: string): string[] {
   return text.split(/[^a-z0-9]+/).filter(Boolean);
 }
 
-// Parses a run of Hindi number words / digits STARTING at words[0],
-// e.g. "bees hazaar" -> { value: 20000, consumed: 2 },
-// "dedh lakh" -> 150000, "ek lakh bees hazaar" -> 120000.
+// Parses a run of Hindi/Hinglish/English number words / digits STARTING
+// at words[0], e.g. "bees hazaar" -> { value: 20000, consumed: 2 },
+// "dedh lakh" -> 150000, "ek lakh bees hazaar" -> 120000,
+// "twenty thousand five hundred" -> 20500, "one and a half lakh" -> 150000.
 // Strict start: a run never skips ahead to a later number — the caller
 // walks each position, so a time ("7 baje") can never borrow the scale
 // of the next phrase ("bees hazaar").
@@ -107,9 +116,24 @@ function parseNumberWords(words: string[]): { value: number; consumed: number } 
   let current = 0;
   let seen = false;
   let consumed = 0;
-  for (const w of words) {
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
     if (w === 'dedh') { current = 1.5; seen = true; consumed++; continue; }
     if (w === 'aadha') { current = 0.5; seen = true; consumed++; continue; }
+    // "half a lakh" -> 50000, "one and a half lakh" -> 150000: half adds
+    // 0.5 to what is already there instead of overwriting it.
+    if (w === 'half') { current = current > 0 ? current + 0.5 : 0.5; seen = true; consumed++; continue; }
+    // "and" joins two parts of one amount ("twenty thousand and five
+    // hundred") — transparent mid-run, never starts a run.
+    if (w === 'and') { if (seen) { consumed++; continue; } break; }
+    // "a lakh" / "a hundred": the article counts as 1, but only right
+    // before a scale — "a 20000" must not become 20001.
+    if (w === 'a' || w === 'an') {
+      const next = words[i + 1];
+      if (next && next in SCALES && current === 0) { current = 1; seen = true; }
+      consumed++;
+      continue;
+    }
     if (w in ONES) { current += ONES[w]; seen = true; consumed++; continue; }
     if (w in SCALES) {
       const scale = SCALES[w];
@@ -134,8 +158,25 @@ function parseAmount(_text: string, stripped: string): Field<number> {
   // (Live bug: "kal shaam 7 baje bees hazaar" extracted ₹7 — the "7" from
   // the time borrowed "hazaar" from the real amount via a lookahead window.)
   const noTime = stripped.replace(/\b(?:\d{1,2}|[a-z]+)\s+baje\b/g, ' ');
+  // Step 20 (B1): decimals split into digits by tokens() ("1.5 lakh" ->
+  // "1"+"5" -> 600000), so catch decimal+scale on the raw string first.
+  const decScale = noTime.match(/\b(\d+\.\d+)\s*(lakh|crore|thousand|hazaar|hazar|hundred|sau)\b/);
+  if (decScale) {
+    const value = parseFloat(decScale[1]) * SCALES[decScale[2]];
+    if (value > 0 && value < 100000000) return { value, confidence: 0.9 };
+  }
+  // "20k" / "20K" shorthand.
+  const kMatch = noTime.match(/\b(\d+(?:\.\d+)?)\s*k\b/);
+  if (kMatch) {
+    const value = parseFloat(kMatch[1]) * 1000;
+    if (value > 0 && value < 100000000) return { value, confidence: 0.9 };
+  }
   // Latin digits first ("20,000" / "20000"), UTR already stripped out.
-  const digitMatch = noTime.match(/\b(\d[\d ]{2,})\b/);
+  // Step 20 (B1): the old /(\d[\d ]{2,})/ matched "50 " in
+  // "2 lakh 50 thousand" — the trailing space counted as the 3rd char —
+  // and returned ₹50 before any word scan. The run must end in a digit
+  // and hold at least 3 digits, so a 2-digit fragment never steals it.
+  const digitMatch = noTime.match(/\b(\d(?:[ ]?\d){2,})\b/);
   if (digitMatch) {
     const value = Number(digitMatch[1].replace(/\s/g, ''));
     if (value > 0 && value < 100000000) return { value, confidence: 0.95 };
@@ -143,7 +184,8 @@ function parseAmount(_text: string, stripped: string): Field<number> {
   const words = tokens(noTime);
   for (let i = 0; i < words.length; i++) {
     const run = parseNumberWords(words.slice(i));
-    if (!run || run.value <= 0) continue;
+    // A bare fraction ("half" alone -> 0.5) is not money.
+    if (!run || run.value < 1) continue;
     // The guard reads ONLY the run's own words plus the word right after
     // it — never a window reaching into the next phrase. A bare number
     // ("das") with no scale and no money word next to it is not money.
@@ -251,7 +293,23 @@ function parseFraudAt(text: string, now: Date): { at: Field<Date>; display: Fiel
   return { at: { value: date, confidence }, display: { value: display || null, confidence } };
 }
 
-// Masks 4-6 digit numbers spoken next to OTP/PIN/CVV/password before storage.
+// OTP/PIN sharing needs a credential word + a sharing verb — and no
+// denial nearby. Step 20 (B5): "I did not share any OTP" / "OTP nahi
+// diya" were read as sharing, which also suppressed the OTP gap question.
+// The denial is checked in a ±40-char window around the first credential
+// mention; "nahi to" (otherwise) is not a denial. Mixed clauses
+// ("PIN de diya, OTP nahi diya") are beyond this rule — the first
+// credential's window decides.
+function detectCredentialShared(text: string): boolean {
+  if (!/(otp|pin|cvv|password)/.test(text)) return false;
+  if (!/(manga|maanga|bata|diya|bheja|share|install|le liya|leliya)/.test(text)) return false;
+  const idx = text.search(/(otp|pin|cvv|password)/);
+  const window = text
+    .slice(Math.max(0, idx - 40), idx + 40)
+    .replace(/nahi\s+to|nahin\s+to/g, ' ');
+  if (/\b(not|never|didn'?t|did\s+not|nahi|nahin|mat|no)\b/.test(window)) return false;
+  return true;
+}
 export function maskCredentials(text: string): { text: string; masked: boolean } {
   let masked = false;
   const out = text.replace(/((?:otp|pin|cvv|password)[^\d]{0,15})(\d{4,6})/gi, (_m, pre: string, digits: string) => {
@@ -269,7 +327,7 @@ export function extractIncident(rawTranscript: string, now = new Date()): { inci
   const stripped = utr.value ? text.replace(/\b(\d{4}[\s-]?\d{4}[\s-]?\d{4}|\d{12})\b/, ' ') : text;
 
   const fraudAt = parseFraudAt(text, now);
-  const credentialShared = /(otp|pin|cvv|password)/.test(text) && /(manga|maanga|bata|diya|bheja|share|install|le liya|leliya)/.test(text);
+  const credentialShared = detectCredentialShared(text);
   const contact = /customer ?care/.test(text)
     ? { value: 'customer-care call', confidence: 0.85 }
     : /whatsapp/.test(text)

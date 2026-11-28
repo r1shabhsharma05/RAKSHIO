@@ -74,7 +74,7 @@
   border: 1px solid var(--gd-line); background: var(--gd-inner);
   border-radius: 10px; padding: 0 0.5rem; min-block-size: 35px;
 }
-.gd-lang select { background: transparent; border: none; color: inherit; font: inherit; min-height: auto; padding: 0; }
+.gd-lang select { background: transparent; border: none; color: inherit; font: inherit; min-height: 44px; padding: 0; }
 /* Step 9 fix: unstyled <option> elements rendered light-on-white on
    Windows Chrome (white box, barely-visible text). Options get the
    component surface explicitly, in both themes. */
