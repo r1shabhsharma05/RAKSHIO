@@ -16,7 +16,7 @@ const EXAMPLES: { key: string; text: string }[] = [
 
 // Second-Scam Shield 2.0: paste any message — recovery agent, refund offer,
 // fake bank SMS — and get a Truth Card: what is wrong, and what to do.
-export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerdict?: (v: ShieldVerdict, text: string) => void }) {
+export function ShieldScreen({ onBack, onVerdict, onModel }: { onBack: () => void; onVerdict?: (v: ShieldVerdict, text: string) => void; onModel?: (score: number | null, coverage: number | null) => void }) {
   const lang = useDashboard((s) => s.settings.language);
   const [text, setText] = useState('');
   const [verdict, setVerdict] = useState<ShieldVerdict | null>(null);
@@ -34,9 +34,14 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
     loadShieldModel().then(async (m) => {
       if (!m) { setMlLoading(false); return; }
       setMlMeta(m.meta);
-      setMlScore(await m.predict(t));
-      setMlCoverage(m.coverage(t));
+      const score = await m.predict(t);
+      const coverage = m.coverage(t);
+      setMlScore(score);
+      setMlCoverage(coverage);
       setMlLoading(false);
+      // Step 21 (T3): hand the model result up so the Home tile can say
+      // the rules and the model disagree — not only inside Shield.
+      onModel?.(score, coverage);
     });
   }
 
@@ -56,7 +61,11 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
   // message's words are outside its English training vocab — say so
   // plainly and tell the user to follow the rules. The score is never
   // hidden or fudged; it stays visible under the warning.
-  const warning = verdict && mlScore !== null && mlCoverage !== null ? modelWarning(verdict.level, mlScore, mlCoverage) : null;
+  // Step 21: the "scored as scam/safe" cut is the shipped model's own
+  // tuned threshold (0.65), never a hardcoded 0.5 — the old 0.5 cut
+  // called the retrain's 52% on the Hinglish danger sentence "a scam"
+  // although the model itself classifies below 0.65 as safe.
+  const warning = verdict && mlScore !== null && mlCoverage !== null ? modelWarning(verdict.level, mlScore, mlCoverage, mlMeta?.threshold ?? 0.65) : null;
 
   return (
     <>
@@ -92,7 +101,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
             {mlLoading && <p>{t(lang, 'shieldModelLoading')}</p>}
             {mlScore !== null && mlMeta && (
               <>
-                <p>{t(lang, 'shieldModelScore')} {Math.round(mlScore * 100)}% — {mlScore >= 0.5 ? t(lang, 'shieldModelSaysScam') : t(lang, 'shieldModelSaysSafe')}.</p>
+                <p>{t(lang, 'shieldModelScore')} {Math.round(mlScore * 100)}% — {mlScore >= (mlMeta?.threshold ?? 0.65) ? t(lang, 'shieldModelSaysScam') : t(lang, 'shieldModelSaysSafe')}.</p>
                 {warning === 'disagree' && (
                   <p className="status-bad" role="alert">{t(lang, 'shieldDisagree')}</p>
                 )}

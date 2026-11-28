@@ -2,7 +2,7 @@
 // the user runs a Shield check, never on first load, never blocking 1930).
 //
 // The model was trained in ml/train.mjs on the REAL labeled merged
-// dataset (UCI SMS Spam + Enron spam + phishing emails, 16,128 rows;
+// dataset (UCI SMS Spam + Enron spam + phishing emails, 42,612 rows;
 // full provenance in ml/README.md). It is an EXTRA signal only: the 16
 // rules are still the explanation, and the model score never overrides
 // the rules' flags. The model was NOT trained on the 32 Situation
@@ -30,14 +30,23 @@ export type ModelWarning = 'disagree' | 'low-coverage' | null;
  *  — showing the bare score would reassure a victim the rules just
  *  warned. 'low-coverage': most of the message's words are outside the
  *  model's English training vocab, so the score is near-meaningless.
- *  Pure function, unit-tested on the exact E2E danger sentence. */
+ *  Pure function, unit-tested on the exact E2E danger sentence.
+ *  Step 21: "the model says safe/scam" is judged against the model's
+ *  own tuned decision threshold (0.65 in the shipped model.json), NOT
+ *  a hardcoded 0.5. The old 0.5 cut labelled the Step 16 retrain's
+ *  52% on the Hinglish danger sentence "a scam" even though 52% is
+ *  below the threshold the model's own accuracy/precision/recall were
+ *  measured at — and hid the disagreement the rules verdict needs
+ *  shown. The threshold is a parameter (default = shipped model's
+ *  0.65) so callers pass the threshold of the model they loaded. */
 export function modelWarning(
   level: 'safe' | 'suspicious' | 'danger',
   score: number | null,
   coverage: number,
+  threshold = 0.65,
 ): ModelWarning {
   if (score === null) return null;
-  if ((level === 'danger' && score < 0.5) || (level === 'safe' && score >= 0.5)) return 'disagree';
+  if ((level === 'danger' && score < threshold) || (level === 'safe' && score >= threshold)) return 'disagree';
   if (coverage < 0.5) return 'low-coverage';
   return null;
 }
@@ -50,6 +59,9 @@ export interface ShieldModelMeta {
   accuracy: number;
   precision: number;
   recall: number;
+  /** Decision threshold tuned on VALIDATION only — the cut the
+   *  "scored this as a scam/safe" line and modelWarning() must use. */
+  threshold: number;
 }
 
 export interface ShieldModel {
@@ -108,6 +120,7 @@ export function loadShieldModel(): Promise<ShieldModel | null> {
             accuracy: json.metrics.accuracy,
             precision: json.metrics.precision,
             recall: json.metrics.recall,
+            threshold: json.threshold ?? 0.65,
           },
           predict: async (text: string) => {
             const x = tf.tensor2d([Array.from(vectorize(text, vocab))], [1, vocab.length]);

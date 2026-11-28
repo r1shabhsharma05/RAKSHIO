@@ -66,12 +66,20 @@ const BANKS: { name: string; aliases: string[] }[] = [
 
 // Weighted keyword rules; highest score wins. Weights are the plan's Appendix A.
 const FRAUD_RULES: { type: string; keywords: [RegExp, number][] }[] = [
-  { type: 'digital-arrest', keywords: [[/digital arrest/, 4], [/police/, 2], [/\bcbi\b/, 2], [/court/, 1]] },
+  // Step 21 (#11): the two biggest 2025 loss categories were investment
+  // (77%) and digital arrest (8%) — plus the courier/task/crypto/loan
+  // patterns victims actually narrate. Each new type maps to a real
+  // Situation Guide (guide.ts FRAUD_TYPE_TO_GUIDE), never to a guess.
+  { type: 'digital-arrest', keywords: [[/digital arrest/, 4], [/arrest/, 2], [/video ?call/, 2], [/police/, 2], [/\bcbi\b/, 2], [/court/, 1]] },
   { type: 'remote-access', keywords: [[/anydesk/, 4], [/screen ?share/, 3], [/teamviewer/, 3]] },
   { type: 'otp-impersonation', keywords: [[/customer ?care/, 3], [/\botp\b/, 3], [/\bkyc\b/, 2]] },
   { type: 'qr-scam', keywords: [[/\bqr\b/, 3], [/scan/, 2]] },
   { type: 'investment-scam', keywords: [[/investment/, 3], [/trading/, 2], [/profit/, 2]] },
   { type: 'job-scam', keywords: [[/\bjob\b/, 3], [/naukri/, 2]] },
+  { type: 'courier-scam', keywords: [[/courier/, 4], [/parcel/, 3], [/customs/, 3], [/drugs in parcel/, 4]] },
+  { type: 'task-scam', keywords: [[/task/, 2], [/like.*(task|rating)/, 3], [/telegram.*task/, 3], [/premium deposit/, 3]] },
+  { type: 'crypto-scam', keywords: [[/crypto/, 4], [/bitcoin/, 4], [/\busdt\b/, 3], [/crypto trading/, 4]] },
+  { type: 'loan-app-scam', keywords: [[/loan app/, 4], [/instant loan/, 3], [/\bloan\b/, 1]] },
   { type: 'phishing-link', keywords: [[/link/, 2], [/click/, 2], [/\bsms\b/, 1], [/message/, 1]] },
   { type: 'unauthorised-debit', keywords: [[/kat gaye/, 2], [/debit/, 2], [/bina permission/, 2], [/kuch nahi kiya/, 2]] },
 ];
@@ -310,11 +318,43 @@ function detectCredentialShared(text: string): boolean {
   if (/\b(not|never|didn'?t|did\s+not|nahi|nahin|mat|no)\b/.test(window)) return false;
   return true;
 }
+// Step 21 (H1): the old masker only hid 4–6 digit numbers spoken right
+// after otp/pin/cvv/password — a bare 16-digit card, a 12-digit Aadhaar or
+// a bare 6-digit OTP was stored in plain text in the transcript. Now:
+// - 16-digit runs (card) -> only the last 4 survive.
+// - 12-digit runs (Aadhaar) -> only the last 4 survive, EXCEPT when a UTR
+//   word (utr/reference/transaction id/txn) sits within 20 chars before
+//   the run — the UTR must stay readable so extractIncident can still
+//   parse it. An unlabelled 12-digit run is masked: it is more likely an
+//   Aadhaar than a UTR, and masking also stops parseUtr reading the first
+//   12 digits of a card number as a fake UTR.
+// - bare 6-digit runs (OTP) -> masked, unless a money word sits within 12
+//   chars either side ("250000 rupaye" is an amount, not an OTP).
 export function maskCredentials(text: string): { text: string; masked: boolean } {
   let masked = false;
-  const out = text.replace(/((?:otp|pin|cvv|password)[^\d]{0,15})(\d{4,6})/gi, (_m, pre: string, digits: string) => {
+  let out = text.replace(/((?:otp|pin|cvv|password)[^\d]{0,15})(\d{4,6})/gi, (_m, pre: string, digits: string) => {
     masked = true;
     return pre + '•'.repeat(digits.length);
+  });
+  // 16-digit card runs first — a 12-digit match must never eat a card prefix.
+  out = out.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, (m) => {
+    masked = true;
+    return `•••• •••• •••• ${m.replace(/[\s-]/g, '').slice(-4)}`;
+  });
+  // 12-digit runs: keep only the last 4, unless a UTR word is nearby.
+  out = out.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, (m, offset: number, full: string) => {
+    if (/(utr|reference|transaction ?id|txn)/i.test(full.slice(Math.max(0, offset - 20), offset))) {
+      return m;
+    }
+    masked = true;
+    return `•••• •••• ${m.replace(/[\s-]/g, '').slice(-4)}`;
+  });
+  // Bare 6-digit runs: an OTP unless a money word is next to it.
+  out = out.replace(/\b\d{6}\b/g, (m, offset: number, full: string) => {
+    const near = full.slice(Math.max(0, offset - 12), offset + m.length + 12);
+    if (/(rupaye|rupee|\brs\b|hazaar|lakh|thousand|paisa)/i.test(near)) return m;
+    masked = true;
+    return '••••••';
   });
   return { text: out, masked };
 }

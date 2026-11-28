@@ -18,7 +18,11 @@ shares it.
 
 - OTP, PIN, CVV, UPI PIN, card numbers, Aadhaar — never asked for, and
   masked if spoken or pasted anyway (4–6 digit numbers next to OTP/PIN
-  words; 16-digit card and 12-digit Aadhaar numbers keep only the last 4).
+  words; any bare 6-digit run; 16-digit card and 12-digit Aadhaar numbers
+  keep only the last 4). The one exception: a 12-digit number spoken next
+  to "UTR" / "reference" / "transaction ID" is kept in full, because that
+  is the transaction reference the bank and police need — it is stored as
+  the UTR field, not as a credential.
 - Voice recordings — speech recognition runs in the browser; RAKSHIO keeps
   only the transcript text, masked as above.
 - Name, phone number, address, location — the app never asks for them.

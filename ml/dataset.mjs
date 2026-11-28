@@ -4,7 +4,7 @@
 // Source: ml/data/sms-spam.csv — jngb-labs/sms-spam (UCI SMS Spam Collection,
 // deduplicated), 5,159 rows: 4,517 ham / 642 spam, columns label,text.
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const SEED = 42;
@@ -58,10 +58,12 @@ export function normText(t) {
 }
 
 /**
- * Load the MERGED training set (Step 15): three real labeled sources.
+ * Load the MERGED training set (Step 16): three real labeled sources,
+ * FULL pools when ml/data/*-full.csv exist (ml/prepare-data.mjs FULL=1),
+ * else the 6,000 / 5,000 samples.
  *   sms       ml/data/sms-spam.csv        — UCI SMS Spam, whole set (5,159)
- *   enron     ml/data/enron-sample.csv    — Enron spam emails, seeded sample (6,000)
- *   phishing  ml/data/phishing-sample.csv — phishing/safe emails, seeded sample (5,000)
+ *   enron     ml/data/enron-full.csv      — Enron spam emails, full pool (29,865 after dedupe)
+ *   phishing  ml/data/phishing-full.csv   — phishing/safe emails, full pool (7,619 after cross-dedupe vs full Enron)
  * Email texts were truncated to 600 chars by ml/prepare-data.mjs.
  *
  * Global dedupe by normalized text runs BEFORE the split, so no message
@@ -73,10 +75,14 @@ export function normText(t) {
 export function loadSplit(dataDir) {
   const dir = dataDir ?? new URL('./data', import.meta.url).pathname;
   const read = (f) => readFileSync(join(dir, f), 'utf8');
+  // Step 16: when the FULL pools exist (ml/prepare-data.mjs FULL=1),
+  // train on them instead of the 6k/5k samples — same seeded 80/10/10
+  // protocol, same global dedupe before the split. The sample files
+  // stay in the repo as the fallback when no full files are present.
   const sources = [
     { source: 'sms', file: 'sms-spam.csv', expected: 5159 },
-    { source: 'enron', file: 'enron-sample.csv', expected: 6000 },
-    { source: 'phishing', file: 'phishing-sample.csv', expected: 5000 },
+    { source: 'enron', file: existsSync(join(dir, 'enron-full.csv')) ? 'enron-full.csv' : 'enron-sample.csv', expected: existsSync(join(dir, 'enron-full.csv')) ? 29865 : 6000 },
+    { source: 'phishing', file: existsSync(join(dir, 'phishing-full.csv')) ? 'phishing-full.csv' : 'phishing-sample.csv', expected: existsSync(join(dir, 'phishing-full.csv')) ? 7619 : 5000 },
   ];
   const seen = new Set();
   const perSource = [];

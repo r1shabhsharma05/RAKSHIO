@@ -14,6 +14,7 @@ import {
   BankPage,
   CarePage,
   CoachPage,
+  DoNotPayPage,
   PortalPage,
   ProofPage,
   ShieldPage,
@@ -54,12 +55,37 @@ export default function App() {
   // fetch. Measured locally before this: incidents 515ms / proof 401ms /
   // care 208ms / vault 155ms cold. No fake loading states — the skeleton
   // still shows if a chunk genuinely isn't ready yet.
+  // Step 16 (bug 7): warm the lazy chunks when the browser is idle, so the
+  // first navigation to Incidents/Vault/Care/Proof doesn't pay a chunk
+  // fetch. Measured locally before this: incidents 515ms / proof 401ms /
+  // care 208ms / vault 155ms cold. No fake loading states — the skeleton
+  // still shows if a chunk genuinely isn't ready yet.
   useEffect(() => {
     if (typeof window.requestIdleCallback === 'function') {
       const id = window.requestIdleCallback(() => prefetchLazyChunks(), { timeout: 3000 });
       return () => window.cancelIdleCallback(id);
     }
     const t = window.setTimeout(() => prefetchLazyChunks(), 2000);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Step 21 (T3/D3): warm the Shield model chunk on first idle too, so the
+  // first Shield check doesn't wait on the ~808 KB model + ~1.1 MB TF.js.
+  // The rules verdict stays instant and is never gated on the model — this
+  // only prefetches the chunk so the model score arrives with the verdict.
+  // Errors are swallowed: offline or a failed fetch just means the model
+  // loads on first check, as before.
+  useEffect(() => {
+    const warm = () => {
+      import('./engines/shield/mlModel')
+        .then((m) => m.loadShieldModel().catch(() => undefined))
+        .catch(() => undefined);
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(warm, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(warm, 3000);
     return () => window.clearTimeout(t);
   }, []);
 
@@ -83,6 +109,7 @@ export default function App() {
           <Route path="proof" element={<ProofPage />} />
           <Route path="guide" element={<GuidePage />} />
           <Route path="judge" element={<JudgePage />} />
+          <Route path="donotpay" element={<DoNotPayPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>

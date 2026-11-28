@@ -13,6 +13,11 @@
 // text across all three sources happens here AND in the loader, so no
 // message can appear in both train and test via different sources.
 // Everything is seeded (42) so the output is reproducible.
+//
+// FULL=1 (Step 16): use the WHOLE Enron + phishing pools instead of the
+// 6,000 / 5,000 seeded samples, writing ml/data/enron-full.csv and
+// ml/data/phishing-full.csv (the sample files are left untouched).
+// ml/dataset.mjs prefers the *-full.csv files when present.
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -65,6 +70,11 @@ const enronSample = seededShuffle(
   SEED,
 );
 writeCsv(join(ROOT, 'ml/data/enron-sample.csv'), enronSample);
+if (process.env.FULL === '1') {
+  // Whole pool, deduped, class balance kept as-is (Enron is ~50/50
+  // after dedupe; no cap, no resampling — the full set is the set).
+  writeCsv(join(ROOT, 'ml/data/enron-full.csv'), seededShuffle([...dedup(enronSpam), ...dedup(enronHam)], SEED));
+}
 
 // --- Zefang phishing emails (Phishing_Email.csv) ---
 const phishRows = parseCsv(readFileSync(join(RAW, 'Phishing_Email.csv'), 'utf8'));
@@ -90,6 +100,18 @@ const seen = new Set();
 const phishDedup = phish.filter((r) => (seen.has(r._n) ? false : (seen.add(r._n), true)));
 const phishSample = seededShuffle(phishDedup, SEED).slice(0, 5000).map(({ _n, ...r }) => r);
 writeCsv(join(ROOT, 'ml/data/phishing-sample.csv'), phishSample);
+if (process.env.FULL === '1') {
+  // Whole pool, deduped against the FULL Enron set (not just the 6k
+  // sample — the phishing set overlaps Enron by ~9%), no 5,000 cap.
+  const enronFullNorm = new Set([...dedup(enronSpam), ...dedup(enronHam)].map((r) => norm(r.text)));
+  const seenFull = new Set();
+  const phishFull = phish.filter((r) => {
+    if (enronFullNorm.has(r._n) || seenFull.has(r._n)) return false;
+    seenFull.add(r._n);
+    return true;
+  }).map(({ _n, ...r }) => r);
+  writeCsv(join(ROOT, 'ml/data/phishing-full.csv'), seededShuffle(phishFull, SEED));
+}
 
 console.log(`enron pool=${enron.length} (spam ${enron.filter((r) => r.label === 'spam').length})`);
 console.log(`phishing pool after dedupe=${phishDedup.length}, sampled=${phishSample.length}`);

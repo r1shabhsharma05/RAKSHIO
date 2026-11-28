@@ -1,5 +1,6 @@
-// Train the Shield ML model on the REAL labeled merged dataset (Step 15).
-//   npm run train        (node ml/train.mjs, CPU, ~8 min)
+// Train the Shield ML model on the REAL labeled merged dataset (Step 16).
+//   npm run train        (node ml/train.mjs, CPU, ~13 min full data at EPOCHS=6)
+//   EPOCHS=12 npm run train   (sampled-data recipe; ~22 min on full data — over the practical bound)
 // Writes:
 //   public/ml/shield-model/model.json — single-file TF.js artifact
 //     (standard ModelArtifacts serialization: modelTopology + weightSpecs +
@@ -9,17 +10,20 @@
 //     (the numbers the UI quotes come from the TEST split only)
 //   ml/fixtures.json — real held-out test rows used by the vitest check
 //
-// Data (ml/dataset.mjs): UCI SMS Spam (5,159) + Enron sample (6,000) +
-// phishing-email sample (5,000) = ~16k real rows, global normalized
+// Data (ml/dataset.mjs): UCI SMS Spam (5,159) + Enron FULL pool
+// (29,865 after dedupe) + phishing-email FULL pool (7,619 after
+// cross-dedupe vs full Enron) = ~42.5k real rows when the *-full.csv
+// files exist (Step 16), else the 6,000 / 5,000 samples (~16k rows).
 // dedupe BEFORE the seeded (42) stratified 80/10/10 split — no message
 // can leak from train into test via another source. No synthetic data,
 // no training on the 32 Situation Guides — those are guides, not classes.
 //
 // Model: binary bag-of-words (per-source vocab union: top 1,500 SMS
 // tokens + top 2,500 email tokens, unigrams only, built ONLY from the
-// training split) -> Dense(32, relu) -> Dropout(0.2) -> Dense(1,
-// sigmoid). Class weights from the train split (spam is the minority).
-// Threshold tuned on the
+// training split) + char trigrams (top 1,500, Step 16 — the Hinglish
+// transfer mechanism; see ml/tokenizer.mjs) -> Dense(32, relu) ->
+// Dropout(0.2) -> Dense(1, sigmoid). Class weights from the train split
+// (spam is the minority). Threshold tuned on the
 // VALIDATION split only (grid 0.30-0.70, max accuracy); the test split
 // is evaluated exactly once, after tuning, and never re-rolled.
 
@@ -28,11 +32,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as tf from '@tensorflow/tfjs';
 import { loadSplit } from './dataset.mjs';
-import { buildVocab, vectorize } from './tokenizer.mjs';
+import { buildVocab, buildCharVocab, vectorize } from './tokenizer.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const EPOCHS = 12;
+// Epochs: 12 by default (Steps 14–15 recipe). The full-data run uses
+// EPOCHS=6: both prior runs' val accuracy was flat from epoch 2–3 on
+// (95.5% → 96.5% by epoch 2, then 96.3–97.0% through epoch 12), so 6
+// epochs reaches the same plateau at ~half the CPU time on 34k rows.
+const EPOCHS = Number(process.env.EPOCHS ?? 12);
 const HIDDEN = 32;
+const CHAR_VOCAB = 1500;
+const BATCH = 32;
 
 const { train, val, test, sources } = loadSplit(join(ROOT, 'ml/data'));
 // Per-source vocab union: top 1,500 SMS tokens + top 2,500 email tokens.
@@ -42,8 +52,12 @@ const { train, val, test, sources } = loadSplit(join(ROOT, 'ml/data'));
 // first merged run. The union guarantees SMS tokens survive.
 const smsVocab = buildVocab(train.filter((r) => r.source === 'sms').map((r) => r.text), 1500);
 const mailVocab = buildVocab(train.filter((r) => r.source !== 'sms').map((r) => r.text), 2500);
-const vocab = [...new Set([...smsVocab, ...mailVocab])];
-console.log(`split train=${train.length} val=${val.length} test=${test.length} vocab=${vocab.length} (sms ${smsVocab.length} + mail ${mailVocab.length})`);
+// Char trigrams (Step 16): built ONLY from the training split, like the
+// word vocab — the transfer mechanism for Hinglish Roman text, where
+// whole words are out-of-vocabulary but substrings are shared.
+const charVocab = buildCharVocab(train.map((r) => r.text), CHAR_VOCAB);
+const vocab = [...new Set([...smsVocab, ...mailVocab, ...charVocab])];
+console.log(`split train=${train.length} val=${val.length} test=${test.length} vocab=${vocab.length} (sms ${smsVocab.length} + mail ${mailVocab.length} + char ${charVocab.length})`);
 console.log('sources:', JSON.stringify(sources));
 
 const toXY = (rows) => {
@@ -59,9 +73,22 @@ const toXY = (rows) => {
   };
 };
 
-const tr = toXY(train);
 const va = toXY(val);
 const te = toXY(test);
+
+// Batched prediction (avoids materializing a full train-size matrix
+// twice): used for the train/test metric passes on the full dataset.
+async function predictProbs(model, rows, batchSize = 2048) {
+  const out = new Float32Array(rows.length);
+  for (let s = 0; s < rows.length; s += batchSize) {
+    const chunk = rows.slice(s, s + batchSize);
+    const x = toXY(chunk).x;
+    const p = await model.predict(x).data();
+    out.set(p, s);
+    x.dispose();
+  }
+  return [...out];
+}
 
 const nSpam = train.filter((r) => r.y === 1).length;
 const classWeight = { 0: train.length / (2 * (train.length - nSpam)), 1: train.length / (2 * nSpam) };
@@ -72,8 +99,24 @@ model.add(tf.layers.dense({ units: HIDDEN, activation: 'relu', inputShape: [voca
 model.add(tf.layers.dropout({ rate: 0.2 }));
 model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
 model.compile({ optimizer: tf.train.adam(0.003), loss: 'binaryCrossentropy', metrics: ['accuracy'] });
-const history = await model.fit(tr.x, tr.y, {
-  epochs: EPOCHS, batchSize: 32, validationData: [va.x, va.y], verbose: 0, classWeight,
+// Train from a batched generator, not one materialized train matrix:
+// the full-data train split is ~34k rows × ~4,600 features (~630 MB
+// as one Float32 tensor — too much next to the val/test tensors on
+// this VM). The generator reshuffles every epoch; classWeight still
+// applies per batch via fitDataset.
+function* trainBatches() {
+  const order = [...train.keys()];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  for (let s = 0; s < order.length; s += BATCH) {
+    const { x, y } = toXY(order.slice(s, s + BATCH).map((i) => train[i]));
+    yield { xs: x, ys: y };
+  }
+}
+const history = await model.fitDataset(tf.data.generator(trainBatches), {
+  epochs: EPOCHS, validationData: [va.x, va.y], verbose: 0, classWeight,
 });
 console.log('val acc by epoch:', history.history.val_acc.map((v) => +v.toFixed(4)).join(' '));
 
@@ -105,8 +148,8 @@ for (let t = 0.3; t <= 0.7001; t += 0.05) {
 }
 console.log(`tuned threshold=${threshold} (val acc ${(bestValAcc * 100).toFixed(2)}%)`);
 
-const trainProbs = [...(await model.predict(tr.x).data())];
-const testProbs = [...(await model.predict(te.x).data())];
+const trainProbs = await predictProbs(model, train);
+const testProbs = await predictProbs(model, test);
 const mTrain = metrics(train, trainProbs, threshold);
 const mVal = metrics(val, valProbs, threshold);
 const mTest = metrics(test, testProbs, threshold);
@@ -134,6 +177,8 @@ const out = {
   rows: train.length + val.length + test.length,
   split: { seed: 42, train: train.length, val: val.length, test: test.length },
   vocabSize: vocab.length, vocab,
+  features: 'word unigrams (per-source union) + char trigrams (top 1500, c: prefix)',
+  charVocabSize: charVocab.length,
   threshold,
   metrics: mTest,
   bySource,
@@ -151,6 +196,8 @@ writeFileSync(metricsPath, JSON.stringify({
   rows: out.rows,
   split: out.split,
   vocabSize: vocab.length,
+  features: out.features,
+  charVocabSize: charVocab.length,
   epochs: EPOCHS,
   hiddenUnits: HIDDEN,
   threshold,

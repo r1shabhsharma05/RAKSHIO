@@ -5,6 +5,7 @@ import { useGSAP } from '@gsap/react';
 import {
   ArrowRight,
   BadgeCheck,
+  Ban,
   Banknote,
   Check,
   Clock3,
@@ -29,6 +30,7 @@ import { deadlineStatuses, formatDurationLang, orderActions } from '../engines/o
 // Home pulls them in on demand with dynamic imports, same as the lazy screens.
 import type { EvidenceRecord } from '../engines/evidence/vault';
 import { loadAck } from '../engines/ack/ack';
+import { modelWarning } from '../engines/shield/mlModel';
 import { loadBankRef } from '../engines/banks/banks';
 import { formatINR, fraudTypeLabel } from '../screens/shared';
 import { STATUS_KEY } from '../state/incidents';
@@ -88,6 +90,14 @@ export function HomePage() {
   const active = useDashboard((s) => s.active());
   const updateIncident = useDashboard((s) => s.updateIncident);
   const shieldLast = useDashboard((s) => s.shieldLast);
+  // Step 21 (T3): if the model disagreed with the rules on the last
+  // Shield check, the Home tile says so — the disagreement used to live
+  // only inside Shield itself. No threshold is stored with shieldLast,
+  // so modelWarning's default (the shipped model's 0.65) applies here.
+  const shieldDisagree =
+    shieldLast && shieldLast.mlScore != null && shieldLast.mlCoverage != null
+      ? modelWarning(shieldLast.level, shieldLast.mlScore, shieldLast.mlCoverage) === 'disagree'
+      : false;
   const navigate = useNavigate();
   const showToast = useToast();
   const [evidence, setEvidence] = useState<EvidenceRecord[]>([]);
@@ -133,12 +143,15 @@ export function HomePage() {
   }, [active?.id]);
 
   const incident: StoredIncident | null = active;
-  const fraudAt = incident ? (incident.fraudAt ? new Date(incident.fraudAt) : new Date(incident.createdAt)) : null;
-  const statuses = fraudAt ? deadlineStatuses(fraudAt, now) : [];
-  const nextDeadline = statuses.filter((s) => s.remainingMs > 0).sort((a, b) => a.remainingMs - b.remainingMs)[0];
-  const actions = fraudAt && incident ? orderActions(fraudAt, now, incident.credentialShared, lang) : [];
+  // Step 21 (P1): fraud time unknown means NO deadline anchor — the old
+  // createdAt fallback restarted every countdown from report time.
+  const fraudAt = incident?.fraudAt ? new Date(incident.fraudAt) : null;
   const ack = incident ? loadAck() : null;
   const hasAck = !!ack && incident ? ack.incidentId === incident.id : false;
+  const calledAt = hasAck && ack?.calledAt ? new Date(ack.calledAt) : null;
+  const statuses = fraudAt ? deadlineStatuses(fraudAt, now, calledAt) : [];
+  const nextDeadline = statuses.filter((s) => s.remainingMs > 0 && s.state !== 'pending').sort((a, b) => a.remainingMs - b.remainingMs)[0];
+  const actions = fraudAt && incident ? orderActions(fraudAt, now, incident.credentialShared, lang, calledAt) : [];
   const hasBankRef = incident ? loadBankRef(incident.id).trim().length > 0 : false;
   const hasEvidence = evidence.length > 0;
 
@@ -198,6 +211,11 @@ export function HomePage() {
               <button type="button" className="db-btn db-btn-outline" onClick={() => navigate('/report?mode=text')}>
                 {t(lang, 'reportText')}
               </button>
+              {/* Step 21 (D5): a cold judge gets a visible demo entry point
+                  in the hero itself, not just the footer note. */}
+              <button type="button" className="db-btn db-btn-outline" onClick={() => navigate('/judge')}>
+                {t(lang, 'homeTryDemo')}
+              </button>
             </div>
           </div>
           <div className="db-hero-art" aria-hidden="true">
@@ -213,9 +231,9 @@ export function HomePage() {
         <Tile
           icon={<Check size={16} />}
           title={t(lang, 'tileShieldTitle')}
-          sub={shieldLast ? `${t(lang, 'tileShieldLastPrefix')} ${t(lang, shieldLast.level === 'danger' ? 'shieldHigh' : shieldLast.level === 'suspicious' ? 'shieldSuspicious' : 'shieldSafe')}` : t(lang, 'tileShieldEmpty')}
+          sub={shieldDisagree ? t(lang, 'tileShieldDisagree') : shieldLast ? `${t(lang, 'tileShieldLastPrefix')} ${t(lang, shieldLast.level === 'danger' ? 'shieldHigh' : shieldLast.level === 'suspicious' ? 'shieldSuspicious' : 'shieldSafe')}` : t(lang, 'tileShieldEmpty')}
           to="/shield"
-          ok={shieldLast?.level === 'safe'}
+          ok={shieldLast?.level === 'safe' && !shieldDisagree}
         />
       </div>
 
@@ -238,7 +256,7 @@ export function HomePage() {
             <div className="db-chip-row" role="timer" aria-live="off">
               {statuses.map((s) => (
                 <div key={s.id} className={`db-chip ${s.state}`}>
-                  <div className="t">{s.state === 'overdue' ? t(lang, 'chipOverdue') : formatDurationLang(lang, s.remainingMs)}</div>
+                  <div className="t">{s.state === 'overdue' ? t(lang, 'chipOverdue') : s.state === 'pending' ? t(lang, 'chipPortalPending') : formatDurationLang(lang, s.remainingMs)}</div>
                   <div className="n">{s.labelKey ? t(lang, s.labelKey) : s.label}</div>
                   <div className="w">{s.windowLabel} {t(lang, 'chipWindow')}</div>
                 </div>
@@ -275,6 +293,7 @@ export function HomePage() {
         <h2>
           {t(lang, 'currentIncident')}{' '}
           {incident && <span className={`db-badge ${incident.status === 'closed' ? 'gray' : 'green'}`}>{incident.status === 'closed' ? t(lang, 'badgeClosed') : t(lang, 'badgeActive')}</span>}
+          {incident?.demo && <span className="db-badge gray">DEMO</span>}
         </h2>
         {incident ? (
           <div className="db-rows">
@@ -317,6 +336,9 @@ export function HomePage() {
           </Link>
           <Link to="/care">
             <Users size={22} aria-hidden="true" /> {t(lang, 'qaCare')} <small>{t(lang, 'qaCareSub')}</small>
+          </Link>
+          <Link to="/donotpay">
+            <Ban size={22} aria-hidden="true" /> {t(lang, 'qaDnp')} <small>{t(lang, 'qaDnpSub')}</small>
           </Link>
         </div>
       </section>

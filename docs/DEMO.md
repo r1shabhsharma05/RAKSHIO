@@ -15,7 +15,7 @@ worried parent — not like a pitch.
 - Tap **Ye sahi hai — aage badhein**. Incident card + timeline appear.
 
 ## 0:50–1:20 — Golden Hour Clock + 1930 Call Coach
-- "Aage ke kadam": show the live clock — 1930 (48h), portal (24h), bank (3 din).
+- "Aage ke kadam": show the live clock — 1930 turant, behtar pehle 4 ghante me; portal 1930 call ke 24 ghante ke andar; bank 3 working days me suchit karein.
 - Open **1930 Call Coach**: the 30-second script is already written from the confirmed facts. "Call karne se pehle script padh lijiye."
 - Show the checklist. Do NOT actually call 1930 on camera.
 

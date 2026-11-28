@@ -46,6 +46,16 @@ test('step 17 bug 2b: English Shield result card + neutral model line', async ({
   await expect(page.getByText(/Asking for OTP\/PIN/)).toBeVisible();
   await expect(page.getByText(/What to do: delete the message/)).toBeVisible();
   // Step 17: neutral wording — "scored this as safe", never "thinks".
+  // Step 21 decision (this test was the 1 remaining Playwright failure):
+  // the Step 16 retrain scores this sentence 52%, and the UI used to
+  // read that as "scored this as a scam" on a hardcoded 0.5 cut. 52% is
+  // BELOW the model's own val-tuned 0.65 threshold (shipped in
+  // model.json, the same cut its accuracy/precision/recall are measured
+  // at), so the model itself classifies it safe — the UI wording was
+  // wrong, not the test. Fix: Shield.tsx + modelWarning() now use the
+  // shipped threshold, so the line reads "safe" and the disagree warning
+  // (rules DANGER vs model safe — follow the rules) shows. No retrain,
+  // no artifact change, no threshold change.
   await expect(page.getByText(/Model scam score: \d+% — scored this as safe/)).toBeVisible({ timeout: 30000 });
   await expect(page.getByText('Model and rules disagree — follow the rules.')).toBeVisible();
   await expect(page.getByText('model ko ye safe lagta hai')).toHaveCount(0);
@@ -58,23 +68,23 @@ test('step 17 bug 2c: English Coach script, bank draft and Portal Copy Deck', as
   await page.goto('/#/coach');
   const script = page.locator('.script-box');
   await expect(script).toContainText('Hello, I am speaking from the RAKSHIO app.');
-  await expect(script).toContainText('yesterday at 10 AM');
+  await expect(script).toContainText(/today at \d+ (AM|PM)/);
   await expect(script).toContainText('Please register my complaint');
   await expect(script).not.toContainText('Namaste, main RAKSHIO');
   // The checklist Time row uses the same localized when-line, not the
   // raw Hinglish display string ("kal, 10 baje").
-  await expect(page.getByText('Time: yesterday at 10 AM')).toBeVisible();
+  await expect(page.getByText(/Time: today at \d+ (AM|PM)/)).toBeVisible();
   await expect(page.getByText('kal, 10 baje')).toHaveCount(0);
   await page.goto('/#/bank');
   const draft = page.getByLabel('Bank draft');
   await expect(draft).toHaveValue(/Hello,/);
-  await expect(draft).toHaveValue(/yesterday at 10 AM/);
+  await expect(draft).toHaveValue(/today at \d+ (AM|PM)/);
   await expect(draft).toHaveValue(/Method: UPI\./);
   await expect(draft).not.toHaveValue(/Tareeka/);
   await expect(page.getByText('HDFC: block your card from the app, or SMS "Block CC".')).toBeVisible();
   await page.goto('/#/portal');
   await expect(page.getByText('Amount: ₹20,000')).toBeVisible();
-  await expect(page.getByText('Date / Time: yesterday at 10 AM')).toBeVisible();
+  await expect(page.getByText(/Date \/ Time: today at \d+ (AM|PM)/)).toBeVisible();
   await expect(page.getByText('Method: UPI')).toBeVisible();
   await expect(page.getByText('OTP/PIN shared?: Yes')).toBeVisible();
   await expect(page.getByText('1930 Ack number: Not received yet — fill it here after the call')).toBeVisible();
@@ -137,6 +147,11 @@ test('step 17 bug b: one click advances Mark done at 1034px, even at the stage b
     return el === btnEl;
   });
   expect(hit, 'button is under the dock after scrollIntoView').toBe(true);
+  await btn.click();
+  // Step 21: two more reminders now (30d, 90d) — one more click lands on
+  // 30d, two more finish the list.
+  await expect(page.getByText('30 din baad')).toBeVisible();
+  await btn.click();
   await btn.click();
   await expect(page.getByText('Sabhi follow-ups poore ho gaye')).toBeVisible();
 });

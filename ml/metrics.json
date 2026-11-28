@@ -1,12 +1,12 @@
 {
-  "n": 1615,
-  "tp": 487,
-  "fp": 25,
-  "tn": 1067,
-  "fn": 36,
-  "accuracy": 0.9622291021671827,
-  "precision": 0.951171875,
-  "recall": 0.9311663479923518,
+  "n": 4264,
+  "tp": 1583,
+  "fp": 67,
+  "tn": 2553,
+  "fn": 61,
+  "accuracy": 0.9699812382739212,
+  "precision": 0.9593939393939394,
+  "recall": 0.9628953771289538,
   "dataset": "SMS Spam (UCI) + Enron spam + Phishing Email (merged, real labeled rows)",
   "sources": [
     {
@@ -18,80 +18,82 @@
     },
     {
       "source": "enron",
-      "total": 5999,
-      "train": 4799,
-      "val": 599,
-      "test": 601
+      "total": 29864,
+      "train": 23891,
+      "val": 2986,
+      "test": 2987
     },
     {
       "source": "phishing",
-      "total": 5000,
-      "train": 4000,
-      "val": 500,
-      "test": 500
+      "total": 7619,
+      "train": 6095,
+      "val": 761,
+      "test": 763
     }
   ],
-  "rows": 16128,
+  "rows": 42612,
   "split": {
     "seed": 42,
-    "train": 12902,
-    "val": 1611,
-    "test": 1615
+    "train": 34089,
+    "val": 4259,
+    "test": 4264
   },
-  "vocabSize": 3108,
-  "epochs": 12,
+  "vocabSize": 4601,
+  "features": "word unigrams (per-source union) + char trigrams (top 1500, c: prefix)",
+  "charVocabSize": 1500,
+  "epochs": 6,
   "hiddenUnits": 32,
-  "threshold": 0.7,
+  "threshold": 0.65,
   "train": {
-    "n": 12902,
-    "tp": 4260,
-    "fp": 1,
-    "tn": 8629,
-    "fn": 12,
-    "accuracy": 0.9989924042784064,
-    "precision": 0.9997653133067355,
-    "recall": 0.9971910112359551
+    "n": 34089,
+    "tp": 13252,
+    "fp": 47,
+    "tn": 20756,
+    "fn": 34,
+    "accuracy": 0.9976238669365485,
+    "precision": 0.9964658996917062,
+    "recall": 0.9974409152491345
   },
   "val": {
-    "n": 1611,
-    "tp": 481,
-    "fp": 12,
-    "tn": 1063,
-    "fn": 55,
-    "accuracy": 0.9584109248913718,
-    "precision": 0.9756592292089249,
-    "recall": 0.8973880597014925
+    "n": 4259,
+    "tp": 1578,
+    "fp": 73,
+    "tn": 2557,
+    "fn": 51,
+    "accuracy": 0.970885184315567,
+    "precision": 0.9557843731072078,
+    "recall": 0.9686924493554327
   },
   "bySource": {
     "sms": {
       "n": 514,
-      "tp": 67,
-      "fp": 11,
-      "tn": 429,
-      "fn": 7,
-      "accuracy": 0.9649805447470817,
-      "precision": 0.8589743589743589,
-      "recall": 0.9054054054054054
+      "tp": 69,
+      "fp": 10,
+      "tn": 430,
+      "fn": 5,
+      "accuracy": 0.9708171206225681,
+      "precision": 0.8734177215189873,
+      "recall": 0.9324324324324325
     },
     "enron": {
-      "n": 601,
-      "tp": 271,
-      "fp": 4,
-      "tn": 310,
-      "fn": 16,
-      "accuracy": 0.9667221297836939,
-      "precision": 0.9854545454545455,
-      "recall": 0.9442508710801394
+      "n": 2987,
+      "tp": 1369,
+      "fp": 18,
+      "tn": 1550,
+      "fn": 50,
+      "accuracy": 0.9772346836290593,
+      "precision": 0.9870223503965393,
+      "recall": 0.9647639182522904
     },
     "phishing": {
-      "n": 500,
-      "tp": 149,
-      "fp": 10,
-      "tn": 328,
-      "fn": 13,
-      "accuracy": 0.954,
-      "precision": 0.9371069182389937,
-      "recall": 0.9197530864197531
+      "n": 763,
+      "tp": 145,
+      "fp": 39,
+      "tn": 573,
+      "fn": 6,
+      "accuracy": 0.9410222804718218,
+      "precision": 0.7880434782608695,
+      "recall": 0.9602649006622517
     }
   }
 }

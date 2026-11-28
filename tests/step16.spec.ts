@@ -32,34 +32,60 @@ async function ageIncident30h(page: Page) {
   await page.reload();
 }
 
+// Step 21 (P2): the portal clock starts at the 1930 call, so a test that
+// wants "portal overdue" must also plant a 30h-old ack for the active
+// incident — fraud age alone leaves the portal pending.
+async function ageAck30h(page: Page) {
+  await page.evaluate(() => {
+    const active = localStorage.getItem('rakshio.active.v1');
+    if (!active) return;
+    localStorage.setItem('rakshio.ack.v1', JSON.stringify({
+      ackNumber: '32912345678901',
+      calledAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(),
+      incidentId: active,
+    }));
+  });
+  await page.reload();
+}
+
 // Step 16: the 13 live E2E #3 bugs on v7.
 test('step 16 bug 1: model disagreement warning on the exact Hinglish danger sentence', async ({ page }) => {
   await page.goto('/#/shield');
   await page.getByLabel('Message paste karein').fill('Turant OTP batao, warna account band ho jayega');
   await page.getByRole('button', { name: 'Message / Number check karein' }).click();
   await expect(page.getByText('KHATRA — mat karein')).toBeVisible();
-  // The model really scores this ~3% (safe) — the UI must warn, never
-  // reassure, and the score stays visible, never fudged or hidden.
-  // Step 17: the model line is neutral wording now — "scored this as
-  // safe", never "thinks this is safe" next to a rules KHATRA.
+  // Step 16 model (full data + char trigrams) scores this ~52% — below
+  // the model's own 0.65 threshold, so the line reads "safe score diya"
+  // and the disagree warning fires (rules KHATRA vs model safe — follow
+  // the rules). The score stays visible, never fudged or hidden. Step 21:
+  // the earlier version of this test pinned "scam score diya" + the
+  // low-coverage warning because the UI judged scam/safe on a hardcoded
+  // 0.5 cut; 52% is below the 0.65 threshold the model's metrics were
+  // measured at, so "scam" was the wrong label and the disagreement was
+  // hidden. Both the line and modelWarning() now use the shipped
+  // threshold from model.json. Step 17: the model line is neutral wording
+  // now — "scored this as safe", never "thinks this is safe" next to a
+  // rules KHATRA.
   await expect(page.getByText(/Model scam score: \d+% — model ne isko safe score diya/)).toBeVisible({ timeout: 30000 });
-  await expect(page.getByRole('alert')).toContainText('Model aur rules alag bol rahe hain — rules ko mano');
-  await expect(page.getByRole('alert')).toContainText('English SMS/email par train hua tha');
+  await expect(page.getByRole('alert')).toContainText('Model aur rules alag bol rahe hain');
 });
 
 test('step 16 bug 2: English switches the clock, the incident card and a tool body', async ({ page }) => {
   await seedDemo(page);
-  await ageIncident30h(page); // pinned 30h old: portal (24h) over, 1930 (48h) open.
+  await ageIncident30h(page);
+  await ageAck30h(page); // portal (24h from the call) is genuinely over now.
   await page.goto('/#/');
   await page.locator('.gd-lang select').selectOption('en');
   await expect(page.getByText('Golden Hour Clock').first()).toBeVisible();
   await expect(page.getByText('Report on 1930', { exact: true })).toBeVisible();
   await expect(page.getByText('OTP scam (fake customer care)').first()).toBeVisible();
   await expect(page.getByText('Reported').first()).toBeVisible();
-  // The first hour is over: the over title + the portal-closed body
-  // show, in English, on the Home clock.
+  // The first hour is over: the over title + the both-windows-closed body
+  // show, in English, on the Home clock. (Step 21: with the call 30h ago
+  // BOTH windows are over — the old "portal over, 1930 open" premise died
+  // with the 48h claim.)
   await expect(page.getByText('Golden Hour is over — but steps remain')).toBeVisible();
-  await expect(page.getByText(/The portal’s 24-hour window has closed/)).toBeVisible();
+  await expect(page.getByText(/Both windows.*have closed/)).toBeVisible();
   await page.goto('/#/coach');
   await expect(page.getByText('Read the script once before calling — it is a 30-second talk.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Call 1930' })).toBeVisible();
