@@ -1,4 +1,5 @@
 import type { StoredIncident } from '../../state/store';
+import { fraudTypeLabel, methodLabel, t, whenText, type Lang } from '../../i18n';
 
 // Ack Bridge: after the 1930 call the victim gets an acknowledgement number.
 // Store it, start the 24-hour portal countdown, and hand over a field-by-
@@ -39,17 +40,20 @@ export interface CopyRow {
   value: string;
 }
 
-export function portalCopyDeck(stored: StoredIncident, ack: AckRecord | null): CopyRow[] {
+// Step 17: the deck follows the UI language. The default 'hg' returns
+// the exact old Hinglish labels and values, so the saved ack flow and
+// the copy buttons are unchanged there.
+export function portalCopyDeck(stored: StoredIncident, ack: AckRecord | null, lang: Lang = 'hg'): CopyRow[] {
   const rows: CopyRow[] = [
-    { label: '1930 Ack number', value: ack?.ackNumber ?? 'Abhi nahi mila — call ke baad yahan bharein' },
-    { label: 'Rashi', value: stored.amount != null ? `₹${stored.amount.toLocaleString('en-IN')}` : 'Pata nahi' },
-    { label: 'Date / Time', value: stored.fraudAtDisplay ?? 'Pata nahi' },
-    { label: 'Bank / App', value: stored.bank ?? 'Pata nahi' },
-    { label: 'Tareeka', value: stored.method ?? 'Pata nahi' },
-    { label: 'UTR / Reference', value: stored.utr ?? 'Nahi mila' },
-    { label: 'Fraud type', value: stored.fraudType ?? 'Pata nahi' },
-    { label: 'OTP/PIN share hua?', value: stored.credentialShared ? 'Haan' : 'Nahi' },
-    { label: 'Contact channel', value: stored.contactChannel ?? 'Pata nahi' },
+    { label: t(lang, 'deckAckLabel'), value: ack?.ackNumber ?? t(lang, 'deckAckMissing') },
+    { label: t(lang, 'deckAmountLabel'), value: stored.amount != null ? `₹${stored.amount.toLocaleString('en-IN')}` : t(lang, 'unknown') },
+    { label: t(lang, 'deckDateLabel'), value: (stored.fraudAt || stored.fraudAtDisplay ? whenText(stored.fraudAt, stored.fraudAtDisplay, lang) : null) ?? t(lang, 'unknown') },
+    { label: t(lang, 'deckBankLabel'), value: stored.bank ?? t(lang, 'unknown') },
+    { label: t(lang, 'deckMethodLabel'), value: stored.method ? methodLabel(stored.method, lang) : t(lang, 'unknown') },
+    { label: t(lang, 'deckUtrLabel'), value: stored.utr ?? t(lang, 'proofNoAck') },
+    { label: t(lang, 'deckFraudTypeLabel'), value: stored.fraudType ? fraudTypeLabel(stored.fraudType, lang) : t(lang, 'unknown') },
+    { label: t(lang, 'deckOtpLabel'), value: stored.credentialShared ? t(lang, 'deckYes') : t(lang, 'deckNo') },
+    { label: t(lang, 'deckContactLabel'), value: stored.contactChannel ?? t(lang, 'unknown') },
   ];
   return rows;
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
-import { BANKS, bankDraft, findBank, loadBankRef, saveBankRef } from '../engines/banks/banks';
+import { BANKS, bankBlockSteps, bankDraft, findBank, loadBankRef, saveBankRef } from '../engines/banks/banks';
 import { BackButton } from './shared';
 import { useToast } from '../components/Toast';
 import { useDashboard } from '../state/dashboardStore';
@@ -14,7 +14,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
   const lang = useDashboard((s) => s.settings.language);
   const initial = findBank(stored.bank);
   const [selected, setSelected] = useState(initial?.name ?? BANKS[0].name);
-  const [draft, setDraft] = useState(() => bankDraft(stored));
+  const [draft, setDraft] = useState(() => bankDraft(stored, lang));
   const [ref, setRef] = useState(() => loadBankRef(stored.id));
   const [refSaved, setRefSaved] = useState(false);
   const bank = BANKS.find((b) => b.name === selected) ?? BANKS[0];
@@ -25,7 +25,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
   // user can still edit it by hand afterwards.
   function changeBank(name: string) {
     setSelected(name);
-    if (name !== '__other') setDraft(bankDraft(stored, name));
+    if (name !== '__other') setDraft(bankDraft(stored, lang, name));
   }
 
   function saveRef() {
@@ -54,7 +54,7 @@ export function BankKitScreen({ stored, onBack }: { stored: StoredIncident; onBa
             {bank.numbers.map((n) => (
               <Button key={n} label={t(lang, 'bankCallBtn', { bank: bank.name, n })} variant="destructive" size="lg" width="100%" href={`tel:${n.replace(/\s/g, '')}`} />
             ))}
-            <p>{bank.blockSteps}</p>
+            <p>{bankBlockSteps(bank, lang)}</p>
           </>
         )}
       </section>

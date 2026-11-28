@@ -246,6 +246,13 @@ const dashboardStyles = `
   block-size: max(360px, min(865px, calc(100svh - 165px)));
   overflow: auto;
   overscroll-behavior: contain;
+  /* Step 17 (E2E #4 bug b): the floating bottom dock overlaps the bottom
+     ~29px of the stage at every width. scroll-padding keeps any
+     scroll-into-view target (Playwright click, keyboard focus, anchor)
+     above the dock, so a button parked at the stage's bottom edge stays
+     clickable — the first click used to land on the dock instead. The
+     96px bottom padding below still guarantees end-of-scroll clearance. */
+  scroll-padding-bottom: 40px;
   scrollbar-width: thin;
   scrollbar-color: var(--gd-line) transparent;
   border-radius: inherit;
@@ -560,7 +567,16 @@ const dashboardStyles = `
 
 @media (max-width: 1060px) {
   .gd-surround { inline-size: calc(100% - 74px); }
-  .gd-stage-scroll { padding-inline: 29px; }
+  .gd-stage-scroll {
+    padding-inline: 29px;
+    /* Step 17 (E2E #4 bug c): below 1060px the top bar is two rows (~107px,
+       not ~68px), so the 165px fit left a 45px page overflow — and with
+       overscroll-behavior: contain the wheel over the stage never scrolled
+       the page, so the footer was unreachable. The fit constant grows by
+       the measured overflow + 2px slack, restoring "the page never scrolls"
+       at tablet widths too. */
+    block-size: max(360px, min(865px, calc(100svh - 212px)));
+  }
   /* Step 16 (bug 3): below 1060px the three-column top bar cannot hold
      the caregiver pill + status pill + lang + 2 buttons next to the search
      pill — use the two-row layout (search full-width on row 2) here instead

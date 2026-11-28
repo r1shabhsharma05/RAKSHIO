@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import type { StoredIncident } from '../state/store';
-import { formatINR, fraudTypeLabel } from './shared';
+import { formatINR, fraudTypeLabel, BackButton } from './shared';
 import { useToast } from '../components/Toast';
 import { useDashboard } from '../state/dashboardStore';
-import { t } from '../i18n';
+import { t, methodLabel, whenText } from '../i18n';
 
 // 1930 Call Coach: big call button + a 30-second script built only from
 // confirmed facts + a checklist. "Done" logs that the button was tapped —
@@ -27,19 +27,24 @@ export function CoachScreen({
   const [checks, setChecks] = useState<Record<string, boolean>>({});
   const showToast = useToast();
 
-  const scriptParts: string[] = ['Namaste, main RAKSHIO app se bol raha hoon.'];
-  if (stored.amount != null) scriptParts.push(`Mere account se ${formatINR(stored.amount)} kat gaye.`);
-  if (stored.fraudAtDisplay) scriptParts.push(`Ye ${stored.fraudAtDisplay} hua.`);
-  if (stored.method) scriptParts.push(`Paise ${stored.method} se gaye.`);
-  if (stored.bank) scriptParts.push(`Bank: ${stored.bank}.`);
-  if (stored.utr) scriptParts.push(`UTR number: ${stored.utr}.`);
-  if (stored.credentialShared) scriptParts.push('Mujhse OTP manga gaya tha.');
-  scriptParts.push('Kripya meri shikayat darj karein aur fund freeze me madad karein.');
+  // Step 17: the script follows the UI language. The sentences are
+  // keyed; the values are the confirmed facts (amount, bank, UTR) plus
+  // the when-line rebuilt from the stored Date (whenText), so no
+  // Hinglish display string leaks into an English script.
+  const when = stored.fraudAt || stored.fraudAtDisplay ? whenText(stored.fraudAt, stored.fraudAtDisplay, lang) : null;
+  const scriptParts: string[] = [t(lang, 'coachScriptHello')];
+  if (stored.amount != null) scriptParts.push(t(lang, 'coachScriptAmount', { v: formatINR(stored.amount) }));
+  if (when) scriptParts.push(t(lang, 'coachScriptWhen', { v: when }));
+  if (stored.method) scriptParts.push(t(lang, 'coachScriptMethod', { v: methodLabel(stored.method, lang) }));
+  if (stored.bank) scriptParts.push(t(lang, 'coachScriptBank', { v: stored.bank }));
+  if (stored.utr) scriptParts.push(t(lang, 'coachScriptUtr', { v: stored.utr }));
+  if (stored.credentialShared) scriptParts.push(t(lang, 'coachScriptOtp'));
+  scriptParts.push(t(lang, 'coachScriptClose'));
   const script = scriptParts.join(' ');
 
   const checklist: { id: string; label: string }[] = [
     { id: 'amount', label: t(lang, 'coachCheckAmount', { v: stored.amount != null ? formatINR(stored.amount) : t(lang, 'unknown') }) },
-    { id: 'time', label: t(lang, 'coachCheckTime', { v: stored.fraudAtDisplay ?? t(lang, 'unknown') }) },
+    { id: 'time', label: t(lang, 'coachCheckTime', { v: when ?? t(lang, 'unknown') }) },
     { id: 'bank', label: t(lang, 'coachCheckBank', { v: stored.bank ?? t(lang, 'unknown') }) },
     { id: 'utr', label: t(lang, 'coachCheckUtr', { v: stored.utr ?? t(lang, 'unknown') }) },
     { id: 'type', label: t(lang, 'coachCheckType', { v: fraudTypeLabel(stored.fraudType, lang) }) },
@@ -85,7 +90,7 @@ export function CoachScreen({
       )}
 
       <p>{t(lang, 'coachBusyNote')} <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a></p>
-      <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />
+      <BackButton onBack={onBack} />
     </>
   );
 }

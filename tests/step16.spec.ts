@@ -22,7 +22,9 @@ test('step 16 bug 1: model disagreement warning on the exact Hinglish danger sen
   await expect(page.getByText('KHATRA — mat karein')).toBeVisible();
   // The model really scores this ~3% (safe) — the UI must warn, never
   // reassure, and the score stays visible, never fudged or hidden.
-  await expect(page.getByText(/Model scam score: \d+% — model ko ye safe lagta hai/)).toBeVisible({ timeout: 30000 });
+  // Step 17: the model line is neutral wording now — "scored this as
+  // safe", never "thinks this is safe" next to a rules KHATRA.
+  await expect(page.getByText(/Model scam score: \d+% — model ne isko safe score diya/)).toBeVisible({ timeout: 30000 });
   await expect(page.getByRole('alert')).toContainText('Model aur rules alag bol rahe hain — rules ko mano');
   await expect(page.getByRole('alert')).toContainText('English SMS/email par train hua tha');
 });

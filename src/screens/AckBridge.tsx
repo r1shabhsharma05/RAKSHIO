@@ -33,7 +33,7 @@ export function AckBridgeScreen({ stored, onBack, onAckSaved }: { stored: Stored
 
   const deadline = savedAt ? portalDeadline(savedAt) : null;
   const remaining = deadline ? deadline.getTime() - now.getTime() : null;
-  const deck = portalCopyDeck(stored, savedAt ? { ackNumber, calledAt: savedAt, incidentId: stored.id } : null);
+  const deck = portalCopyDeck(stored, savedAt ? { ackNumber, calledAt: savedAt, incidentId: stored.id } : null, lang);
 
   // One feedback mechanism for copy: the toast. The old inline label flip
   // ("Copy hua ✓") is gone — two mechanisms for one job was noise.

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
-import { t, type Lang } from '../i18n';
+import { t } from '../i18n';
+import { useDashboard } from '../state/dashboardStore';
 import { createListener, recognitionSupported } from '../voice/VoiceAdapter';
 
 // Every Step 2 screen ends with this — a stuck user in a panic app is a bug.
 export function BackButton({ onBack }: { onBack: () => void }) {
-  return <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />;
+  const lang = useDashboard((s) => s.settings.language);
+  return <Button label={t(lang, 'backBtn')} variant="ghost" size="lg" width="100%" onClick={onBack} />;
 }
 
 export function formatINR(n: number): string {
@@ -14,35 +16,9 @@ export function formatINR(n: number): string {
 
 // Step 16 (bug 2): the label follows the selected language (default 'hg'
 // = the old Hinglish text, so old callers don't change behaviour).
-const FRAUD_TYPE_KEYS: Record<string, 'ftOtp' | 'ftDigitalArrest' | 'ftRemoteAccess' | 'ftQr' | 'ftInvestment' | 'ftJob' | 'ftPhishing' | 'ftDebit'> = {
-  'otp-impersonation': 'ftOtp',
-  'digital-arrest': 'ftDigitalArrest',
-  'remote-access': 'ftRemoteAccess',
-  'qr-scam': 'ftQr',
-  'investment-scam': 'ftInvestment',
-  'job-scam': 'ftJob',
-  'phishing-link': 'ftPhishing',
-  'unauthorised-debit': 'ftDebit',
-};
-
-export function fraudTypeLabel(type: string | null, lang: Lang = 'hg'): string {
-  if (!type) return t(lang, 'confirmUnknown');
-  const key = FRAUD_TYPE_KEYS[type];
-  return key ? t(lang, key) : type;
-}
-
-const METHOD_KEYS: Record<string, 'methodUpi' | 'methodCard' | 'methodNetbanking' | 'methodWallet'> = {
-  UPI: 'methodUpi',
-  card: 'methodCard',
-  netbanking: 'methodNetbanking',
-  wallet: 'methodWallet',
-};
-
-export function methodLabel(m: string | null, lang: Lang = 'hg'): string {
-  if (!m) return t(lang, 'confirmUnknown');
-  const key = METHOD_KEYS[m];
-  return key ? t(lang, key) : m;
-}
+// The maps live in i18n.ts so the engines can use them too (bank draft,
+// portal deck) without importing React components.
+export { fraudTypeLabel, methodLabel } from '../i18n';
 
 // Copy with a fallback: the async clipboard API is missing in older
 // browsers and some in-app webviews — the execCommand path still works

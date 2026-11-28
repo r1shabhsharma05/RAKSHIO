@@ -4,7 +4,7 @@ import type { ExtractedIncident } from '../engines/understanding/extract';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
 import { formatINR, VoiceInput } from './shared';
 import { useDashboard } from '../state/dashboardStore';
-import { t } from '../i18n';
+import { t, methodLabel, whenText } from '../i18n';
 
 export type ConfirmState = 'pending' | 'yes' | 'unknown';
 export type GapField = 'amount' | 'fraudAt' | 'method' | 'bank';
@@ -52,9 +52,12 @@ export function ConfirmScreen({
 
   function display(field: GapField): string {
     if (field === 'amount') return incident.amount.value != null ? formatINR(incident.amount.value) : t(lang, 'unknown');
-    if (field === 'fraudAt') return incident.fraudAtDisplay.value ?? t(lang, 'unknown');
+    if (field === 'fraudAt') {
+      const when = incident.fraudAt.value || incident.fraudAtDisplay.value ? whenText(incident.fraudAt.value, incident.fraudAtDisplay.value, lang) : null;
+      return when ?? t(lang, 'unknown');
+    }
     if (field === 'bank') return incident.bank.value ?? t(lang, 'unknown');
-    return incident.method.value ?? t(lang, 'unknown');
+    return incident.method.value ? methodLabel(incident.method.value, lang) : t(lang, 'unknown');
   }
 
   const labels: Record<GapField, string> = {

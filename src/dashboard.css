@@ -412,6 +412,12 @@ select.db-input { appearance: auto; }
 .gd-app .rk-primary-btn { color: var(--rk-on-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn { background: var(--db-primary); }
 .gd-app[data-theme="dark"] .db-flow .mic-btn.listening { background: #b91c1c; }
+/* Step 17: the glassy `:where(button){color:inherit}` rule ties with
+   .mic-btn (same specificity, later inline <style>), so the mic label
+   inherited dark --gd-ink on the blue button — 2.71:1, caught by the new
+   Report-page axe test. The .gd-app prefix wins it back to white:
+   5.9:1 on light #0369a1, 5.6:1 on the dark --db-primary. */
+.gd-app .mic-btn { color: #ffffff; }
 .gd-app[data-theme="dark"] .db-flow .calm-card { background: #161616; }
 .gd-app[data-theme="dark"] .db-flow .deadline-chip.overdue { background: #450a0a; }
 .gd-app[data-theme="dark"] .db-flow .deadline-chip.soon { background: #451a03; }

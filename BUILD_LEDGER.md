@@ -1255,6 +1255,85 @@ disagreement warning + disclosure, card clears the dock at end of scroll;
 links clear of the dock; `step16-home-390-dark.png`). Secret scan clean.
 NOT deployed — live still serves v7; deploy needs his word.
 
+## Step 17: complete (2026-11-28) — all E2E #4 findings fixed (full English + 1034px)
+
+1. **Full English (E2E #4 bug 2, user call: "English bhi poora").** ~120 new
+   i18n keys × EN/HI/HG, wired through with `t()`:
+   - Report flow — Panic.tsx calm card ("You are safe", countdown, TTS
+     line), mic screen, emergency row, caregiver toggle, demo/judge links;
+     Listen.tsx voice + text mode (every mic error, the placeholder,
+     "Understand this"); Confirm read-back summary (TTS) + the When/Method
+     values; BackButton everywhere.
+   - Shield result card — the 16 rule explanations, Truth ×3, Advice ×2
+     and the OTP note now come from `analyzeShield(text, lang)`; the
+     default 'hg' returns the exact old strings (50-message test set
+     unchanged, otpNote byte-identical).
+   - Coach 1930 script — sentences keyed; the when-line is rebuilt from
+     the stored Date via `whenText()` (EN "yesterday at 10 AM", HI
+     "कल सुबह 10 बजे", HG keeps the stored display string verbatim), and
+     the checklist Time row uses the same line (the first screenshot pass
+     caught "Time: kal, 10 baje" leaking there — fixed, test-pinned).
+   - Bank draft + fraud-line note — `bankDraft(stored, lang, bankName?)`
+     keyed; `BankInfo.blockSteps` is now `{en, hg}` per bank with a
+     `bankBlockSteps()` helper (HI keeps the Hinglish text, as before).
+   - Portal Copy Deck — `portalCopyDeck(stored, ack, lang)`; labels,
+     yes/no, unknown values and the Date/Time value (via `whenText`) all
+     translate. The Settings note now says the whole app follows the
+     language (was: "the panic flow always stays in Hinglish").
+   - Model line wording — "thinks this is safe/scam" → neutral "scored
+     this as safe/a scam" (EN/HI/HG keyed); Step 16 test regex updated.
+   - OUT OF SCOPE, recorded: the 32 Situation Guides stay Hinglish
+     (long-form content, E2E did not flag them); the SOS text and the
+     Latin-script PDF stay Hinglish by design. `fraudTypeLabel` /
+     `methodLabel` / `whenText` moved into `i18n.ts` so the engines can
+     use them without importing React components; `shared.tsx` re-exports
+     them (no caller changed).
+2. **1034px Mark done needed two clicks (bug b).** Reproduced at
+   1034×633 in Playwright: with the button parked at the stage viewport's
+   bottom edge, `elementFromPoint` returned a dock link (`A.active`) and
+   one real mouse click did NOT advance. Root cause, measured: the
+   floating bottom dock overlaps the bottom ~29px of the stage at every
+   width, and a button scrolled to that zone is unclickable. Fix:
+   `scroll-padding-bottom: 40px` on `.gd-stage-scroll`, so any
+   scroll-into-view (Playwright click, keyboard focus, anchor) keeps the
+   target above the dock. Test parks the button at the bottom edge, asserts
+   the hit target is the button after scrollIntoView, then one click
+   advances to "all follow-ups done".
+3. **1034px footer unreachable (bug c).** Reproduced at 1034×633:
+   `document.scrollHeight` 678 vs viewport 633 = 45px page overflow, and
+   wheeling over the stage never scrolled the page
+   (`overscroll-behavior: contain`), so the footer never came into view.
+   Root cause, measured: the stage fit `calc(100svh - 165px)` assumes the
+   one-row top bar (~68px); below 1060px the top bar is two rows (~107px).
+   Fix: in the ≤1060px media query the fit is `calc(100svh - 212px)`
+   (measured 45px overflow + 2px slack). Test pins page overflow ≤ 0 and
+   the footer fully in view at 1034×633 and 1034×768.
+4. **Caregiver default OFF (bug d).** Already pinned — unit test
+   (`DEFAULT_SETTINGS.caregiver === false`) + Step 16 Playwright test on
+   a fresh profile (`aria-checked=false`). No code change. Live
+   verification stays impossible without wipe (forbidden) — pinned by
+   tests, NOT claimed live-verified.
+   Bonus fix the new axe test caught (pre-existing, not in the E2E list):
+   the mic button label inherited dark `--gd-ink` on the blue button
+   (2.71:1) — the glassy `:where(button){color:inherit}` rule ties with
+   `.mic-btn` and the later inline `<style>` wins. `.gd-app .mic-btn {
+   color: #ffffff; }` restores white (5.9:1 light, 5.6:1 dark), same
+   pattern as the existing `.db-btn-red` fix. Known pre-existing item,
+   NOT fixed here: the dark listening-state mic (#f87171 bg) is ~2.7:1
+   with white text — same before Step 17, out of scope.
+
+Evidence: build green (7.60s); vitest **54/54** (13 files: +5 Step 17
+localization tests — whenText, Shield EN/HG, bank draft byte-identical
+HG, block steps, portal deck); Playwright **59/59** across the full
+local suite (dashboard 43 + step16 8 + step17 6 + smoke 2 + production 6
++ all-screens 1, 13.5m, incl. axe 0 on the Report page in English);
+screenshots read (`tests/shots-local/step17-report-en-1366.png` —
+"You are safe", "This card will close in 10 seconds.", white "Speak" on
+blue; `step17-shield-en.png` — DANGER + English Truth; `step17-coach-en.png`
+— full English script + "Time: yesterday at 10 AM"; `step17-home-1034-footer.png`
+— two-row top bar, footer fully visible, dock clear of it). Secret scan
+clean. NOT deployed — live still serves v8; deploy needs his word.
+
 ## Rulings (Step 16)
 
 - The model score is never fudged, hidden, or overridden. Disagreement

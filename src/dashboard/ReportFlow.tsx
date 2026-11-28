@@ -13,8 +13,8 @@ import { ListenScreen } from '../screens/Listen';
 import { GapsScreen, type GapField } from '../screens/Gaps';
 import { ConfirmScreen, type ConfirmState } from '../screens/Confirm';
 import { JudgeScreen } from '../screens/Judge';
-import { formatINR, ScreenSkeleton } from '../screens/shared';
-import { t } from '../i18n';
+import { formatINR, methodLabel, ScreenSkeleton } from '../screens/shared';
+import { t, whenText, type Lang } from '../i18n';
 
 gsap.registerPlugin(useGSAP);
 
@@ -28,12 +28,16 @@ export function computeGaps(inc: ExtractedIncident): GapField[] {
   return gaps;
 }
 
-function summaryText(inc: ExtractedIncident): string {
-  const parts = ['Main ye samjha.'];
-  parts.push(inc.amount.value != null ? `Rashi ${formatINR(inc.amount.value)}.` : 'Rashi pata nahi.');
-  parts.push(inc.fraudAtDisplay.value ? `Samay ${inc.fraudAtDisplay.value}.` : 'Samay pata nahi.');
-  parts.push(inc.method.value ? `Tareeka ${inc.method.value}.` : 'Tareeka pata nahi.');
-  parts.push(inc.bank.value ? `Bank ${inc.bank.value}.` : 'Bank pata nahi.');
+// Step 17: the read-back summary follows the UI language — it is spoken
+// aloud by TTS on the Confirm screen, so Hinglish here would be heard in
+// English mode. The default 'hg' keeps the exact old wording.
+function summaryText(inc: ExtractedIncident, lang: Lang): string {
+  const parts = [t(lang, 'reportSumLead')];
+  parts.push(inc.amount.value != null ? `${t(lang, 'reportSumAmount')} ${formatINR(inc.amount.value)}.` : `${t(lang, 'reportSumAmount')} ${t(lang, 'unknown')}.`);
+  const when = inc.fraudAt.value || inc.fraudAtDisplay.value ? whenText(inc.fraudAt.value, inc.fraudAtDisplay.value, lang) : null;
+  parts.push(when ? `${t(lang, 'reportSumWhen')} ${when}.` : `${t(lang, 'reportSumWhen')} ${t(lang, 'unknown')}.`);
+  parts.push(inc.method.value ? `${t(lang, 'reportSumMethod')} ${methodLabel(inc.method.value, lang)}.` : `${t(lang, 'reportSumMethod')} ${t(lang, 'unknown')}.`);
+  parts.push(inc.bank.value ? `${t(lang, 'reportSumBank')} ${inc.bank.value}.` : `${t(lang, 'reportSumBank')} ${t(lang, 'unknown')}.`);
   return parts.join(' ');
 }
 
@@ -200,7 +204,7 @@ export function ReportFlow() {
           <ConfirmScreen
             incident={incident}
             confirmState={confirmState}
-            summaryText={summaryText(incident)}
+            summaryText={summaryText(incident, settings.language)}
             onResolve={(f, r) => setConfirmState((prev) => ({ ...prev, [f]: r }))}
             onCorrect={(f, text) => { mergeField(f, text); setConfirmState((prev) => ({ ...prev, [f]: 'pending' })); }}
             onReopen={(f) => setConfirmState((prev) => ({ ...prev, [f]: 'pending' }))}

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@astryxdesign/core/Button';
 import { createListener, requestMicAccess, type MicMeter } from '../voice/VoiceAdapter';
-import { MicIcon } from './shared';
+import { BackButton, MicIcon } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // 1–2 minutes of free speech, no interruption. The listener restarts itself
 // on silence (VoiceAdapter); the user stops it when done.
@@ -34,6 +35,7 @@ export function ListenScreen({
   onTextMode?: () => void;
   onBack: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [elapsed, setElapsed] = useState(0);
   const [perm, setPerm] = useState<'pending' | 'granted' | 'denied' | 'unavailable'>('pending');
   const [hasMeter, setHasMeter] = useState(false);
@@ -142,70 +144,68 @@ export function ListenScreen({
 
   return (
     <>
-      <h2>{mode === 'voice' ? 'Sun raha hoon — boliye' : 'Likh kar batayein'}</h2>
+      <h2>{mode === 'voice' ? t(lang, 'listenTitleVoice') : t(lang, 'panicWriteBtn')}</h2>
       {mode === 'voice' ? (
         <>
-          <p aria-live="polite">Samay: {mm}:{ss} — 2 minute tak bol sakte hain. Rokne ke liye neeche dabaiye.</p>
-          {perm === 'pending' && <p aria-live="polite">Mic ki permission maang raha hoon…</p>}
+          <p aria-live="polite">{t(lang, 'listenTimer', { t: `${mm}:${ss}` })}</p>
+          {perm === 'pending' && <p aria-live="polite">{t(lang, 'listenPermPending')}</p>}
           {perm === 'granted' && (
             <p aria-live="polite">
-              <strong>Sun raha hoon…</strong> {silent ? 'abhi tak kuch suna nahi gaya — paas aakar phir se bolein.' : 'boliye, aapki baat yahan likhi jayegi.'}
+              <strong>{t(lang, 'listenHearing')}</strong> {silent ? t(lang, 'listenSilentHint') : t(lang, 'listenSpeakHint')}
             </p>
           )}
           <div className="transcript-box" aria-live="polite">
             {finalText}
             {interimText && <span className="interim">{interimText}</span>}
-            {!finalText && !interimText && 'Aapki baat yahan likhi jayegi…'}
+            {!finalText && !interimText && t(lang, 'listenTranscriptEmpty')}
           </div>
           {perm === 'granted' && hasMeter && (
-            <div className="mic-level" role="meter" aria-label="Mic level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
+            <div className="mic-level" role="meter" aria-label={t(lang, 'listenMicLevel')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
               <span ref={meterBarRef} aria-hidden="true" />
             </div>
           )}
           {perm === 'denied' && (
             <div role="alert">
               <p className="step2-note">
-                <strong>Mic ki permission nahi mili.</strong> Browser ke address bar me mic icon dabakar “Allow” karein,
-                ya Settings → Site settings → Microphone → Allow karein. Phir Retry dabayein.
+                <strong>{t(lang, 'listenDeniedTitle')}</strong> {t(lang, 'listenDeniedBody')}
               </p>
               <div className="chip-row">
-                <button type="button" className="rk-primary-btn" onClick={retry}>Retry — mic phir se maangein</button>
+                <button type="button" className="rk-primary-btn" onClick={retry}>{t(lang, 'listenRetryMic')}</button>
                 {onTextMode && (
-                  <button type="button" className="rk-primary-btn" onClick={onTextMode}>Likh kar batayein</button>
+                  <button type="button" className="rk-primary-btn" onClick={onTextMode}>{t(lang, 'panicWriteBtn')}</button>
                 )}
               </div>
             </div>
           )}
           {perm === 'unavailable' && (
             <p className="step2-note" role="alert">
-              Is browser/device par mic nahi mila. Neeche likh kar batayein — wohi kaam karega.
+              {t(lang, 'listenUnavailable')}
             </p>
           )}
           {errorKind === 'network' && (
             <div role="alert">
               <p className="step2-note">
-                <strong>Speech service se connect nahi ho pa raha.</strong> Internet check karein, phir Retry dabayein.
+                <strong>{t(lang, 'listenNetworkTitle')}</strong> {t(lang, 'listenNetworkBody')}
               </p>
-              <button type="button" className="rk-primary-btn" onClick={retry}>Retry</button>
+              <button type="button" className="rk-primary-btn" onClick={retry}>{t(lang, 'listenRetry')}</button>
             </div>
           )}
           {errorKind === 'no-mic' && (
             <p className="step2-note" role="alert">
-              <strong>Koi mic nahi mila.</strong> Device me mic check karein, ya neeche likh kar batayein.
+              <strong>{t(lang, 'listenNoMicTitle')}</strong> {t(lang, 'listenNoMicBody')}
             </p>
           )}
           {errorKind === 'other' && (
             <p className="step2-note" role="alert">
-              Mic se sunne me dikkat aayi. Retry dabayein, ya likh kar batayein.
+              {t(lang, 'listenOtherError')}
             </p>
           )}
           {silent && perm === 'granted' && !errorKind && (
             <div role="alert">
               <p className="step2-note">
-                <strong>Kuch suna nahi gaya — abhi bhi sun raha hoon.</strong> Paas aakar, tez awaaz me phir se bolein,
-                ya Retry dabayein. Likhna ho to neeche likh sakte hain.
+                <strong>{t(lang, 'listenSilentTitle')}</strong> {t(lang, 'listenSilentBody')}
               </p>
-              <button type="button" className="rk-primary-btn" onClick={retry}>Retry</button>
+              <button type="button" className="rk-primary-btn" onClick={retry}>{t(lang, 'listenRetry')}</button>
             </div>
           )}
           <div className="mic-wrap">
@@ -217,35 +217,35 @@ export function ListenScreen({
                 listenerRef.current?.stop();
                 onStop(finalRef.current);
               }}
-              aria-label="Bas, ho gaya — sunna band karein"
+              aria-label={t(lang, 'listenStopAria')}
             >
               <MicIcon />
-              <span className="mic-label">Bas, ho gaya</span>
+              <span className="mic-label">{t(lang, 'listenStopLabel')}</span>
             </button>
           </div>
           {emptyStop && (
-            <p className="step2-note" role="alert">Kuch suna nahi gaya — dobara boliye, ya neeche likh kar batayein.</p>
+            <p className="step2-note" role="alert">{t(lang, 'listenEmptyStop')}</p>
           )}
-          <p className="note">Mic band karne ke baad hum samjhenge kya hua.</p>
+          <p className="note">{t(lang, 'listenAfterMic')}</p>
           {onTextMode && (
-            <button type="button" className="demo-link" onClick={onTextMode}>Likh kar batana hai? Text mode kholein</button>
+            <button type="button" className="demo-link" onClick={onTextMode}>{t(lang, 'listenTextModeLink')}</button>
           )}
         </>
       ) : (
         <>
-          <label htmlFor="listen-text" className="rk-label">Kya hua, apne shabdon me likhiye</label>
+          <label htmlFor="listen-text" className="rk-label">{t(lang, 'listenTextLabel')}</label>
           <textarea
             id="listen-text"
             className="rk-input"
             rows={6}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Jaise: Mere account se bees hazaar kat gaye, customer care ne OTP manga tha…"
+            placeholder={t(lang, 'listenTextPlaceholder')}
           />
-          <button type="button" className="rk-primary-btn" disabled={text.trim().length < 3} onClick={() => onTextSubmit(text.trim())}>Samjhaao</button>
+          <button type="button" className="rk-primary-btn" disabled={text.trim().length < 3} onClick={() => onTextSubmit(text.trim())}>{t(lang, 'listenTextSubmit')}</button>
         </>
       )}
-      <Button label="Wapas" variant="ghost" size="lg" width="100%" onClick={onBack} />
+      <BackButton onBack={onBack} />
     </>
   );
 }

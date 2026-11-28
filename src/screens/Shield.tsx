@@ -42,7 +42,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
 
   function analyze() {
     if (!text.trim()) return;
-    const v = analyzeShield(text.trim());
+    const v = analyzeShield(text.trim(), lang);
     setVerdict(v);
     onVerdict?.(v, text.trim());
     runModel(text.trim());
@@ -66,7 +66,7 @@ export function ShieldScreen({ onBack, onVerdict }: { onBack: () => void; onVerd
       <button type="button" className="rk-primary-btn" disabled={text.trim().length < 3} onClick={analyze}>{t(lang, 'shieldCheckBtn')}</button>
       <div className="chip-row">
         {EXAMPLES.map((e) => (
-          <Button key={e.key} label={t(lang, e.key)} variant="secondary" size="lg" onClick={() => { setText(e.text); const v = analyzeShield(e.text); setVerdict(v); onVerdict?.(v, e.text); runModel(e.text); }} />
+          <Button key={e.key} label={t(lang, e.key)} variant="secondary" size="lg" onClick={() => { setText(e.text); const v = analyzeShield(e.text, lang); setVerdict(v); onVerdict?.(v, e.text); runModel(e.text); }} />
         ))}
       </div>
 

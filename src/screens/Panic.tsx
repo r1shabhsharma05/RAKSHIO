@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import { speak, stopSpeaking, CALM_RATE } from '../voice/VoiceAdapter';
-import { DEMO_LABEL } from '../demo/seed';
 import { MicIcon } from './shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Calm prompt, isolated: it owns the 1-second interval, so the ticking
 // re-renders only this small card — never the mic button or the rest of
@@ -13,6 +14,7 @@ import { MicIcon } from './shared';
 // TTS never starts on its own: the card used to read itself aloud on
 // mount, which startled users mid-panic. "Suniye" speaks only on tap.
 function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => void }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [secondsLeft, setSecondsLeft] = useState(10);
   const [speaking, setSpeaking] = useState(false);
 
@@ -41,18 +43,18 @@ function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => 
       setSpeaking(false);
       return;
     }
-    speak('Aap safe hain. Abhi kisi ko OTP ya paisa mat dijiye.', { rate: ttsRate });
+    speak(t(lang, 'panicCalmSpeak'), { rate: ttsRate });
     setSpeaking(true);
   }
 
   return (
     <section className="calm-card" aria-live="polite">
-      <h2>Aap safe hain</h2>
-      <p>Abhi kisi ko OTP ya paisa mat dijiye. Saans lijiye — hum ek-ek kadam karenge.</p>
-      <p className="note" aria-live="off">{`${secondsLeft} second me ye card band ho jayega.`}</p>
+      <h2>{t(lang, 'panicCalmTitle')}</h2>
+      <p>{t(lang, 'panicCalmBody')}</p>
+      <p className="note" aria-live="off">{t(lang, 'panicCalmCountdown', { n: secondsLeft })}</p>
       <div className="chip-row">
         <button type="button" className="rk-primary-btn" onClick={onDismiss}>
-          Aage badhein
+          {t(lang, 'panicCalmContinue')}
         </button>
         <button
           type="button"
@@ -60,7 +62,7 @@ function CalmPrompt({ ttsRate, onDismiss }: { ttsRate: number; onDismiss: () => 
           onClick={toggleSpeak}
           aria-pressed={speaking}
         >
-          {speaking ? 'Bolna band karein' : 'Suniye'}
+          {speaking ? t(lang, 'panicCalmStopListen') : t(lang, 'panicCalmListen')}
         </button>
       </div>
     </section>
@@ -94,6 +96,7 @@ export function PanicScreen({
   onJudge: () => void;
   onCall1930: () => void;
 }) {
+  const lang = useDashboard((s) => s.settings.language);
   const [calmVisible, setCalmVisible] = useState(showCalm);
 
   return (
@@ -101,34 +104,34 @@ export function PanicScreen({
       {calmVisible && <CalmPrompt ttsRate={ttsRate} onDismiss={() => setCalmVisible(false)} />}
 
       <section className="rk-card mic-wrap">
-        <h2>Boliye, kya hua?</h2>
+        <h2>{t(lang, 'panicTitle')}</h2>
         {caregiver && (
-          <p><Badge label="Caregiver mode ON — aap kisi aur ki madad kar rahe hain" variant="success" /></p>
+          <p><Badge label={t(lang, 'panicCaregiverBadge')} variant="success" /></p>
         )}
         {voiceSupported ? (
-          <button type="button" className="mic-btn" onClick={onStartVoice} aria-label="Boliye kya hua — mic se batayein">
+          <button type="button" className="mic-btn" onClick={onStartVoice} aria-label={t(lang, 'panicMicAria')}>
             <MicIcon />
-            <span className="mic-label">Boliye</span>
+            <span className="mic-label">{t(lang, 'panicMicLabel')}</span>
           </button>
         ) : (
-          <p>Is browser me mic nahi chalta — neeche likh kar batayein.</p>
+          <p>{t(lang, 'panicNoMic')}</p>
         )}
-        <Button label="Likh kar batayein" variant="secondary" size="lg" width="100%" onClick={onStartText} />
+        <Button label={t(lang, 'panicWriteBtn')} variant="secondary" size="lg" width="100%" onClick={onStartText} />
       </section>
 
       <section className="rk-card emergency-row" aria-label="Emergency">
-        <h2>Turant madad</h2>
-        <Button label="1930 par call karein" variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCall1930} />
-        <p className="note">Bank helpline aur parivar ko alert karna aage ke kadam me aayega.</p>
+        <h2>{t(lang, 'panicEmergencyTitle')}</h2>
+        <Button label={t(lang, 'panicCall1930Btn')} variant="destructive" size="lg" width="100%" href="tel:1930" onClick={onCall1930} />
+        <p className="note">{t(lang, 'panicEmergencyNote')}</p>
       </section>
 
       <label className="caregiver-toggle">
         <input type="checkbox" checked={caregiver} onChange={(e) => onCaregiverChange(e.target.checked)} />
-        <span>Main kisi aur ki madad kar raha/rahi hoon (caregiver mode)</span>
+        <span>{t(lang, 'panicCaregiverToggle')}</span>
       </label>
 
-      <button type="button" className="demo-link" onClick={onDemo}>{DEMO_LABEL}</button>
-      <button type="button" className="demo-link" onClick={onJudge}>Judge Mode — bina mic ke demo chalao</button>
+      <button type="button" className="demo-link" onClick={onDemo}>{t(lang, 'panicDemoBtn')}</button>
+      <button type="button" className="demo-link" onClick={onJudge}>{t(lang, 'panicJudgeBtn')}</button>
     </>
   );
 }
