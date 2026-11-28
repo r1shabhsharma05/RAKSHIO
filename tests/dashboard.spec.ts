@@ -13,6 +13,26 @@ async function seedDemo(page: Page) {
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
 }
 
+// The seeded demo parses "kal subah das baje" as yesterday 10:00 in the
+// browser timezone, so its age — and whether the 24h portal window is
+// over — depends on the time of day the suite runs. Pin the active
+// incident to exactly 30h old (portal over, 1930 open) so portal-over
+// assertions hold at any hour. Test-only: the app keeps the real parsed
+// time; only the stored fraudAt is rewritten, then the app reloads it.
+async function ageIncident30h(page: Page) {
+  await page.evaluate(() => {
+    const active = localStorage.getItem('rakshio.active.v1');
+    const raw = localStorage.getItem('rakshio.incidents.v1');
+    if (!raw) return;
+    const list = JSON.parse(raw) as { id: string; fraudAt: string }[];
+    const target = list.find((i) => i.id === active) ?? list[0];
+    if (!target) return;
+    target.fraudAt = new Date(Date.now() - 30 * 3600 * 1000).toISOString();
+    localStorage.setItem('rakshio.incidents.v1', JSON.stringify(list));
+  });
+  await page.reload();
+}
+
 test('home renders empty, then shows the seeded ₹20,000 incident', async ({ page }) => {
   await page.goto('/#/');
   await expect(page.getByRole('heading', { name: 'Panic me bhi, sahi kadam.' })).toBeVisible();
@@ -321,11 +341,11 @@ test('fix 3: caregiver mode is visibly on — badge, incident label, vault rows'
 
 test('fix 4: every deadline shows its window; overdue portal is explained', async ({ page }) => {
   await seedDemo(page);
+  await ageIncident30h(page); // pinned 30h old: portal (24h) over, 1930 (48h) open.
   await page.goto('/#/');
   await expect(page.getByText('≤48 hours window')).toBeVisible();
   await expect(page.getByText('≤24 hours window')).toBeVisible();
   await expect(page.getByText('≤3 working days window')).toBeVisible();
-  // Seeded demo is ~30h old: portal (24h) is over while 1930 (48h) is not.
   await expect(page.getByText(/portal \(24h\) 1930 \(48h\) se pehle/)).toBeVisible();
 });
 
@@ -724,7 +744,7 @@ test('step 15: shield shows the retrained merged model score + honest disclosure
   // Danger example: rules say KHATRA; the model is an extra signal only.
   await page.getByRole('button', { name: 'Danger example' }).click();
   await expect(page.getByText('KHATRA — mat karein')).toBeVisible();
-  await expect(page.getByText(/Model scam score: \d+% — model ko ye (scam|safe) lagta hai/)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Model scam score: \d+% — model ne isko (scam|safe) score diya/)).toBeVisible({ timeout: 30000 });
   // Honest disclosure: real datasets + size + real held-out test accuracy.
   await expect(page.getByText(/SMS Spam \(UCI\) \+ Enron spam \+ Phishing Email/)).toBeVisible();
   await expect(page.getByText(/16,128 real messages \(SMS \+ email\)/)).toBeVisible();
@@ -748,8 +768,8 @@ test('step 12: light-mode cards are solid enough to read on the photo', async ({
 
 test('step 12: golden-hour text agrees with the portal deadline when it is over', async ({ page }) => {
   await seedDemo(page);
+  await ageIncident30h(page); // pinned 30h old: portal (24h) over, 1930 (48h) open.
   await page.goto('/#/');
-  // Seeded demo is ~30h old: portal (24h) is over while 1930 (48h) is not.
   await expect(page.getByText(/Portal ki 24 ghante ki window beet gayi/)).toBeVisible();
   await expect(page.getByText(/1930 \(48h\) abhi bhi khula hai/)).toBeVisible();
 });

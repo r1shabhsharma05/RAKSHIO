@@ -141,9 +141,11 @@ export function setActiveId(id: string | null): void {
 export function loadSettings(): Settings {
   const stored: Partial<Settings> = read<Settings>(SETTINGS_KEY) ?? {};
   const settings = { ...DEFAULT_SETTINGS, ...stored };
-  // One-time migration (Step 10): the old 'en' dictionary was Hinglish
-  // strings, so a stored 'en' means the user saw Hinglish — keep it.
-  if (stored.language === 'en') settings.language = 'hg';
+  // Step 18: the Step 10 migration lived here — it rewrote a stored 'en'
+  // to 'hg' on EVERY load, because the old 'en' dictionary was Hinglish.
+  // Steps 16–17 made 'en' real English, so the migration silently undid
+  // the user's explicit English choice on every reload. Removed: a stored
+  // 'en' now means English, as the picker says.
   return settings;
 }
 

@@ -6,6 +6,8 @@ import { Button } from '@astryxdesign/core/Button';
 import { Badge } from '@astryxdesign/core/Badge';
 import type { Screen } from '../engines/orchestrator/machine';
 import type { StoredIncident } from '../state/store';
+import { useDashboard } from '../state/dashboardStore';
+import { t, whenText } from '../i18n';
 import { guideForFraudType } from '../engines/guide/guide';
 import { formatINR, fraudTypeLabel, methodLabel } from './shared';
 
@@ -25,6 +27,7 @@ export function IncidentScreen({
   onReset: () => void;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
+  const lang = useDashboard((s) => s.settings.language);
 
   // Timeline reveal: fade + rise once, staggered. Skipped under reduced motion.
   useGSAP(() => {
@@ -42,77 +45,86 @@ export function IncidentScreen({
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 
+  // Step 18: the stored display string ('kal, 7 baje') is Hinglish by
+  // construction — en/hi rebuild the when-line from the stored Date, and
+  // fall back to "not known" when there is no Date to rebuild from.
+  const whenLine = stored.fraudAt
+    ? (whenText(stored.fraudAt, stored.fraudAtDisplay, lang) ?? t(lang, 'incTlWhenUnknown'))
+    : (lang === 'hg' ? (stored.fraudAtDisplay ?? t(lang, 'incTlWhenUnknown')) : t(lang, 'incTlWhenUnknown'));
+
   return (
     <>
-      <h2>Aapka incident card</h2>
-      {stored.caregiverMode && <Badge label="Caregiver ne bhara hai" variant="success" />}
+      <h2>{t(lang, 'incCardTitle')}</h2>
+      {stored.caregiverMode && <Badge label={t(lang, 'incCaregiverBadge')} variant="success" />}
       <section className="rk-card">
-        <div className="field-row"><span className="label">Rashi</span><span className="value">{stored.amount != null ? formatINR(stored.amount) : 'Pata nahi'}</span></div>
-        <div className="field-row"><span className="label">Kab hua</span><span className="value">{stored.fraudAtDisplay ?? 'Pata nahi'}</span></div>
-        <div className="field-row"><span className="label">Kaise gaye</span><span className="value">{methodLabel(stored.method)}</span></div>
-        <div className="field-row"><span className="label">Bank / App</span><span className="value">{stored.bank ?? 'Pata nahi'}</span></div>
-        <div className="field-row"><span className="label">UTR</span><span className="value">{stored.utr ?? 'Nahi mila'}</span></div>
-        <div className="field-row"><span className="label">Fraud type</span><span className="value">{fraudTypeLabel(stored.fraudType)}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incAmount')}</span><span className="value">{stored.amount != null ? formatINR(stored.amount) : t(lang, 'incUnknown')}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incWhen')}</span><span className="value">{whenLine}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incHow')}</span><span className="value">{methodLabel(stored.method, lang)}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incBank')}</span><span className="value">{stored.bank ?? t(lang, 'incUnknown')}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incUtr')}</span><span className="value">{stored.utr ?? t(lang, 'incNotFound')}</span></div>
+        <div className="field-row"><span className="label">{t(lang, 'incFraudType')}</span><span className="value">{fraudTypeLabel(stored.fraudType, lang)}</span></div>
         {stored.credentialShared && (
-          <p className="step2-note" role="alert">Aapne OTP/PIN share kiya tha — turant card/UPI block karein, aur kisi ko OTP mat dijiye.</p>
+          <p className="step2-note" role="alert">{t(lang, 'incOtpShared')}</p>
         )}
         {stored.maskedCredentials && (
-          <p className="note">OTP/PIN wale number chhupakar save kiye gaye hain — RAKSHIO kabhi OTP/PIN store nahi karta.</p>
+          <p className="note">{t(lang, 'incMaskedNote')}</p>
         )}
       </section>
 
       {/* Situation Guide: the Understanding Engine already extracted a fraud
-          type — show the matching step-by-step guide for this situation. */}
+          type — show the matching step-by-step guide for this situation.
+          The guide title itself stays Hinglish by design (Step 18 boundary);
+          only the chrome around it is keyed. */}
       <section className="rk-card">
-        <h2>Is situation me kya karein</h2>
+        <h2>{t(lang, 'incGuideTitle')}</h2>
         {(() => {
           const guide = guideForFraudType(stored.fraudType);
           return guide ? (
             <p>
               <Link to={`/guide?id=${guide.id}`}>
-                {guide.title} — pehle 5 minute, report ke kadam, aur kya na karein, step by step.
+                {guide.title} — {t(lang, 'incGuideLink')}
               </Link>
             </p>
           ) : (
             <p>
-              <Link to="/guide">Situation Guide dekhein — har situation me kya karein, step by step.</Link>
+              <Link to="/guide">{t(lang, 'incGuideFallback')}</Link>
             </p>
           );
         })()}
       </section>
 
       <section className="rk-card">
-        <h2>Panic se Proof tak</h2>
+        <h2>{t(lang, 'incTimelineTitle')}</h2>
         <ul className="timeline" ref={listRef}>
           <li className="timeline-item done">
-            <div><strong>Fraud hua</strong><div className="when">{stored.fraudAtDisplay ?? 'Samay pata nahi'}</div></div>
+            <div><strong>{t(lang, 'incTlFraud')}</strong><div className="when">{whenLine}</div></div>
           </li>
           <li className="timeline-item done">
-            <div><strong>Aapne RAKSHIO ko bataya</strong><div className="when">{created}</div></div>
+            <div><strong>{t(lang, 'incTlTold')}</strong><div className="when">{created}</div></div>
           </li>
           <li className={stored.callTappedAt ? 'timeline-item done' : 'timeline-item pending'}>
-            <div><strong>1930 par call</strong><div className="when">{stored.callTappedAt ? 'Call tap hua' : 'Baaki hai'}</div></div>
+            <div><strong>{t(lang, 'incTlCall')}</strong><div className="when">{stored.callTappedAt ? t(lang, 'incTlCallDone') : t(lang, 'incTlPending')}</div></div>
           </li>
           <li className="timeline-item pending">
-            <div><strong>Portal complaint</strong><div className="when">1930 ke baad 24 ghante me — cybercrime.gov.in</div></div>
+            <div><strong>Portal complaint</strong><div className="when">{t(lang, 'incTlPortal')}</div></div>
           </li>
         </ul>
       </section>
 
-      <button type="button" className="rk-primary-btn" onClick={onActions}>Aage ke kadam dekhein</button>
+      <button type="button" className="rk-primary-btn" onClick={onActions}>{t(lang, 'incNextSteps')}</button>
 
       <section className="rk-card">
-        <h2>Madad ke tools</h2>
-        <Button label="Evidence Vault — saboot save karein" variant="secondary" size="lg" width="100%" onClick={() => onTool('vault')} />
-        <Button label="Second-Scam Shield — message check karein" variant="secondary" size="lg" width="100%" onClick={() => onTool('shield')} />
-        <Button label="Triage — mera rasta kya hai?" variant="secondary" size="lg" width="100%" onClick={() => onTool('triage')} />
-        <Button label="Bank Alert Kit" variant="secondary" size="lg" width="100%" onClick={() => onTool('bank')} />
-        <Button label="Care Circle — parivar ko batayein" variant="secondary" size="lg" width="100%" onClick={() => onTool('care')} />
-        <Button label="Proof Pack — PDF / ZIP" variant="secondary" size="lg" width="100%" onClick={() => onTool('proof')} />
-        <Button label="Ack Bridge — 1930 ack number" variant="secondary" size="lg" width="100%" onClick={() => onTool('ack')} />
+        <h2>{t(lang, 'incToolsTitle')}</h2>
+        <Button label={t(lang, 'incToolVault')} variant="secondary" size="lg" width="100%" onClick={() => onTool('vault')} />
+        <Button label={t(lang, 'incToolShield')} variant="secondary" size="lg" width="100%" onClick={() => onTool('shield')} />
+        <Button label={t(lang, 'incToolTriage')} variant="secondary" size="lg" width="100%" onClick={() => onTool('triage')} />
+        <Button label={t(lang, 'incToolBank')} variant="secondary" size="lg" width="100%" onClick={() => onTool('bank')} />
+        <Button label={t(lang, 'incToolCare')} variant="secondary" size="lg" width="100%" onClick={() => onTool('care')} />
+        <Button label={t(lang, 'incToolProof')} variant="secondary" size="lg" width="100%" onClick={() => onTool('proof')} />
+        <Button label={t(lang, 'incToolAck')} variant="secondary" size="lg" width="100%" onClick={() => onTool('ack')} />
       </section>
 
-      <button type="button" className="demo-link" onClick={onReset}>Saaf karein — naya incident shuru karein</button>
+      <button type="button" className="demo-link" onClick={onReset}>{t(lang, 'incReset')}</button>
     </>
   );
 }

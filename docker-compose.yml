@@ -1,0 +1,7 @@
+# RAKSHIO — `docker compose up` serves the app on http://localhost:3000.
+# No env vars, no secret keys, no backend: no .env file is needed.
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"

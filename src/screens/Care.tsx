@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import type { StoredIncident } from '../state/store';
 import { BackButton, formatINR } from './shared';
 import { useDashboard } from '../state/dashboardStore';
-import { t } from '../i18n';
+import { t, whenText } from '../i18n';
 
 // Care Circle: consent first, then a minimal SOS card. The family number is
 // used only to build the WhatsApp link — it is never stored. The offline QR
@@ -14,12 +14,18 @@ export function CareScreen({ stored, onBack }: { stored: StoredIncident; onBack:
   const [number, setNumber] = useState('');
   const [qr, setQr] = useState('');
 
+  // Step 18: the SOS text is sent to family, so it follows the UI language.
+  // The time is rebuilt from the stored Date (en/hi) — the stored display
+  // string is Hinglish by construction and would leak into an English SOS.
+  const sosWhen = stored.fraudAt
+    ? whenText(stored.fraudAt, stored.fraudAtDisplay, lang)
+    : (lang === 'hg' ? stored.fraudAtDisplay : null);
   const sosText = [
-    'Mujhe fraud hua hai — madad chahiye.',
-    stored.amount != null ? `Rashi: ${formatINR(stored.amount)}.` : '',
-    stored.fraudAtDisplay ? `Samay: ${stored.fraudAtDisplay}.` : '',
-    '1930 par call karne me meri madad karein. Kisi ko OTP mat dijiye.',
-    '— RAKSHIO se',
+    t(lang, 'sosLine1'),
+    stored.amount != null ? t(lang, 'sosAmount', { amount: formatINR(stored.amount) }) : '',
+    sosWhen ? t(lang, 'sosTime', { when: sosWhen }) : '',
+    t(lang, 'sosLine2'),
+    t(lang, 'sosSign'),
   ].filter(Boolean).join(' ');
 
   useEffect(() => {

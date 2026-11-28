@@ -14,6 +14,24 @@ async function seedDemo(page: Page) {
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
 }
 
+// Same time-of-day pin as dashboard.spec.ts: the seeded demo parses "kal
+// subah das baje" as yesterday 10:00 in the browser timezone, so its age
+// depends on when the suite runs. Pin the active incident to exactly 30h
+// old (portal over, 1930 open) so portal-over assertions hold at any hour.
+async function ageIncident30h(page: Page) {
+  await page.evaluate(() => {
+    const active = localStorage.getItem('rakshio.active.v1');
+    const raw = localStorage.getItem('rakshio.incidents.v1');
+    if (!raw) return;
+    const list = JSON.parse(raw) as { id: string; fraudAt: string }[];
+    const target = list.find((i) => i.id === active) ?? list[0];
+    if (!target) return;
+    target.fraudAt = new Date(Date.now() - 30 * 3600 * 1000).toISOString();
+    localStorage.setItem('rakshio.incidents.v1', JSON.stringify(list));
+  });
+  await page.reload();
+}
+
 // Step 16: the 13 live E2E #3 bugs on v7.
 test('step 16 bug 1: model disagreement warning on the exact Hinglish danger sentence', async ({ page }) => {
   await page.goto('/#/shield');
@@ -31,14 +49,15 @@ test('step 16 bug 1: model disagreement warning on the exact Hinglish danger sen
 
 test('step 16 bug 2: English switches the clock, the incident card and a tool body', async ({ page }) => {
   await seedDemo(page);
+  await ageIncident30h(page); // pinned 30h old: portal (24h) over, 1930 (48h) open.
   await page.goto('/#/');
   await page.locator('.gd-lang select').selectOption('en');
   await expect(page.getByText('Golden Hour Clock').first()).toBeVisible();
   await expect(page.getByText('Report on 1930', { exact: true })).toBeVisible();
   await expect(page.getByText('OTP scam (fake customer care)').first()).toBeVisible();
   await expect(page.getByText('Reported').first()).toBeVisible();
-  // The seeded demo is ~31h old, so the first hour is over: the over
-  // title + the portal-closed body show, in English, on the Home clock.
+  // The first hour is over: the over title + the portal-closed body
+  // show, in English, on the Home clock.
   await expect(page.getByText('Golden Hour is over — but steps remain')).toBeVisible();
   await expect(page.getByText(/The portal’s 24-hour window has closed/)).toBeVisible();
   await page.goto('/#/coach');

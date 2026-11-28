@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Toasts: one short confirmation per completed action (save, download, copy).
 // Pattern follows the ui-motion-kit toast meta (enter 220ms ease-out, exit
@@ -20,6 +22,7 @@ interface ToastItem {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const lang = useDashboard((s) => s.settings.language);
   const idRef = useRef(0);
   const timersRef = useRef(new Map<number, number>());
 
@@ -55,18 +58,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={showToast}>
       {children}
       <div className="toast-region" role="region" aria-label="Notifications">
-        {toasts.map((t) => (
+        {toasts.map((item) => (
           <div
-            key={t.id}
+            key={item.id}
             className="toast"
             role="status"
-            onMouseEnter={() => pause(t.id)}
-            onMouseLeave={() => arm(t.id, 2000)}
-            onFocus={() => pause(t.id)}
-            onBlur={() => arm(t.id, 2000)}
+            onMouseEnter={() => pause(item.id)}
+            onMouseLeave={() => arm(item.id, 2000)}
+            onFocus={() => pause(item.id)}
+            onBlur={() => arm(item.id, 2000)}
           >
-            <span>{t.message}</span>
-            <button type="button" className="toast-close" aria-label="Notification band karein" onClick={() => dismiss(t.id)}>
+            <span>{item.message}</span>
+            <button type="button" className="toast-close" aria-label={t(lang, 'toastDismiss')} onClick={() => dismiss(item.id)}>
               ✕
             </button>
           </div>

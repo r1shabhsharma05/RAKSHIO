@@ -1334,6 +1334,163 @@ blue; `step17-shield-en.png` — DANGER + English Truth; `step17-coach-en.png`
 — two-row top bar, footer fully visible, dock clear of it). Secret scan
 clean. NOT deployed — live still serves v8; deploy needs his word.
 
+## Step 18: complete (2026-11-28) — all E2E #5 findings fixed + full sweep + Docker
+
+1. **Incident detail page English (E2E #5 bug 3, real Step 17 miss).**
+   40 new i18n keys × EN/HI/HG, wired through `IncidentScreen` (which
+   had no `lang` at all): card title, Amount/When/How/Bank/UTR/Fraud
+   type labels, unknown/not-received values, OTP-shared alert,
+   masked-credentials note, guide section (title + link chrome — the
+   guide title itself stays Hinglish by design), Panic-to-Proof
+   timeline (incl. the when-line rebuilt from the stored Date via
+   `whenText()`, falling back to "not known" when there is no Date so
+   the Hinglish display string never leaks), next-steps button, all 7
+   tool buttons, reset link. `methodLabel`/`fraudTypeLabel` already
+   took a lang — now they are passed one. Leftovers fixed in the same
+   pass: ReportFlow "Naya report shuru karein" button, toast dismiss
+   aria-label (plus a `t` shadowing fix in Toast.tsx — the map param
+   `t` hid the imported `t()`), Care SOS preview text (rebuilt from
+   keys + `whenText`, so an English SOS goes to family).
+2. **Mark done needs 3 clicks (E2E #5 bug 2, HIGH) — NOT an app bug.**
+   Reproduced in Playwright at true 1034×633: the button sits below
+   the fold inside the stage scroll container (viewport y ≈ 2832 in a
+   633px viewport), so clicks at its unscrolled coordinates land on
+   `<html>` and do nothing; `elementFromPoint` at the centre returned
+   null. Scrolled into view, ONE raw mouse click advances on the
+   first try (both widths). The 8px drift over the first 500ms is the
+   GSAP entrance settling (y: 8 → 0), then stable — no moving target,
+   no swallowed handler (`markFollowup` is a plain Zustand set). The
+   E2E agent clicked unscrolled coordinates. No code change; pinned
+   by a test that scrolls into view first, then asserts one raw click
+   advances.
+3. **Dock overlap at max scroll (E2E #5 bug 1, HIGH) — NOT an app
+   bug.** Re-diagnosed, not re-fixed: both Step 17 CSS fixes ARE in
+   the live v9 bundle (verified in live `index-Srw5Lu4-.js`:
+   `scroll-padding-bottom: 40px`, `calc(100svh - 212px)` — glassy CSS
+   ships inside the JS bundle). Measured at true widths: at max stage
+   scroll the last content bottom clears the dock top by 67px at
+   1034/1366/1920 (Home + Coach/Shield/Portal/Bank/Judge). The E2E
+   observations were mid-scroll states (by design, Step 16) and a
+   page-scroll that never moves the stage (`overscroll-behavior:
+   contain`). No code change; pinned by bounding-box assertions at
+   1034/1097/1366/1920.
+4. **English does not survive a reload (found by the full sweep — the
+   biggest extra bug).** `loadSettings()` in `src/state/incidents.ts`
+   ran the Step 10 migration on EVERY load: any stored `'en'` was
+   rewritten to `'hg'`, because the old 'en' dictionary was Hinglish.
+   Steps 16–17 made 'en' real English, so the migration silently
+   undid the user's explicit English choice on every reload — the
+   English option could never stick. Fix: migration removed (with a
+   comment saying why). Pinned by a unit test (stubbed storage) AND a
+   Playwright test that switches to English, reloads, and asserts the
+   English banner + sidebar still show.
+5. **More sweep findings, all fixed in the same pass.** (a) Chunk-load
+   fallback (`chunkRecovery.tsx`) was fully hardcoded Hinglish — 3
+   keys added. (b) Crash screen (`ErrorBoundary.tsx`) was fully
+   hardcoded Hinglish — keyed (banner reuses `bannerText`); it reads
+   the language via `loadSettings()` (plain try/catch storage read)
+   instead of the store hook, so the fallback still renders if the
+   crash took the store down. (c) Test bugs fixed, not app bugs:
+   'yesterday at 10 AM' appears twice on the detail page (field +
+   timeline) — strict-mode violation, now `.first()`; the demo
+   incident carries UTR 432109876543, so 'Not received' never shows
+   there; the Devanagari sweep must exclude `<select>` elements
+   (language pickers must show "हिंदी" as the native name — top bar
+   AND Settings page); the axe test needs the timeline animation
+   (~550ms) to settle first. Boundaries, recorded: the 32 Situation
+   Guides stay Hinglish (Latin-script content); the SOS text is now
+   keyed but the Latin-script PDF stays Hinglish by design
+   (unchanged); the .ics file content stays Hinglish (calendar file,
+   UI chrome is keyed); Shield sample scam messages stay as written
+   (they are the scam text being checked).
+6. **Full-regression sweep: 13 stale/flaky tests found and fixed
+   (same pass, user's word: zero bugs remaining).** The first
+   full-suite run reported "64 passed" through a `| tail -6` pipe —
+   the pipe hid the "11 failed" line and returned tail's exit 0, so
+   it read as green when it was 64 passed / 11 failed. The re-run
+   (full log to a file) showed the same 11. A second full run then
+   surfaced 2 more — lazy-heading strict-mode races that only fail
+   when the chunk loads slowly. None is a Step 18 app regression;
+   all are stale/flaky tests the earlier steps never ran end-to-end
+   (their reported suite counts covered only dashboard + step16/17 +
+   smoke):
+   - (a) Confirm gate has 4 questions, 6 tests answered 3 (Step 16
+     added Bank as the 4th; `seedDemo` was updated then, the other
+     files were not): all-screens, production reachIncident (lazy
+     Proof, Ack save) + render-crash test, shots, smoke demo flow +
+     shield test. The button stayed disabled after 3 taps. Fixed:
+     4 taps everywhere; smoke's `toHaveCount(3)` → 4. The smoke
+     failure itself proved the count (received 4).
+   - (b) Time-of-day tests, 3 tests: fix 4, golden-hour, step 16 bug
+     2 all assumed the seeded demo is "~30h old". The seed parses
+     "kal subah das baje" as yesterday 10:00 in the browser timezone
+     (probe: fraudAt `2026-11-27T10:00:00.000Z`, age 20h41m at 06:41
+     UTC), so before 10:00 UTC the 24h portal window is still open
+     and the clock shows the open body, not the portal-over body.
+     They passed in afternoon runs and failed in morning runs.
+     Fixed (test-only, the app keeps the real parsed time): a local
+     `ageIncident30h` helper rewrites the stored incident's fraudAt
+     to exactly now − 30h and reloads, so portal-over / 1930-open
+     holds at any hour.
+   - (c) Step 15 model-line regex, 1 test: Step 17 reworded the line
+     to "scored this as a scam/safe" and updated the Step 16 test's
+     regex, but the Step 15 test still expected the old "model ko ye
+     (scam|safe) lagta hai". Fixed to the current HG rendering
+     "model ne isko (scam|safe) score diya" (same pattern as the
+     Step 16 test).
+   - (d) Copy toast, 1 test (unmasked by fixing (a)): production
+     Ack-save expected the old "Copy ho gaya" toast; the app now
+     toasts the keyed `portalCopyToast` — "Copy hua: {label}".
+     Fixed the assertion; clipboard copy itself works in headless.
+   - (e) Lazy-heading strict-mode races, 2 tests (surfaced by the
+     second full run; both had passed standalone minutes earlier):
+     production lazy-Proof and smoke demo-flow assert a heading by
+     substring ("Proof Pack" / "Evidence Vault") while the lazy
+     "…khul raha hai…" loading heading is still mounted — both match
+     at once and strict mode fails. Fixed with exact heading names
+     ('Proof Pack aur Verify', exact: true; 'Evidence Vault',
+     exact: true). The dashboard Home assertions on the same names
+     are safe as-is (no lazy chunk loads on Home).
+   All 13 re-run green individually before the final full run.
+
+Evidence: build green (7.42s); vitest **61/61** (14 files: +7 Step 18
+— 40-key parity, EN values, HG byte-identical, whenText, language
+persistence, chunk/crash keys); Playwright full local suite: first run
+64 passed / 11 failed (masked by the tail pipe — see item 6), fixes
+applied, all 13 re-run green individually; final full re-run **76/76
+passed (5.9m), 0 failed, exit 0** (dashboard 43 + step16 8 + step17 6
++ step18 7 + smoke 2 + production 6 + all-screens 1 + live-e2e-probe 1
++ shots 1 + step18-shots 1); axe 0 on incident detail in English;
+screenshots read
+(`tests/shots-local/step18-incident-detail-en.png` — full English
+card; `step18-home-1034-maxscroll.png` +
+`step18-home-1366-maxscroll.png` — footer fully visible, dock clear).
+Secret scan clean. NOT deployed — live still serves v9; deploy needs
+his word.
+
+**Docker (Round 2 code instructions, same pass).**
+- `Dockerfile` (multi-stage): node:20-alpine `npm ci` + `npm run
+  build`, then nginx:alpine serving dist on 3000 with SPA fallback.
+  `nginx.conf` (minimal, `try_files $uri $uri/ /index.html`, listen
+  3000). `docker-compose.yml` (service `app`, build ., ports
+  3000:3000). `.env.example` (states the app uses NO env vars and NO
+  secret keys; placeholder only, never real values; the only
+  `import.meta.env` reference is Vite's built-in PROD flag).
+  `.dockerignore` (node_modules, dist, .git — the build stays
+  reproducible). None of the three existed before (checked local +
+  remote 404).
+- Verified WITHOUT Docker (no Docker on this VM — not installed):
+  `npm run build` green; dist served with a plain static server on
+  port 3000; curl: `/` 200 ("RAKSHIO — Fraud Golden Hour"), asset
+  `index-nA_yfaVw.js` 200, `model.json` 200, `sw.js` contains
+  rakshio-v2.
+- Honest limit: `docker compose up` itself was NOT run here, and
+  `nginx -t` was NOT run (no nginx on the VM). The Dockerfile/compose
+  follow the standard pattern and the served-dist path is verified;
+  the judges' `docker compose up` is the remaining untested step.
+- The 300+ lines of own code requirement is already satisfied
+  (thousands of lines) — no action.
+
 ## Rulings (Step 16)
 
 - The model score is never fudged, hidden, or overridden. Disagreement

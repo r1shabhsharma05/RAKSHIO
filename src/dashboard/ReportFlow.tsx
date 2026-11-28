@@ -214,7 +214,7 @@ export function ReportFlow() {
         {screen === 'judge' && <JudgeScreen showTitle onStart={() => handleTranscript(DEMO_TRANSCRIPT)} onBack={() => go('panic')} />}
       </div>
       {screen !== 'panic' && (
-        <button type="button" className="demo-link" onClick={resetAll}>Naya report shuru karein</button>
+        <button type="button" className="demo-link" onClick={resetAll}>{t(settings.language, 'reportStartNew')}</button>
       )}
     </div>
   );

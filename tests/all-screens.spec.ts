@@ -34,7 +34,7 @@ test('all screens', async ({ browser }) => {
   await a.getByRole('heading', { name: 'Kya ye sahi hai?' }).waitFor({ timeout: 8000 });
   await shot(a, '04-confirm');
   const yes = a.getByRole('button', { name: 'Haan, sahi hai' });
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  for (let i = 0; i < 4; i++) await yes.nth(0).click(); // Step 16 (bug 9): Bank is the 4th confirm question.
   await a.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await a.getByRole('heading', { name: 'Aapka incident card' }).waitFor();
   await shot(a, '05-incident');

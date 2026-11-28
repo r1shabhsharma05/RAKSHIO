@@ -1,5 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { ScreenSkeleton } from '../screens/shared';
+import { useDashboard } from '../state/dashboardStore';
+import { t } from '../i18n';
 
 // Lazy chunk loaders, shared so the idle prefetch (App), the hover preload
 // (GlassShell dock) and the route mounts (App/ToolPages) all warm the SAME
@@ -60,13 +62,14 @@ export function useChunk<P extends object>(
 }
 
 export function ChunkFallback({ label, failed }: { label: string; failed: boolean }) {
+  const lang = useDashboard((s) => s.settings.language);
   if (failed) {
     return (
       <div className="db-card" role="alert">
-        <h2 className="db-page-title">Naya version aaya hai</h2>
-        <p className="db-muted">App ka naya version aa gaya — ye page load nahi ho raha. Reload dabayein.</p>
+        <h2 className="db-page-title">{t(lang, 'chunkTitle')}</h2>
+        <p className="db-muted">{t(lang, 'chunkBody')}</p>
         <button type="button" className="db-btn db-btn-red" onClick={() => window.location.reload()}>
-          Reload karein
+          {t(lang, 'chunkReload')}
         </button>
       </div>
     );

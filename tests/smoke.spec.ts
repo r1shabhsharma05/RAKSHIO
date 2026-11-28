@@ -19,10 +19,11 @@ test('demo flow end to end + vault tamper turns red', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   await expect(page.getByText('₹20,000')).toBeVisible();
 
-  // Confirmation gate: three "Haan" taps, then the card unlocks.
+  // Confirmation gate: four "Haan" taps, then the card unlocks.
+  // Step 16 (bug 9): Bank is the 4th confirm question.
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
-  await expect(yes).toHaveCount(3);
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  await expect(yes).toHaveCount(4);
+  for (let i = 0; i < 4; i++) await yes.nth(0).click();
   await page.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
 
@@ -38,7 +39,10 @@ test('demo flow end to end + vault tamper turns red', async ({ page }) => {
 
   // Evidence Vault: add, verify green, tamper test turns red, back works.
   await page.getByRole('button', { name: 'Evidence Vault kholein' }).click();
-  await expect(page.getByRole('heading', { name: 'Evidence Vault' })).toBeVisible();
+  // exact:true — the lazy "Evidence Vault khul raha hai…" loading
+  // heading is also a heading containing this text while the chunk
+  // loads; a substring match fails strict mode when both are mounted.
+  await expect(page.getByRole('heading', { name: 'Evidence Vault', exact: true })).toBeVisible();
   await page.getByLabel('Text').fill('Test SMS: OTP 123456 bhejo');
   await page.getByRole('button', { name: 'Vault me save karein' }).click();
   await expect(page.getByText('Test SMS', { exact: false })).toBeVisible();
@@ -55,7 +59,7 @@ test('shield truth card flags a recovery scam', async ({ page }) => {
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  for (let i = 0; i < 4; i++) await yes.nth(0).click(); // Step 16 (bug 9): Bank is the 4th confirm question.
   await page.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await page.getByRole('button', { name: /Second-Scam Shield/ }).click();
   await expect(page.getByRole('heading', { name: 'Second-Scam Shield' })).toBeVisible();

@@ -1,21 +1,28 @@
 import { Component, type ReactNode } from 'react';
 import { Button } from '@astryxdesign/core/Button';
+import { loadSettings } from '../state/incidents';
+import { t } from '../i18n';
 
 // Calm fallback for a render crash: never a blank page, always a way back
 // to Panic and always the 1930 call one tap away. The banner copy stays —
 // the honest sentence is the one thing a crash must not hide.
+// Step 18: the crash screen follows the UI language too. It reads the
+// language straight from storage (loadSettings is a plain try/catch read),
+// not from the store hook — if the crash took the store down with it, the
+// fallback must still render.
 export function ErrorFallback({ onReset }: { onReset: () => void }) {
+  const lang = loadSettings().language;
   return (
     <main className="app-main">
       <div className="screen-stack">
         <p className="no-report-banner" role="note">
-          RAKSHIO report file nahi karta. Aapko 1930 / bank ko khud contact karna hoga.
+          {t(lang, 'bannerText')}
         </p>
         <section className="rk-card">
-          <h1>Kuch gadbad ho gayi</h1>
-          <p>App ruk gaya hai — aapka data safe hai, ye sirf is phone par hai.</p>
-          <a className="rk-primary-btn" href="tel:1930">1930 par call karein</a>
-          <Button label="Pehle screen par wapas" variant="ghost" size="lg" width="100%" onClick={onReset} />
+          <h1>{t(lang, 'errTitle')}</h1>
+          <p>{t(lang, 'errBody')}</p>
+          <a className="rk-primary-btn" href="tel:1930">{t(lang, 'errCall')}</a>
+          <Button label={t(lang, 'errBack')} variant="ghost" size="lg" width="100%" onClick={onReset} />
         </section>
       </div>
     </main>

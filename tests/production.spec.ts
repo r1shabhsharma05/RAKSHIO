@@ -9,7 +9,7 @@ async function reachIncident(page: Page) {
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  for (let i = 0; i < 4; i++) await yes.nth(0).click(); // Step 16 (bug 9): Bank is the 4th confirm question.
   await page.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await expect(page.getByRole('heading', { name: 'Aapka incident card' })).toBeVisible();
 }
@@ -39,7 +39,7 @@ test('corrupt stored incident falls back to Panic, never a blank page', async ({
 test('lazy Proof screen loads, downloads the PDF, and toasts', async ({ page }) => {
   await reachIncident(page);
   await page.getByRole('button', { name: /Proof Pack/ }).click();
-  await expect(page.getByRole('heading', { name: 'Proof Pack' })).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('heading', { name: 'Proof Pack aur Verify', exact: true })).toBeVisible({ timeout: 10000 });
   const download = page.waitForEvent('download', { timeout: 15000 });
   await page.getByRole('button', { name: 'PDF download karein' }).click();
   expect((await download).suggestedFilename()).toBe('RAKSHIO-proof.pdf');
@@ -57,7 +57,9 @@ test('Ack save and copy-deck copy both toast', async ({ page }) => {
   await page.getByRole('button', { name: 'Save karein' }).click();
   await expect(page.getByText('Ack number save ho gaya')).toBeVisible();
   await page.getByRole('button', { name: 'Copy', exact: true }).first().click();
-  await expect(page.getByText(/Copy ho gaya/)).toBeVisible();
+  // Step 17: the copy toast is keyed (portalCopyToast) — "Copy hua: {label}",
+  // not the old "Copy ho gaya" string.
+  await expect(page.getByText(/Copy hua:/)).toBeVisible();
 });
 
 test('mic button is keyboard-focusable', async ({ page }) => {
@@ -81,7 +83,7 @@ test('a render crash shows the calm fallback, never a blank page', async ({ page
   await page.getByRole('button', { name: /Demo data bharo/ }).click();
   await expect(page.getByRole('heading', { name: 'Kya ye sahi hai?' })).toBeVisible({ timeout: 8000 });
   const yes = page.getByRole('button', { name: 'Haan, sahi hai' });
-  for (let i = 0; i < 3; i++) await yes.nth(0).click();
+  for (let i = 0; i < 4; i++) await yes.nth(0).click(); // Step 16 (bug 9): Bank is the 4th confirm question.
   await page.getByRole('button', { name: 'Ye sahi hai — aage badhein' }).click();
   await expect(page.getByRole('heading', { name: 'Kuch gadbad ho gayi' })).toBeVisible();
   await expect(page.getByRole('link', { name: '1930 par call karein' })).toBeVisible();
